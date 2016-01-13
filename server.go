@@ -1,30 +1,53 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 )
 
-type Topic struct {
+type Subject struct {
+	ID   int64
 	Name string
 }
 
-// views
-var templates = template.Must(template.ParseFiles("tmpl/topics.html"))
+type Topic struct {
+	ID        int64
+	Name      string
+	SubjectId int64
+}
 
-// temp hard coded topics
-var topics = []Topic{Topic{"Python"}, Topic{"Java"}} // TODO: switch to a database
+type Resource struct {
+	ID             int64
+	Name           string
+	Content        string
+	ThreadID       int64
+	PostedByUserID int64
+}
+
+var templates = template.Must(template.ParseFiles("tmpl/subjects.html", "tmpl/topics.html"))
+
+func handleSubjects(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "subjects.html", GetSubjects())
+}
 
 func handleTopics(w http.ResponseWriter, r *http.Request) {
-	templates.ExecuteTemplate(w, "topics.html", topics)
+	vars := mux.Vars(r)
+	subjectID, err := strconv.ParseInt(vars["subjectID"], 10, 64)
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	templates.ExecuteTemplate(w, "topics.html", GetTopics(subjectID))
 }
 
 func main() {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", handleTopics)
+	r.HandleFunc("/", handleSubjects)
+	r.HandleFunc("/topics/{subjectID}", handleTopics)
 
 	r.HandleFunc("/login/{utorid}", handleLogin)
 	r.HandleFunc("/logout", handleLogout)

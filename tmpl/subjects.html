@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="static/css/base.css" />
+{{range $subject := .}}
+<ul>
+	<li><a href="/topics/{{$subject.ID}}">{{$subject.Name}}</a></li>
+</ul>
+{{end}}

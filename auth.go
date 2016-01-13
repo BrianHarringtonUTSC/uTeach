@@ -48,7 +48,7 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 	utorid, ok := getSessionUTORid(session)
 	msg := "Not logged in"
 	if ok {
-		msg = "logged in as: " + utorid
+		msg = "Logged in as: " + utorid
 	}
 
 	fmt.Fprint(w, msg)
@@ -56,7 +56,8 @@ func handleCheck(w http.ResponseWriter, r *http.Request) {
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, USER_SESSION)
-	session.Values[UTORID] = nil
+	delete(session.Values, UTORID)
+	session.Options.MaxAge = -1
 	session.Save(r, w)
 	fmt.Fprint(w, "Logged out")
 }
