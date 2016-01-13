@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"html/template"
 	"log"
 	"net/http"
@@ -44,6 +45,8 @@ func handleTopics(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	authMiddleWare := alice.New(isAuth)
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", handleSubjects)
@@ -51,7 +54,7 @@ func main() {
 
 	r.HandleFunc("/login/{utorid}", handleLogin)
 	r.HandleFunc("/logout", handleLogout)
-	r.HandleFunc("/check", handleCheck)
+	r.Handle("/user", authMiddleWare.ThenFunc(handleUser))
 
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
