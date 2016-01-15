@@ -1,0 +1,7 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="static/css/base.css" />
+{{range $thread := .}}
+<ul>
+	<li><a href="/thread/{{$thread.ID}}">{{$thread.Title}}</a></li>
+</ul>
+{{end}}

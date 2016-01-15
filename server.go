@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"html/template"
@@ -10,38 +9,47 @@ import (
 	"strconv"
 )
 
-type Subject struct {
-	ID   int64
-	Name string
-}
-
-type Topic struct {
-	ID        int64
-	Name      string
-	SubjectId int64
-}
-
-type Resource struct {
-	ID             int64
-	Name           string
-	Content        string
-	ThreadID       int64
-	PostedByUserID int64
-}
-
-var templates = template.Must(template.ParseFiles("tmpl/subjects.html", "tmpl/topics.html"))
+var templates = template.Must(template.ParseGlob("tmpl/*.html"))
 
 func handleSubjects(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "subjects.html", GetSubjects())
 }
 
 func handleTopics(w http.ResponseWriter, r *http.Request) {
+	// TODO: refactor repeated handle functoins into a generic function
 	vars := mux.Vars(r)
+
 	subjectID, err := strconv.ParseInt(vars["subjectID"], 10, 64)
 	if err != nil {
-		fmt.Fprint(w, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+
 	templates.ExecuteTemplate(w, "topics.html", GetTopics(subjectID))
+}
+
+func handleThreads(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	topicID, err := strconv.ParseInt(vars["topicID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	templates.ExecuteTemplate(w, "threads.html", GetThreads(topicID))
+}
+
+func handleThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	templates.ExecuteTemplate(w, "thread.html", GetThread(threadID))
 }
 
 func main() {
@@ -51,6 +59,8 @@ func main() {
 
 	r.HandleFunc("/", handleSubjects)
 	r.HandleFunc("/topics/{subjectID}", handleTopics)
+	r.HandleFunc("/threads/{topicID}", handleThreads)
+	r.HandleFunc("/thread/{threadID}", handleThread)
 
 	r.HandleFunc("/login/{utorid}", handleLogin)
 	r.HandleFunc("/logout", handleLogout)
