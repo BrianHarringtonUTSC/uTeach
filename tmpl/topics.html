@@ -2,6 +2,6 @@
 <link rel="stylesheet" href="static/css/base.css" />
 {{range $topic := .}}
 <ul>
-	<li><a href="/threads/{{$topic.ID}}">{{$topic.Name}}</a></li>
+	<li><a href="/threads/{{$topic.SubjectName}}/{{$topic.Name}}">{{$topic.Title}}</a></li>
 </ul>
 {{end}}

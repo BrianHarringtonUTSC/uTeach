@@ -1,20 +1,22 @@
 package main
 
 type Subject struct {
-	ID   int64
-	Name string
+	Name  string
+	Title string
 }
 
 type Topic struct {
-	ID        int64
-	Name      string
-	SubjectId int64
+	Name        string
+	Title       string
+	SubjectName string
 }
 
 type Thread struct {
-	ID      int64
-	Title   string
-	Content string
-	TopicID int64
+	ID          int64
+	Name        string
+	Title       string
+	Content     string
+	SubjectName string
+	TopicName   string
 	// PostedByUserID int64
 }
