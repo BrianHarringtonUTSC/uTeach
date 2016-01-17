@@ -1,5 +1,9 @@
 package main
 
+type User struct {
+	UTORid string
+}
+
 type Subject struct {
 	Name  string
 	Title string
@@ -12,11 +16,10 @@ type Topic struct {
 }
 
 type Thread struct {
-	ID          int64
-	Name        string
-	Title       string
-	Content     string
-	SubjectName string
-	TopicName   string
-	// PostedByUserID int64
+	ID             int64
+	Title          string
+	Content        string
+	SubjectName    string
+	TopicName      string
+	PostedByUTORid string
 }

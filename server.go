@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/gob"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 var templates = template.Must(template.ParseGlob("tmpl/*.html"))
@@ -31,8 +33,12 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
-	threadName := vars["threadName"]
-	templates.ExecuteTemplate(w, "thread.html", GetThread(subjectName, topicName, threadName))
+	threadID, err := strconv.Atoi(vars["threadID"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	templates.ExecuteTemplate(w, "thread.html", GetThread(subjectName, topicName, threadID))
 }
 
 func main() {
@@ -44,7 +50,7 @@ func main() {
 	r.HandleFunc("/subjects", handleSubjects)
 	r.HandleFunc("/topics/{subjectName}", handleTopics)
 	r.HandleFunc("/threads/{subjectName}/{topicName}", handleThreads)
-	r.HandleFunc("/thread/{subjectName}/{topicName}/{threadName}", handleThread)
+	r.HandleFunc("/thread/{subjectName}/{topicName}/{threadID}", handleThread)
 
 	r.HandleFunc("/login/{utorid}", handleLogin)
 	r.HandleFunc("/logout", handleLogout)
@@ -52,6 +58,9 @@ func main() {
 
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
+
+	// register gob so that user can be stored in session
+	gob.Register(&User{})
 
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

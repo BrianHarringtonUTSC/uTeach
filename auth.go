@@ -8,26 +8,34 @@ import (
 )
 
 const (
-	UTORID       = "utorid"
+	USER_KEY     = "user"
 	USER_SESSION = "user-session"
 )
 
 var store = sessions.NewCookieStore([]byte("todo-proper-secret")) // TODO: move secret to config
 
-func getSessionUTORid(r *http.Request) (string, bool) {
-	session, _ := store.Get(r, USER_SESSION)
-	utorid, ok := session.Values[UTORID]
-	if !ok {
-		return "", ok
+func GetSession(r *http.Request) (*sessions.Session, error) {
+	return store.Get(r, USER_SESSION)
+}
+
+func getSessionUser(r *http.Request) (*User, bool) {
+	session, err := GetSession(r)
+	if err != nil {
+		return nil, false
 	}
 
-	s, ok := utorid.(string)
-	return s, ok
+	user, ok := session.Values[USER_KEY]
+	if !ok {
+		return nil, ok
+	}
+
+	u, ok := user.(*User)
+	return u, ok
 }
 
 func isAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, ok := getSessionUTORid(r)
+		_, ok := getSessionUser(r)
 
 		if ok {
 			next.ServeHTTP(w, r)
@@ -39,7 +47,7 @@ func isAuth(next http.Handler) http.Handler {
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
-	if _, ok := getSessionUTORid(r); ok {
+	if _, ok := getSessionUser(r); ok {
 		fmt.Fprint(w, "Already logged in")
 		return
 	}
@@ -49,25 +57,41 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: replace this with SAML login for utorid
 
-	session, _ := store.Get(r, USER_SESSION)
-	session.Values[UTORID] = utorid
+	session, err := GetSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	user, ok := GetUser(utorid)
+	if !ok {
+		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	session.Values[USER_KEY] = user
 	session.Save(r, w)
 
 	fmt.Fprint(w, "Logged in as: "+utorid)
 }
 
 func handleUser(w http.ResponseWriter, r *http.Request) {
-	utorid, ok := getSessionUTORid(r)
+	user, ok := getSessionUser(r)
 	if !ok {
 		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		return
 	}
 
-	fmt.Fprint(w, "User: "+utorid)
+	fmt.Fprint(w, "User: "+user.UTORid)
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	session, _ := store.Get(r, USER_SESSION)
-	delete(session.Values, UTORID)
+	session, err := GetSession(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	delete(session.Values, USER_KEY)
 	session.Options.MaxAge = -1
 	session.Save(r, w)
 	fmt.Fprint(w, "Logged out")
