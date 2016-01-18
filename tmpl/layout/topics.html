@@ -1,7 +1,7 @@
-<!DOCTYPE html>
-<link rel="stylesheet" href="static/css/base.css" />
+{{define "content"}}
 {{range $topic := .}}
 <ul>
 	<li><a href="/threads/{{$topic.SubjectName}}/{{$topic.Name}}">{{$topic.Title}}</a></li>
 </ul>
+{{end}}
 {{end}}

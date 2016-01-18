@@ -42,7 +42,6 @@ func isAuth(next http.Handler) http.Handler {
 		} else {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
 		}
-
 	})
 }
 
