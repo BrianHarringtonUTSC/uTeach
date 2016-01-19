@@ -1,7 +1,7 @@
 {{define "content"}}
-{{range $subject := .}}
 <ul>
+	{{range $subject := .Data}}
 	<li><a href="/topics/{{$subject.Name}}">{{$subject.Title}}</a></li>
+	{{end}}
 </ul>
-{{end}}
 {{end}}

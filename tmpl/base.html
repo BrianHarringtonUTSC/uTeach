@@ -7,7 +7,22 @@
     <link rel="stylesheet" href="/static/css/base.css" />
   </head>
   <body>
-    <div id="content">{{template "content" .}}</div>
+  	<header>
+  		<div id="main-title">
+  			<h2><a id="main-title-link" href="/">uTeach</a></h3>
+  		</div>
+	  	<div id="signin-status">
+  		{{if .User}}
+  			Signed in as: {{.User.UTORid}}
+  		{{else}}
+  			Not signed in
+  		{{end}}
+	  	</div>
+  	</header>
+  	<hr>
+  	<main>
+   		<div id="content">{{template "content" .}}</div>
+  	</main>
   </body>
 </html>
 {{end}}

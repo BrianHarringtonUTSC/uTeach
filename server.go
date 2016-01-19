@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"log"
@@ -10,18 +11,18 @@ import (
 )
 
 func handleSubjects(w http.ResponseWriter, r *http.Request) {
-	err := RenderTemplate(w, "subjects.html", GetSubjects())
+	err := RenderTemplate(w, r, "subjects.html", GetSubjects())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprint(w, err.Error())
 	}
 }
 
 func handleTopics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
-	err := RenderTemplate(w, "topics.html", GetTopics(subjectName))
+	err := RenderTemplate(w, r, "topics.html", GetTopics(subjectName))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprint(w, err.Error())
 	}
 }
 
@@ -29,9 +30,9 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
-	err := RenderTemplate(w, "threads.html", GetThreads(subjectName, topicName))
+	err := RenderTemplate(w, r, "threads.html", GetThreads(subjectName, topicName))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprint(w, err.Error())
 	}
 }
 
@@ -44,9 +45,9 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = RenderTemplate(w, "thread.html", GetThread(subjectName, topicName, threadID))
+	err = RenderTemplate(w, r, "thread.html", GetThread(subjectName, topicName, threadID))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Fprint(w, err.Error())
 	}
 }
 

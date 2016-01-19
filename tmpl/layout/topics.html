@@ -1,7 +1,7 @@
 {{define "content"}}
-{{range $topic := .}}
 <ul>
+	{{range $topic := .Data}}
 	<li><a href="/threads/{{$topic.SubjectName}}/{{$topic.Name}}">{{$topic.Title}}</a></li>
+	{{end}}
 </ul>
-{{end}}
 {{end}}
