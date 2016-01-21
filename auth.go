@@ -52,9 +52,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	utorid := vars["utorid"]
+	username := vars["username"]
 
-	// TODO: replace this with SAML login for utorid
+	// TODO: replace this with SAML login for username
 
 	session, err := GetSession(r)
 	if err != nil {
@@ -62,16 +62,20 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, ok := GetUser(utorid)
-	if !ok {
-		http.Error(w, "User not found.", http.StatusNotFound)
+	user, err := GetUser(username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	session.Values[USER_KEY] = user
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusInternalServerError)
+		return
+	}
 
-	fmt.Fprint(w, "Logged in as: "+utorid)
+	fmt.Fprint(w, "Logged in as: "+username)
 }
 
 func handleUser(w http.ResponseWriter, r *http.Request) {
@@ -81,7 +85,7 @@ func handleUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, "User: "+user.UTORid)
+	fmt.Fprint(w, "User: "+user.Username)
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +96,10 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(session.Values, USER_KEY)
 	session.Options.MaxAge = -1
-	session.Save(r, w)
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	fmt.Fprint(w, "Logged out")
 }

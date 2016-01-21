@@ -1,7 +1,7 @@
 package main
 
 type User struct {
-	UTORid string
+	Username string
 }
 
 type Subject struct {
@@ -16,10 +16,11 @@ type Topic struct {
 }
 
 type Thread struct {
-	ID             int64
-	Title          string
-	Content        string
-	SubjectName    string
-	TopicName      string
-	PostedByUTORid string
+	ID               int
+	Title            string
+	Content          string
+	Score            int
+	SubjectName      string
+	TopicName        string
+	PostedByUsername string
 }

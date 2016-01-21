@@ -11,7 +11,13 @@ import (
 )
 
 func handleSubjects(w http.ResponseWriter, r *http.Request) {
-	err := RenderTemplate(w, r, "subjects.html", GetSubjects())
+	subjects, err := GetSubjects()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = RenderTemplate(w, r, "subjects.html", subjects)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
@@ -20,7 +26,14 @@ func handleSubjects(w http.ResponseWriter, r *http.Request) {
 func handleTopics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
-	err := RenderTemplate(w, r, "topics.html", GetTopics(subjectName))
+
+	topics, err := GetTopics(subjectName)
+	if err != nil {
+		http.Error(w, "No topics.", http.StatusInternalServerError)
+		return
+	}
+
+	err = RenderTemplate(w, r, "topics.html", topics)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
@@ -30,7 +43,14 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
-	err := RenderTemplate(w, r, "threads.html", GetThreads(subjectName, topicName))
+
+	threads, err := GetThreads(subjectName, topicName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = RenderTemplate(w, r, "threads.html", threads)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
@@ -38,24 +58,31 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 
 func handleThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	subjectName := vars["subjectName"]
-	topicName := vars["topicName"]
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = RenderTemplate(w, r, "thread.html", GetThread(subjectName, topicName, threadID))
+
+	thread, err := GetThread(threadID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	}
+
+	err = RenderTemplate(w, r, "thread.html", thread)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
 }
 
 func main() {
+	LoadTemplates()
+
+	InitDB()
+	defer DB.Close()
+
 	// allows user to be encoded so that it can be stored in a session
 	gob.Register(&User{})
-
-	LoadTemplates()
 
 	authMiddleWare := alice.New(isAuth)
 
@@ -66,7 +93,7 @@ func main() {
 	router.HandleFunc("/threads/{subjectName}/{topicName}", handleThreads)
 	router.HandleFunc("/thread/{subjectName}/{topicName}/{threadID}", handleThread)
 
-	router.HandleFunc("/login/{utorid}", handleLogin)
+	router.HandleFunc("/login/{username}", handleLogin)
 	router.HandleFunc("/logout", handleLogout)
 	router.Handle("/user", authMiddleWare.ThenFunc(handleUser))
 
