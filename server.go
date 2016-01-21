@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/gob"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"log"
@@ -17,10 +16,7 @@ func handleSubjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = RenderTemplate(w, r, "subjects.html", subjects)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
+	RenderTemplate(w, r, "subjects.html", subjects)
 }
 
 func handleTopics(w http.ResponseWriter, r *http.Request) {
@@ -33,10 +29,7 @@ func handleTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = RenderTemplate(w, r, "topics.html", topics)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
+	RenderTemplate(w, r, "topics.html", topics)
 }
 
 func handleThreads(w http.ResponseWriter, r *http.Request) {
@@ -50,10 +43,7 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = RenderTemplate(w, r, "threads.html", threads)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
+	RenderTemplate(w, r, "threads.html", threads)
 }
 
 func handleThread(w http.ResponseWriter, r *http.Request) {
@@ -69,10 +59,7 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 	}
 
-	err = RenderTemplate(w, r, "thread.html", thread)
-	if err != nil {
-		fmt.Fprint(w, err.Error())
-	}
+	RenderTemplate(w, r, "thread.html", thread)
 }
 
 func main() {

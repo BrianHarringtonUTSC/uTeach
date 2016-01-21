@@ -107,7 +107,8 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 
 	for rows.Next() {
 		thread := &Thread{}
-		rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.Score, &thread.SubjectName, &thread.TopicName, &thread.PostedByUsername)
+		rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.Score, &thread.SubjectName, &thread.TopicName,
+			&thread.PostedByUsername)
 		threads = append(threads, thread)
 	}
 	return
@@ -115,6 +116,7 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 
 func GetThread(threadID int) (*Thread, error) {
 	thread := &Thread{}
-	err := DB.QueryRow("SELECT * FROM thread WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content, &thread.Score, &thread.SubjectName, &thread.TopicName, &thread.PostedByUsername)
-	return thread, err // &Thread{1, "Some random tutorial on for loops", "Here's a random link to said random tutorial on for loops", "python", "for_loops", "umair"}
+	err := DB.QueryRow("SELECT * FROM thread WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
+		&thread.Score, &thread.SubjectName, &thread.TopicName, &thread.PostedByUsername)
+	return thread, err
 }
