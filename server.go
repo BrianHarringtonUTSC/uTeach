@@ -25,7 +25,7 @@ func handleTopics(w http.ResponseWriter, r *http.Request) {
 
 	topics, err := GetTopics(subjectName)
 	if err != nil {
-		http.Error(w, "No topics.", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -56,7 +56,7 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 
 	thread, err := GetThread(threadID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusNotFound)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	RenderTemplate(w, r, "thread.html", thread)
