@@ -15,7 +15,7 @@ func InitDB() (err error) {
 
 	// ensure all required tables exist
 	_, err = DB.Exec(`
-		CREATE TABLE IF NOT EXISTS user(
+		CREATE TABLE IF NOT EXISTS users(
 			username TEXT PRIMARY KEY
 		)`)
 	if err != nil {
@@ -23,37 +23,48 @@ func InitDB() (err error) {
 	}
 
 	_, err = DB.Exec(`
-		CREATE TABLE IF NOT EXISTS subject(
+		CREATE TABLE IF NOT EXISTS subjects(
 			name TEXT PRIMARY KEY,
-			title TEXT
+			title TEXT NOT NULL
 		)`)
 	if err != nil {
 		return
 	}
 
 	_, err = DB.Exec(`
-		CREATE TABLE IF NOT EXISTS topic(
-			name TEXT,
-			title TEXT,
-			subjectName TEXT,
-			PRIMARY KEY(name, subjectName)
-			FOREIGN KEY(subjectName) REFERENCES subject(name)
+		CREATE TABLE IF NOT EXISTS topics(
+			name TEXT NOT NULL,
+			title TEXT NOT NULL,
+			subject_name TEXT NOT NULL,
+			PRIMARY KEY(name, subject_name)
+			FOREIGN KEY(subject_name) REFERENCES subjects(name)
 		)`)
 	if err != nil {
 		return
 	}
 
 	_, err = DB.Exec(`
-		CREATE TABLE IF NOT EXISTS thread(
+		CREATE TABLE IF NOT EXISTS threads(
 			id INTEGER PRIMARY KEY,
-			title TEXT,
-			content TEXT,
-			score INTEGER,
-			subjectName TEXT,
-			topicName TEXT,
-			postedByUsername TEXT,
-			FOREIGN KEY(subjectName, topicName) REFERENCES topic(subjectName, name)
-			FOREIGN KEY(postedByUsername) REFERENCES user(username)
+			title TEXT NOT NULL,
+			content TEXT NOT NULL,
+			score INTEGER NOT NULL,
+			subject_name TEXT NOT NULL,
+			topic_name TEXT NOT NULL,
+			created_by_username TEXT NOT NULL,
+			FOREIGN KEY(subject_name, topic_name) REFERENCES topics(subject_name, name)
+			FOREIGN KEY(created_by_username) REFERENCES users(username)
+		)`)
+	if err != nil {
+		return
+	}
+
+	_, err = DB.Exec(`
+		CREATE TABLE IF NOT EXISTS upvotes(
+			username TEXT NOT NULL
+			thread_id INTEGER NOT NULL,
+			FOREIGN KEY(username) REFERENCES users(username)
+			FOREIGN KEY(thread_id) REFERENCES threads(id)
 		)`)
 	if err != nil {
 		return
@@ -64,12 +75,12 @@ func InitDB() (err error) {
 
 func GetUser(username string) (*User, error) {
 	user := &User{}
-	err := DB.QueryRow("SELECT * FROM user WHERE username=?", username).Scan(&user.Username)
+	err := DB.QueryRow("SELECT * FROM users WHERE username=?", username).Scan(&user.Username)
 	return user, err
 }
 
 func GetSubjects() (subjects []*Subject, err error) {
-	rows, err := DB.Query("SELECT * FROM subject")
+	rows, err := DB.Query("SELECT * FROM subjects")
 	if err != nil {
 		return
 	}
@@ -84,7 +95,7 @@ func GetSubjects() (subjects []*Subject, err error) {
 }
 
 func GetTopics(subjectName string) (topics []*Topic, err error) {
-	rows, err := DB.Query("SELECT * FROM topic WHERE subjectName=?", subjectName)
+	rows, err := DB.Query("SELECT * FROM topics WHERE subject_name=?", subjectName)
 	if err != nil {
 		return
 	}
@@ -99,7 +110,7 @@ func GetTopics(subjectName string) (topics []*Topic, err error) {
 }
 
 func GetThreads(subjectName string, topicName string) (threads []*Thread, err error) {
-	rows, err := DB.Query("SELECT * FROM thread WHERE subjectName=? AND topicName=?", subjectName, topicName)
+	rows, err := DB.Query("SELECT * FROM threads WHERE subject_name=? AND topic_name=?", subjectName, topicName)
 	if err != nil {
 		return
 	}
@@ -108,7 +119,7 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 	for rows.Next() {
 		thread := &Thread{}
 		rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.Score, &thread.SubjectName, &thread.TopicName,
-			&thread.PostedByUsername)
+			&thread.CreatedByUsername)
 		threads = append(threads, thread)
 	}
 	return
@@ -116,7 +127,7 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 
 func GetThread(threadID int) (*Thread, error) {
 	thread := &Thread{}
-	err := DB.QueryRow("SELECT * FROM thread WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
-		&thread.Score, &thread.SubjectName, &thread.TopicName, &thread.PostedByUsername)
+	err := DB.QueryRow("SELECT * FROM threads WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
+		&thread.Score, &thread.SubjectName, &thread.TopicName, &thread.CreatedByUsername)
 	return thread, err
 }

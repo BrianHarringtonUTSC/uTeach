@@ -16,11 +16,11 @@ type Topic struct {
 }
 
 type Thread struct {
-	ID               int
-	Title            string
-	Content          string
-	Score            int
-	SubjectName      string
-	TopicName        string
-	PostedByUsername string
+	ID                int
+	Title             string
+	Content           string
+	Score             int
+	SubjectName       string
+	TopicName         string
+	CreatedByUsername string
 }

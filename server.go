@@ -57,6 +57,7 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 	thread, err := GetThread(threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	RenderTemplate(w, r, "thread.html", thread)
