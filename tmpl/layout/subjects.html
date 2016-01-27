@@ -1,6 +1,6 @@
 {{define "content"}}
 <ul>
-	{{range $subject := .Data}}
+	{{range $subject := .Subjects}}
 	<li><a href="/topics/{{$subject.Name}}">{{$subject.Title}}</a></li>
 	{{end}}
 </ul>

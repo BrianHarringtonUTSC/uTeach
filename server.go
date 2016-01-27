@@ -17,7 +17,8 @@ func handleSubjects(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RenderTemplate(w, r, "subjects.html", subjects)
+	data := map[string]interface{}{"Subjects": subjects}
+	RenderTemplate(w, r, "subjects.html", data)
 }
 
 func handleTopics(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +31,8 @@ func handleTopics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RenderTemplate(w, r, "topics.html", topics)
+	data := map[string]interface{}{"Topics": topics}
+	RenderTemplate(w, r, "topics.html", data)
 }
 
 func handleThreads(w http.ResponseWriter, r *http.Request) {
@@ -54,13 +56,7 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	data := struct {
-		Threads              []*Thread
-		UserUpvotedThreadIDs map[int]bool
-	}{
-		threads,
-		userUpvotedThreadIDs,
-	}
+	data := map[string]interface{}{"Threads": threads, "UserUpvotedThreadIDs": userUpvotedThreadIDs}
 	RenderTemplate(w, r, "threads.html", data)
 }
 
@@ -78,7 +74,8 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RenderTemplate(w, r, "thread.html", thread)
+	data := map[string]interface{}{"Thread": thread}
+	RenderTemplate(w, r, "thread.html", data)
 }
 
 func handleUpvote(w http.ResponseWriter, r *http.Request, fn func(string, int) error) {

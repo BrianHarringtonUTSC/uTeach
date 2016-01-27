@@ -23,7 +23,7 @@ func LoadTemplates() {
 	}
 }
 
-func RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data interface{}) {
+func RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
 	tmpl, ok := templates[name]
 	if !ok {
 		http.Error(w, "The template %s does not exist.", http.StatusInternalServerError)
@@ -36,16 +36,9 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data in
 		user = nil
 	}
 
-	// anonymous struct that adds session user for all templates to access
-	templateData := struct {
-		Data interface{}
-		User *User
-	}{
-		data,
-		user,
-	}
+	data["User"] = user
 
-	err := tmpl.ExecuteTemplate(w, "base", templateData)
+	err := tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
