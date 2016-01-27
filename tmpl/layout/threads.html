@@ -1,7 +1,21 @@
 {{define "content"}}
-<ul>
-	{{range $thread := .Data}}
-	<li><a href="/thread/{{$thread.SubjectName}}/{{$thread.TopicName}}/{{$thread.ID}}">{{$thread.Title}}</a></li>
+{{$base := .}}
+<ul id="threads">
+	{{range $thread := .Data.Threads}}
+	<li>
+		<a href="/thread/{{$thread.SubjectName}}/{{$thread.TopicName}}/{{$thread.ID}}">{{.Title}}</a>
+		<br />
+
+		{{.Score}} |
+		{{if $base.User}}
+			{{if index $base.Data.UserUpvotedThreadIDs .ID}}
+				<button class="thread_remove_vote_button" type="button" value="{{.ID}}">remove vote</button>
+			{{else}}
+				<button class="thread_upvote_button" type="button" value="{{.ID}}">upvote</button>
+			{{end}}
+		{{end}}
+	</li>
+
 	{{end}}
 </ul>
 {{end}}

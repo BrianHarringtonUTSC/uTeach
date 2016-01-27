@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"log"
@@ -43,7 +44,24 @@ func handleThreads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RenderTemplate(w, r, "threads.html", threads)
+	userUpvotedThreadIDs := make(map[int]bool)
+	user, ok := getSessionUser(r)
+	if ok {
+		userUpvotedThreadIDs, err = GetUserUpvotedThreadIDs(user.Username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	data := struct {
+		Threads              []*Thread
+		UserUpvotedThreadIDs map[int]bool
+	}{
+		threads,
+		userUpvotedThreadIDs,
+	}
+	RenderTemplate(w, r, "threads.html", data)
 }
 
 func handleThread(w http.ResponseWriter, r *http.Request) {
@@ -63,11 +81,43 @@ func handleThread(w http.ResponseWriter, r *http.Request) {
 	RenderTemplate(w, r, "thread.html", thread)
 }
 
+func handleUpvote(w http.ResponseWriter, r *http.Request, fn func(string, int) error) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.Atoi(vars["threadID"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, ok := getSessionUser(r)
+	if !ok {
+		http.Error(w, "Failed to get user", http.StatusInternalServerError)
+		return
+	}
+
+	err = fn(user.Username, threadID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+func handleAddUpvote(w http.ResponseWriter, r *http.Request) {
+	handleUpvote(w, r, AddUpVote)
+}
+
+func handleRemoveUpvote(w http.ResponseWriter, r *http.Request) {
+	handleUpvote(w, r, RemoveUpvote)
+}
+
 func main() {
 	LoadTemplates()
 
-	InitDB()
-	defer DB.Close()
+	err := InitDB()
+	if err != nil {
+		panic(err)
+	}
 
 	// allows user to be encoded so that it can be stored in a session
 	gob.Register(&User{})
@@ -84,6 +134,9 @@ func main() {
 	router.HandleFunc("/login/{username}", handleLogin)
 	router.HandleFunc("/logout", handleLogout)
 	router.Handle("/user", authMiddleWare.ThenFunc(handleUser))
+
+	router.Handle("/upvote/{threadID}", authMiddleWare.ThenFunc(handleAddUpvote)).Methods("POST")
+	router.Handle("/upvote/{threadID}", authMiddleWare.ThenFunc(handleRemoveUpvote)).Methods("DELETE")
 
 	http.Handle("/", router)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))

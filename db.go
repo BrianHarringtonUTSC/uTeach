@@ -48,7 +48,6 @@ func InitDB() (err error) {
 			id INTEGER PRIMARY KEY,
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
-			score INTEGER NOT NULL,
 			subject_name TEXT NOT NULL,
 			topic_name TEXT NOT NULL,
 			created_by_username TEXT NOT NULL,
@@ -61,7 +60,7 @@ func InitDB() (err error) {
 
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS upvotes(
-			username TEXT NOT NULL
+			username TEXT NOT NULL,
 			thread_id INTEGER NOT NULL,
 			FOREIGN KEY(username) REFERENCES users(username)
 			FOREIGN KEY(thread_id) REFERENCES threads(id)
@@ -109,6 +108,11 @@ func GetTopics(subjectName string) (topics []*Topic, err error) {
 	return
 }
 
+func GetThreadScore(threadID int) (score int, err error) {
+	err = DB.QueryRow("SELECT COUNT(*) FROM upvotes WHERE thread_id=?", threadID).Scan(&score)
+	return
+}
+
 func GetThreads(subjectName string, topicName string) (threads []*Thread, err error) {
 	rows, err := DB.Query("SELECT * FROM threads WHERE subject_name=? AND topic_name=?", subjectName, topicName)
 	if err != nil {
@@ -118,8 +122,14 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 
 	for rows.Next() {
 		thread := &Thread{}
-		rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.Score, &thread.SubjectName, &thread.TopicName,
+		rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.SubjectName, &thread.TopicName,
 			&thread.CreatedByUsername)
+
+		thread.Score, err = GetThreadScore(thread.ID)
+		if err != nil {
+			return
+		}
+
 		threads = append(threads, thread)
 	}
 	return
@@ -128,6 +138,49 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 func GetThread(threadID int) (*Thread, error) {
 	thread := &Thread{}
 	err := DB.QueryRow("SELECT * FROM threads WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
-		&thread.Score, &thread.SubjectName, &thread.TopicName, &thread.CreatedByUsername)
+		&thread.SubjectName, &thread.TopicName, &thread.CreatedByUsername)
+	if err != nil {
+		return nil, err
+	}
+
+	thread.Score, err = GetThreadScore(thread.ID)
 	return thread, err
+}
+
+func GetUserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error) {
+	rows, err := DB.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+
+	threadIDs = make(map[int]bool)
+	for rows.Next() {
+		var threadID int
+		rows.Scan(&threadID)
+		threadIDs[threadID] = true
+	}
+	return
+}
+
+func AddUpVote(username string, threadID int) (err error) {
+	stmt, err := DB.Prepare("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(username, threadID)
+	return
+}
+
+func RemoveUpvote(username string, threadID int) (err error) {
+	stmt, err := DB.Prepare("DELETE FROM upvotes where username=? AND thread_id=?")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(username, threadID)
+	return
 }
