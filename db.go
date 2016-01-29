@@ -45,7 +45,6 @@ func InitDB() (err error) {
 
 	_, err = DB.Exec(`
 		CREATE TABLE IF NOT EXISTS threads(
-			id INTEGER PRIMARY KEY,
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
 			subject_name TEXT NOT NULL,
@@ -63,7 +62,7 @@ func InitDB() (err error) {
 			username TEXT NOT NULL,
 			thread_id INTEGER NOT NULL,
 			FOREIGN KEY(username) REFERENCES users(username)
-			FOREIGN KEY(thread_id) REFERENCES threads(id)
+			FOREIGN KEY(thread_id) REFERENCES threads(rowid)
 		)`)
 	if err != nil {
 		return
@@ -114,7 +113,7 @@ func GetThreadScore(threadID int) (score int, err error) {
 }
 
 func GetThreads(subjectName string, topicName string) (threads []*Thread, err error) {
-	rows, err := DB.Query("SELECT * FROM threads WHERE subject_name=? AND topic_name=?", subjectName, topicName)
+	rows, err := DB.Query("SELECT rowid, * FROM threads WHERE subject_name=? AND topic_name=?", subjectName, topicName)
 	if err != nil {
 		return
 	}
@@ -137,7 +136,7 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 
 func GetThread(threadID int) (*Thread, error) {
 	thread := &Thread{}
-	err := DB.QueryRow("SELECT * FROM threads WHERE id=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
+	err := DB.QueryRow("SELECT rowid, * FROM threads WHERE rowid=?", threadID).Scan(&thread.ID, &thread.Title, &thread.Content,
 		&thread.SubjectName, &thread.TopicName, &thread.CreatedByUsername)
 	if err != nil {
 		return nil, err
