@@ -6,8 +6,9 @@
 		<a href="/thread/{{$thread.SubjectName}}/{{$thread.TopicName}}/{{$thread.ID}}">{{$thread.Title}}</a>
 		<br />
 
-		{{$thread.Score}} |
+		{{$thread.Score}}
 		{{if $base.User}}
+			|
 			{{if index $base.UserUpvotedThreadIDs $thread.ID}}
 				<button class="thread_remove_vote_button" type="button" value="{{$thread.ID}}">remove vote</button>
 			{{else}}
