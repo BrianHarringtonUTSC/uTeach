@@ -1,4 +1,4 @@
-package main
+	package main
 
 import (
 	"fmt"
@@ -118,6 +118,7 @@ func handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, 
 
 	err = upvoteFn(user.Username, threadID)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
