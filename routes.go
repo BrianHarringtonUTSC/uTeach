@@ -44,8 +44,7 @@ func handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userUpvotedThreadIDs := make(map[int]bool)
-	user, ok := GetSessionUser(r)
-	if ok {
+	if user, ok := GetSessionUser(r); ok {
 		userUpvotedThreadIDs, err = GetUserUpvotedThreadIDs(user.Username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -103,7 +102,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged out")
 }
 
-func handleUpvote(w http.ResponseWriter, r *http.Request, fn func(string, int) error) {
+func handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
@@ -117,7 +116,7 @@ func handleUpvote(w http.ResponseWriter, r *http.Request, fn func(string, int) e
 		return
 	}
 
-	err = fn(user.Username, threadID)
+	err = upvoteFn(user.Username, threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -125,6 +124,7 @@ func handleUpvote(w http.ResponseWriter, r *http.Request, fn func(string, int) e
 
 	w.WriteHeader(http.StatusOK)
 }
+
 func handleAddUpvote(w http.ResponseWriter, r *http.Request) {
 	handleUpvote(w, r, AddUpVote)
 }

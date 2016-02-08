@@ -6,12 +6,12 @@ import (
 
 func AuthorizedHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, ok := GetSessionUser(r)
 
-		if ok {
-			next.ServeHTTP(w, r)
-		} else {
+		if _, ok := GetSessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
+			return
 		}
+
+		next.ServeHTTP(w, r)
 	})
 }
