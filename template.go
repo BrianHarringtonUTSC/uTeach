@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 )
 
-var templates = make(map[string]*template.Template)
+func LoadTemplates() map[string]*template.Template {
+	templates := make(map[string]*template.Template)
 
-func LoadTemplates() {
 	baseTemplate := template.Must(template.ParseFiles("tmpl/base.html"))
 
 	layoutFiles, _ := filepath.Glob("tmpl/layout/*.html")
@@ -20,16 +20,18 @@ func LoadTemplates() {
 		}
 		templates[filepath.Base(layoutFile)] = template.Must(baseTemplateCopy.ParseFiles(layoutFile))
 	}
+
+	return templates
 }
 
-func RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
-	tmpl, ok := templates[name]
+func (a *App) RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
+	tmpl, ok := a.templates[name]
 	if !ok {
-		http.Error(w, fmt.Sprintf("The template %s does not exist.", tmpl), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("The template %s does not exist.", name), http.StatusInternalServerError)
 		return
 	}
 
-	user, ok := GetSessionUser(r)
+	user, ok := a.store.SessionUser(r)
 	if !ok {
 		// if failed to get user, make sure user is nil so templates don't render a user
 		user = nil

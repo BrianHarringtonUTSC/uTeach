@@ -1,4 +1,4 @@
-	package main
+package main
 
 import (
 	"fmt"
@@ -7,45 +7,45 @@ import (
 	"strconv"
 )
 
-func handleGetSubjects(w http.ResponseWriter, r *http.Request) {
-	subjects, err := GetSubjects()
+func (a *App) handleGetSubjects(w http.ResponseWriter, r *http.Request) {
+	subjects, err := a.db.GetSubjects()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Subjects": subjects}
-	RenderTemplate(w, r, "subjects.html", data)
+	a.RenderTemplate(w, r, "subjects.html", data)
 }
 
-func handleGetTopics(w http.ResponseWriter, r *http.Request) {
+func (a *App) handleGetTopics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 
-	topics, err := GetTopics(subjectName)
+	topics, err := a.db.GetTopics(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Topics": topics}
-	RenderTemplate(w, r, "topics.html", data)
+	a.RenderTemplate(w, r, "topics.html", data)
 }
 
-func handleGetThreads(w http.ResponseWriter, r *http.Request) {
+func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
 
-	threads, err := GetThreads(subjectName, topicName)
+	threads, err := a.db.GetThreads(subjectName, topicName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	userUpvotedThreadIDs := make(map[int]bool)
-	if user, ok := GetSessionUser(r); ok {
-		userUpvotedThreadIDs, err = GetUserUpvotedThreadIDs(user.Username)
+	if user, ok := a.store.SessionUser(r); ok {
+		userUpvotedThreadIDs, err = a.db.GetUserUpvotedThreadIDs(user.Username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -53,10 +53,10 @@ func handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := map[string]interface{}{"Threads": threads, "UserUpvotedThreadIDs": userUpvotedThreadIDs}
-	RenderTemplate(w, r, "threads.html", data)
+	a.RenderTemplate(w, r, "threads.html", data)
 }
 
-func handleGetThread(w http.ResponseWriter, r *http.Request) {
+func (a *App) handleGetThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
@@ -64,18 +64,18 @@ func handleGetThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thread, err := GetThread(threadID)
+	thread, err := a.db.GetThread(threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Thread": thread}
-	RenderTemplate(w, r, "thread.html", data)
+	a.RenderTemplate(w, r, "thread.html", data)
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
-	if _, ok := GetSessionUser(r); ok {
+func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
+	if _, ok := a.store.SessionUser(r); ok {
 		fmt.Fprint(w, "Already logged in")
 		return
 	}
@@ -85,7 +85,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: replace this with SAML login for username
 
-	err := NewUserSession(w, r, username)
+	err := a.store.NewUserSession(w, r, username, a.db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,8 +93,8 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged in as: "+username)
 }
 
-func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := DeleteUserSession(w, r)
+func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
+	err := a.store.DeleteUserSession(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -102,7 +102,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged out")
 }
 
-func handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
+func (a *App) handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
@@ -110,7 +110,7 @@ func handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, 
 		return
 	}
 
-	user, ok := GetSessionUser(r)
+	user, ok := a.store.SessionUser(r)
 	if !ok {
 		http.Error(w, "Failed to get user", http.StatusInternalServerError)
 		return
@@ -126,10 +126,10 @@ func handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, 
 	w.WriteHeader(http.StatusOK)
 }
 
-func handleAddUpvote(w http.ResponseWriter, r *http.Request) {
-	handleUpvote(w, r, AddUpVote)
+func (a *App) handleAddUpvote(w http.ResponseWriter, r *http.Request) {
+	a.handleUpvote(w, r, a.db.AddUpVote)
 }
 
-func handleRemoveUpvote(w http.ResponseWriter, r *http.Request) {
-	handleUpvote(w, r, RemoveUpvote)
+func (a *App) handleRemoveUpvote(w http.ResponseWriter, r *http.Request) {
+	a.handleUpvote(w, r, a.db.RemoveUpvote)
 }

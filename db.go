@@ -5,33 +5,38 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var DB *sql.DB
+type DB struct {
+	*sql.DB
+}
 
-func InitDB() (err error) {
-	DB, err = sql.Open("sqlite3", "./uteach.db")
+func panicOnErr(err error) {
 	if err != nil {
-		return
+		panic(err)
 	}
+}
+
+func InitDB() *DB {
+
+	sqlDb, err := sql.Open("sqlite3", "./uteach.db")
+	panicOnErr(err)
+
+	db := &DB{sqlDb}
 
 	// ensure all required tables exist
-	_, err = DB.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS users(
 			username TEXT PRIMARY KEY
 		)`)
-	if err != nil {
-		return
-	}
+	panicOnErr(err)
 
-	_, err = DB.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS subjects(
 			name TEXT PRIMARY KEY,
 			title TEXT NOT NULL
 		)`)
-	if err != nil {
-		return
-	}
+	panicOnErr(err)
 
-	_, err = DB.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS topics(
 			name TEXT NOT NULL,
 			title TEXT NOT NULL,
@@ -39,11 +44,9 @@ func InitDB() (err error) {
 			PRIMARY KEY(name, subject_name)
 			FOREIGN KEY(subject_name) REFERENCES subjects(name)
 		)`)
-	if err != nil {
-		return
-	}
+	panicOnErr(err)
 
-	_, err = DB.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS threads(
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
@@ -53,32 +56,28 @@ func InitDB() (err error) {
 			FOREIGN KEY(subject_name, topic_name) REFERENCES topics(subject_name, name)
 			FOREIGN KEY(created_by_username) REFERENCES users(username)
 		)`)
-	if err != nil {
-		return
-	}
+	panicOnErr(err)
 
-	_, err = DB.Exec(`
+	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS upvotes(
 			username TEXT NOT NULL,
 			thread_id INTEGER NOT NULL,
 			FOREIGN KEY(username) REFERENCES users(username)
 			FOREIGN KEY(thread_id) REFERENCES threads(rowid)
 		)`)
-	if err != nil {
-		return
-	}
+	panicOnErr(err)
 
-	return
+	return db
 }
 
-func GetUser(username string) (*User, error) {
+func (db *DB) GetUser(username string) (*User, error) {
 	user := &User{}
-	err := DB.QueryRow("SELECT * FROM users WHERE username=?", username).Scan(&user.Username)
+	err := db.QueryRow("SELECT * FROM users WHERE username=?", username).Scan(&user.Username)
 	return user, err
 }
 
-func GetSubjects() (subjects []*Subject, err error) {
-	rows, err := DB.Query("SELECT * FROM subjects")
+func (db *DB) GetSubjects() (subjects []*Subject, err error) {
+	rows, err := db.Query("SELECT * FROM subjects")
 	if err != nil {
 		return
 	}
@@ -92,8 +91,8 @@ func GetSubjects() (subjects []*Subject, err error) {
 	return
 }
 
-func GetTopics(subjectName string) (topics []*Topic, err error) {
-	rows, err := DB.Query("SELECT * FROM topics WHERE subject_name=?", subjectName)
+func (db *DB) GetTopics(subjectName string) (topics []*Topic, err error) {
+	rows, err := db.Query("SELECT * FROM topics WHERE subject_name=?", subjectName)
 	if err != nil {
 		return
 	}
@@ -107,13 +106,13 @@ func GetTopics(subjectName string) (topics []*Topic, err error) {
 	return
 }
 
-func GetThreads(subjectName string, topicName string) (threads []*Thread, err error) {
+func (db *DB) GetThreads(subjectName string, topicName string) (threads []*Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id)
 			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
 			  WHERE threads.subject_name=? AND threads.topic_name=?
 			  GROUP BY threads.rowid
 			  ORDER BY count(upvotes.thread_id) DESC`
-	rows, err := DB.Query(query, subjectName, topicName)
+	rows, err := db.Query(query, subjectName, topicName)
 	if err != nil {
 		return
 	}
@@ -128,25 +127,25 @@ func GetThreads(subjectName string, topicName string) (threads []*Thread, err er
 	return
 }
 
-func GetThreadScore(threadID int) (score int, err error) {
- 	err = DB.QueryRow("SELECT COUNT(*) FROM upvotes WHERE thread_id=?", threadID).Scan(&score)
- 	return
- }
+func (db *DB) GetThreadScore(threadID int) (score int, err error) {
+	err = db.QueryRow("SELECT COUNT(*) FROM upvotes WHERE thread_id=?", threadID).Scan(&score)
+	return
+}
 
-func GetThread(threadID int) (*Thread, error) {
+func (db *DB) GetThread(threadID int) (*Thread, error) {
 	thread := &Thread{}
-	err := DB.QueryRow("SELECT rowid, * FROM threads WHERE rowid=?", threadID).Scan(&thread.ID, &thread.Title,
+	err := db.QueryRow("SELECT rowid, * FROM threads WHERE rowid=?", threadID).Scan(&thread.ID, &thread.Title,
 		&thread.Content, &thread.SubjectName, &thread.TopicName, &thread.CreatedByUsername)
 	if err != nil {
 		return nil, err
 	}
 
-	thread.Score, err = GetThreadScore(thread.ID)
+	thread.Score, err = db.GetThreadScore(thread.ID)
 	return thread, err
 }
 
-func GetUserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error) {
-	rows, err := DB.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
+func (db *DB) GetUserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error) {
+	rows, err := db.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
 	if err != nil {
 		return
 	}
@@ -161,8 +160,8 @@ func GetUserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error
 	return
 }
 
-func runUpvoteQuery(query string, username string, threadID int) (err error) {
-	stmt, err := DB.Prepare(query)
+func (db *DB) runUpvoteQuery(query string, username string, threadID int) (err error) {
+	stmt, err := db.Prepare(query)
 	if err != nil {
 		return
 	}
@@ -172,10 +171,10 @@ func runUpvoteQuery(query string, username string, threadID int) (err error) {
 	return
 }
 
-func AddUpVote(username string, threadID int) error {
-	return runUpvoteQuery("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
+func (db *DB) AddUpVote(username string, threadID int) error {
+	return db.runUpvoteQuery("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
 }
 
-func RemoveUpvote(username string, threadID int) error {
-	return runUpvoteQuery("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
+func (db *DB) RemoveUpvote(username string, threadID int) error {
+	return db.runUpvoteQuery("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
 }
