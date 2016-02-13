@@ -4,6 +4,7 @@ import (
 	"net/http"
 )
 
+// AuthorizedHandler ensures that the next handler is only accessible by users that are logged in.
 func (a *App) AuthorizedHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 

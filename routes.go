@@ -8,7 +8,7 @@ import (
 )
 
 func (a *App) handleGetSubjects(w http.ResponseWriter, r *http.Request) {
-	subjects, err := a.db.GetSubjects()
+	subjects, err := a.db.Subjects()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -22,7 +22,7 @@ func (a *App) handleGetTopics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 
-	topics, err := a.db.GetTopics(subjectName)
+	topics, err := a.db.Topics(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -37,7 +37,7 @@ func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
 
-	threads, err := a.db.GetThreads(subjectName, topicName)
+	threads, err := a.db.Threads(subjectName, topicName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,7 +45,7 @@ func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 
 	userUpvotedThreadIDs := make(map[int]bool)
 	if user, ok := a.store.SessionUser(r); ok {
-		userUpvotedThreadIDs, err = a.db.GetUserUpvotedThreadIDs(user.Username)
+		userUpvotedThreadIDs, err = a.db.UserUpvotedThreadIDs(user.Username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -64,7 +64,7 @@ func (a *App) handleGetThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thread, err := a.db.GetThread(threadID)
+	thread, err := a.db.Thread(threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

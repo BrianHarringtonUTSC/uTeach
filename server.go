@@ -1,3 +1,4 @@
+// Package uTeach implements a web app which is a platform for sharing educational material and resources.
 package main
 
 import (
@@ -9,19 +10,22 @@ import (
 	"net/http"
 )
 
+// App is the application context, the central struct binding all components of the app together.
 type App struct {
 	db        *DB
 	store     *Store
 	templates map[string]*template.Template
 }
 
-func Init() *App {
+// NewApp initializes a new App and performs required setup to run.
+func NewApp() *App {
+
 	// allows user to be encoded so that it can be stored in a session
 	gob.Register(&User{})
 
-	db := InitDB()
+	db := NewDB("./uteach.db")
 	store := NewStore("todo-proper-secret")
-	templates := LoadTemplates()
+	templates := LoadTemplates("tmpl/")
 
 	app := &App{db, store, templates}
 
@@ -29,7 +33,7 @@ func Init() *App {
 }
 
 func main() {
-	app := Init()
+	app := NewApp()
 
 	authMiddleWare := alice.New(app.AuthorizedHandler)
 

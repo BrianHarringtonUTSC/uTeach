@@ -7,12 +7,15 @@ import (
 	"path/filepath"
 )
 
-func LoadTemplates() map[string]*template.Template {
+// LoadTemplates gets all templates at path into a mapping of the template name to its template object.
+// The path should contain a file "base.html" which is the base template.
+// It should also contain a "layout" subfolder which contains child templates to join with the base.
+func LoadTemplates(path string) map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 
-	baseTemplate := template.Must(template.ParseFiles("tmpl/base.html"))
+	baseTemplate := template.Must(template.ParseFiles(filepath.Join(path, "base.html")))
 
-	layoutFiles, _ := filepath.Glob("tmpl/layout/*.html")
+	layoutFiles, _ := filepath.Glob(filepath.Join(path, "layout/*.html"))
 	for _, layoutFile := range layoutFiles {
 		baseTemplateCopy, err := baseTemplate.Clone()
 		if err != nil {
@@ -24,6 +27,8 @@ func LoadTemplates() map[string]*template.Template {
 	return templates
 }
 
+// RenderTemplate renders the template at name with data.
+// It also adds the session user to the data for templates to access.
 func (a *App) RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
 	tmpl, ok := a.templates[name]
 	if !ok {
