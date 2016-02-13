@@ -36,13 +36,13 @@ func (a *App) RenderTemplate(w http.ResponseWriter, r *http.Request, name string
 		return
 	}
 
-	user, ok := a.store.SessionUser(r)
-	if !ok {
-		// if failed to get user, make sure user is nil so templates don't render a user
-		user = nil
+	// add user to data
+	if user, ok := a.store.SessionUser(r); ok {
+		data["User"] = user
+	} else {
+		// make sure user is nil so templates don't render a user
+		data["User"] = nil
 	}
-
-	data["User"] = user
 
 	err := tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
