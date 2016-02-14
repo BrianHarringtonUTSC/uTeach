@@ -44,7 +44,7 @@ func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username 
 // SessionUser gets the user stored in the user session.
 // If there is a User stored in the session and can be retrieved it returns the user and true, else the boolean will be
 // false.
-func (s *Store) SessionUser(r *http.Request) (user *User, ok bool) {
+func (s *Store) SessionUser(r *http.Request) (*User, bool) {
 	session, err := s.getUserSession(r)
 	if err != nil {
 		return nil, false
@@ -55,8 +55,8 @@ func (s *Store) SessionUser(r *http.Request) (user *User, ok bool) {
 		return nil, false
 	}
 
-	user, ok = u.(*User)
-	return
+	user, ok := u.(*User)
+	return user, ok
 }
 
 // DeleteUserSession deletes the user session.

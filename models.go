@@ -15,16 +15,16 @@ type Subject struct {
 type Topic struct {
 	Name        string
 	Title       string
-	SubjectName string
+	SubjectName string `db:"subject_name"`
 }
 
 // Thread is a post inside of a topic.
 type Thread struct {
-	ID                int
+	ID                int `db:"rowid"`
 	Title             string
 	Content           string
 	Score             int
-	SubjectName       string
-	TopicName         string
-	CreatedByUsername string
+	SubjectName       string `db:"subject_name"`
+	TopicName         string `db:"topic_name"`
+	CreatedByUsername string `db:"created_by_username"`
 }
