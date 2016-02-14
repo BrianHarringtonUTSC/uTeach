@@ -13,8 +13,8 @@
   			<h2><a id="main-title-link" href="/">uTeach</a></h3>
   		</div>
 	  	<div id="signin-status">
-  		{{if .User}}
-  			Signed in as: {{.User.Username}}
+  		{{if .SessionUser}}
+  			Signed in as: {{.SessionUser.Username}}
   		{{else}}
   			Not signed in
   		{{end}}
@@ -29,6 +29,5 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script type="text/javascript" src="/static/js/threads.js"></script>
   </body>
-
 </html>
 {{end}}

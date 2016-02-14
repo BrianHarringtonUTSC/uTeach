@@ -60,7 +60,7 @@ func NewDB(path string) *DB {
 	return db
 }
 
-// User gets the User at username.
+// User gets the user at the given username.
 func (db *DB) User(username string) (user *User, err error) {
 	user = &User{}
 	err = db.Get(user, "SELECT * FROM users WHERE username=?", username)
@@ -73,13 +73,13 @@ func (db *DB) Subjects() (subjects []*Subject, err error) {
 	return
 }
 
-// Topics gets all topics with the subjectName.
+// Topics gets all topics with the given subject name.
 func (db *DB) Topics(subjectName string) (topics []*Topic, err error) {
 	err = db.Select(&topics, "SELECT * FROM topics WHERE subject_name=?", subjectName)
 	return
 }
 
-// Threads gets all threads with the subjectName and topicName.
+// Threads gets all threads with the given subject and topic names.
 func (db *DB) Threads(subjectName string, topicName string) (threads []*Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
 			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
@@ -87,6 +87,17 @@ func (db *DB) Threads(subjectName string, topicName string) (threads []*Thread, 
 			  GROUP BY threads.rowid
 			  ORDER BY count(upvotes.thread_id) DESC`
 	err = db.Select(&threads, query, subjectName, topicName)
+	return
+}
+
+// UserCreatedThreads gets all threads created by the user.
+func (db *DB) UserCreatedThreads(username string) (threads []*Thread, err error) {
+	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
+			  WHERE threads.created_by_username=?
+			  GROUP BY threads.rowid
+			  ORDER BY count(upvotes.thread_id) DESC`
+	err = db.Select(&threads, query, username)
 	return
 }
 
@@ -101,7 +112,7 @@ func (db *DB) Thread(id int) (thread *Thread, err error) {
 	return
 }
 
-// UserUpvotedThreadIDs returns the IDs of the threads that the user with username has upvoted.
+// UserUpvotedThreadIDs returns the IDs of the threads that the user has upvoted.
 // All threadIDs are mapped to "true". The purpose of the map is to act as a set.
 func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error) {
 	rows, err := db.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
@@ -130,12 +141,12 @@ func (db *DB) runUpvoteQuery(query string, username string, threadID int) (err e
 	return
 }
 
-// AddUpVote adds upvote for user with username for the thread with threadID.
+// AddUpVote adds upvote for user on the thread.
 func (db *DB) AddUpVote(username string, threadID int) error {
 	return db.runUpvoteQuery("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
 }
 
-// RemoveUpvote removes the vote for user with username for the thread with threadID.
+// RemoveUpvote removes the vote for user on the thread.
 func (db *DB) RemoveUpvote(username string, threadID int) error {
 	return db.runUpvoteQuery("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
 }

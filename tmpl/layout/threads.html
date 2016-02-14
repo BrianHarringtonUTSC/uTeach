@@ -7,7 +7,7 @@
 		<br />
 
 		{{$thread.Score}}
-		{{if $base.User}}
+		{{if $base.SessionUser}}
 			|
 			{{if index $base.UserUpvotedThreadIDs $thread.ID}}
 				<button class="thread_remove_vote_button" type="button" value="{{$thread.ID}}">remove vote</button>

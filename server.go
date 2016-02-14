@@ -43,6 +43,8 @@ func main() {
 	router.HandleFunc("/threads/{subjectName}/{topicName}", app.handleGetThreads)
 	router.HandleFunc("/thread/{subjectName}/{topicName}/{threadID}", app.handleGetThread)
 
+	router.HandleFunc("/user/{username}", app.handleUser)
+
 	router.HandleFunc("/login/{username}", app.handleLogin)
 	router.HandleFunc("/logout", app.handleLogout)
 

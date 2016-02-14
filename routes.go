@@ -43,16 +43,17 @@ func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userUpvotedThreadIDs := make(map[int]bool)
+	data := map[string]interface{}{"Threads": threads}
+
 	if user, ok := a.store.SessionUser(r); ok {
-		userUpvotedThreadIDs, err = a.db.UserUpvotedThreadIDs(user.Username)
+		userUpvotedThreadIDs, err := a.db.UserUpvotedThreadIDs(user.Username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
 	}
 
-	data := map[string]interface{}{"Threads": threads, "UserUpvotedThreadIDs": userUpvotedThreadIDs}
 	a.RenderTemplate(w, r, "threads.html", data)
 }
 
@@ -72,6 +73,20 @@ func (a *App) handleGetThread(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{"Thread": thread}
 	a.RenderTemplate(w, r, "thread.html", data)
+}
+
+func (a *App) handleUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	userCreatedThreads, err := a.db.UserCreatedThreads(username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
+	a.RenderTemplate(w, r, "user.html", data)
 }
 
 func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
