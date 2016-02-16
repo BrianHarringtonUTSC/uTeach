@@ -1,4 +1,4 @@
-// Package uTeach implements a web app which is a platform for sharing educational material and resources.
+// Package main runs a web app, uTeach, which is a platform for sharing educational material and resources.
 package main
 
 import (

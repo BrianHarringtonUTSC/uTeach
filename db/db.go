@@ -1,4 +1,4 @@
-// Package db provides functionaltiy database functionaltiy for the uTeach models using an sqlite database.
+// Package db provides database functionality for the uTeach models using an sqlite database.
 package db
 
 import (
