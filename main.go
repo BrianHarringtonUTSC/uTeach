@@ -50,6 +50,6 @@ func main() {
 	http.Handle("/", router)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
 
-	address := app.Config.Host + ":" + strconv.Itoa(app.Config.Port)
+	address := app.Config.Host + ":" + strconv.Itoa(int(app.Config.Port))
 	log.Fatal(http.ListenAndServe(address, nil))
 }
