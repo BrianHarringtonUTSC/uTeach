@@ -1,4 +1,5 @@
-package main
+// Package models provides models for the uTeach app.
+package models
 
 // User is a user in the uTeach system.
 type User struct {

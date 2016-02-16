@@ -1,43 +1,50 @@
-package main
+// Package routes provides route handlers for the uTeach app.
+package routes
 
 import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+
+	"github.com/umairidris/uTeach/app"
 )
 
-func (a *App) handleGetSubjects(w http.ResponseWriter, r *http.Request) {
-	subjects, err := a.db.Subjects()
+type RouteHandler struct {
+	App *app.App
+}
+
+func (rh *RouteHandler) GetSubjects(w http.ResponseWriter, r *http.Request) {
+	subjects, err := rh.App.DB.Subjects()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Subjects": subjects}
-	a.RenderTemplate(w, r, "subjects.html", data)
+	rh.App.RenderTemplate(w, r, "subjects.html", data)
 }
 
-func (a *App) handleGetTopics(w http.ResponseWriter, r *http.Request) {
+func (rh *RouteHandler) GetTopics(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 
-	topics, err := a.db.Topics(subjectName)
+	topics, err := rh.App.DB.Topics(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Topics": topics}
-	a.RenderTemplate(w, r, "topics.html", data)
+	rh.App.RenderTemplate(w, r, "topics.html", data)
 }
 
-func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
+func (rh *RouteHandler) GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
 	topicName := vars["topicName"]
 
-	threads, err := a.db.Threads(subjectName, topicName)
+	threads, err := rh.App.DB.Threads(subjectName, topicName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,8 +52,8 @@ func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{"Threads": threads}
 
-	if user, ok := a.store.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := a.db.UserUpvotedThreadIDs(user.Username)
+	if user, ok := rh.App.Store.SessionUser(r); ok {
+		userUpvotedThreadIDs, err := rh.App.DB.UserUpvotedThreadIDs(user.Username)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -54,10 +61,10 @@ func (a *App) handleGetThreads(w http.ResponseWriter, r *http.Request) {
 		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
 	}
 
-	a.RenderTemplate(w, r, "threads.html", data)
+	rh.App.RenderTemplate(w, r, "threads.html", data)
 }
 
-func (a *App) handleGetThread(w http.ResponseWriter, r *http.Request) {
+func (rh *RouteHandler) GetThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
@@ -65,32 +72,32 @@ func (a *App) handleGetThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	thread, err := a.db.Thread(threadID)
+	thread, err := rh.App.DB.Thread(threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Thread": thread}
-	a.RenderTemplate(w, r, "thread.html", data)
+	rh.App.RenderTemplate(w, r, "thread.html", data)
 }
 
-func (a *App) handleUser(w http.ResponseWriter, r *http.Request) {
+func (rh *RouteHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	username := vars["username"]
 
-	userCreatedThreads, err := a.db.UserCreatedThreads(username)
+	userCreatedThreads, err := rh.App.DB.UserCreatedThreads(username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
-	a.RenderTemplate(w, r, "user.html", data)
+	rh.App.RenderTemplate(w, r, "user.html", data)
 }
 
-func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
-	if _, ok := a.store.SessionUser(r); ok {
+func (rh *RouteHandler) Login(w http.ResponseWriter, r *http.Request) {
+	if _, ok := rh.App.Store.SessionUser(r); ok {
 		fmt.Fprint(w, "Already logged in")
 		return
 	}
@@ -100,7 +107,7 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: replace this with SAML login for username
 
-	err := a.store.NewUserSession(w, r, username, a.db)
+	err := rh.App.Store.NewUserSession(w, r, username, rh.App.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -108,8 +115,8 @@ func (a *App) handleLogin(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged in as: "+username)
 }
 
-func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := a.store.DeleteUserSession(w, r)
+func (rh *RouteHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	err := rh.App.Store.DeleteUserSession(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -117,7 +124,7 @@ func (a *App) handleLogout(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged out")
 }
 
-func (a *App) handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
+func (rh *RouteHandler) upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.Atoi(vars["threadID"])
 	if err != nil {
@@ -125,7 +132,7 @@ func (a *App) handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func
 		return
 	}
 
-	user, ok := a.store.SessionUser(r)
+	user, ok := rh.App.Store.SessionUser(r)
 	if !ok {
 		http.Error(w, "Failed to get user", http.StatusInternalServerError)
 		return
@@ -141,10 +148,10 @@ func (a *App) handleUpvote(w http.ResponseWriter, r *http.Request, upvoteFn func
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *App) handleAddUpvote(w http.ResponseWriter, r *http.Request) {
-	a.handleUpvote(w, r, a.db.AddUpVote)
+func (rh *RouteHandler) AddUpvote(w http.ResponseWriter, r *http.Request) {
+	rh.upvote(w, r, rh.App.DB.AddUpVote)
 }
 
-func (a *App) handleRemoveUpvote(w http.ResponseWriter, r *http.Request) {
-	a.handleUpvote(w, r, a.db.RemoveUpvote)
+func (rh *RouteHandler) RemoveUpvote(w http.ResponseWriter, r *http.Request) {
+	rh.upvote(w, r, rh.App.DB.RemoveUpvote)
 }

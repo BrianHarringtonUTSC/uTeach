@@ -1,8 +1,11 @@
-package main
+// Package db provides functionaltiy database functionaltiy for the uTeach models using an sqlite database.
+package db
 
 import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/umairidris/uTeach/models"
 )
 
 // DB wraps a generic sql DB to provide db functionality for models.
@@ -11,13 +14,16 @@ type DB struct {
 }
 
 // NewDB opens a connection to an sqlite database at path and creates all necessary tables that the app uses.
-func NewDB(path string) *DB {
-
+func New(path string) *DB {
 	sqlDb := sqlx.MustOpen("sqlite3", path)
 
 	db := &DB{sqlDb}
+	db.createTables()
 
-	// ensure all required tables exist
+	return db
+}
+
+func (db *DB) createTables() {
 	db.MustExec(`
 		CREATE TABLE IF NOT EXISTS users(
 			username TEXT PRIMARY KEY
@@ -56,42 +62,40 @@ func NewDB(path string) *DB {
 			FOREIGN KEY(username) REFERENCES users(username)
 			FOREIGN KEY(thread_id) REFERENCES threads(rowid)
 		)`)
-
-	return db
 }
 
 // User gets the user at the given username.
-func (db *DB) User(username string) (user *User, err error) {
-	user = &User{}
+func (db *DB) User(username string) (user *models.User, err error) {
+	user = &models.User{}
 	err = db.Get(user, "SELECT * FROM users WHERE username=?", username)
 	return
 }
 
 // Subjects gets all subjects.
-func (db *DB) Subjects() (subjects []*Subject, err error) {
+func (db *DB) Subjects() (subjects []*models.Subject, err error) {
 	err = db.Select(&subjects, "SELECT * FROM subjects")
 	return
 }
 
 // Topics gets all topics with the given subject name.
-func (db *DB) Topics(subjectName string) (topics []*Topic, err error) {
+func (db *DB) Topics(subjectName string) (topics []*models.Topic, err error) {
 	err = db.Select(&topics, "SELECT * FROM topics WHERE subject_name=?", subjectName)
 	return
 }
 
 // Threads gets all threads with the given subject and topic names.
-func (db *DB) Threads(subjectName string, topicName string) (threads []*Thread, err error) {
+func (db *DB) Threads(subjectName string, topicName string) (threads []*models.Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
-			  WHERE threads.subject_name=? AND threads.topic_name=?
-			  GROUP BY threads.rowid
-			  ORDER BY count(upvotes.thread_id) DESC`
+		FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
+		WHERE threads.subject_name=? AND threads.topic_name=?
+		GROUP BY threads.rowid
+		ORDER BY count(upvotes.thread_id) DESC`
 	err = db.Select(&threads, query, subjectName, topicName)
 	return
 }
 
 // UserCreatedThreads gets all threads created by the user.
-func (db *DB) UserCreatedThreads(username string) (threads []*Thread, err error) {
+func (db *DB) UserCreatedThreads(username string) (threads []*models.Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
 			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
 			  WHERE threads.created_by_username=?
@@ -102,12 +106,12 @@ func (db *DB) UserCreatedThreads(username string) (threads []*Thread, err error)
 }
 
 // Thread gets the thread with the given id.
-func (db *DB) Thread(id int) (thread *Thread, err error) {
+func (db *DB) Thread(id int) (thread *models.Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
 			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
 			  WHERE threads.rowid=?
 			  GROUP BY threads.rowid`
-	thread = &Thread{}
+	thread = &models.Thread{}
 	err = db.Get(thread, query, id)
 	return
 }

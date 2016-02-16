@@ -1,8 +1,13 @@
-package main
+// Package session provides functionality for user sessions and cookie management.
+package session
 
 import (
+	"encoding/gob"
 	"github.com/gorilla/sessions"
 	"net/http"
+
+	"github.com/umairidris/uTeach/db"
+	"github.com/umairidris/uTeach/models"
 )
 
 const (
@@ -13,6 +18,11 @@ const (
 // Store wraps around CookieStore to provide uTeach specific cookie and session functionality.
 type Store struct {
 	*sessions.CookieStore
+}
+
+func init() {
+	// allows user to be encoded so that it can be stored in a session
+	gob.Register(&models.User{})
 }
 
 // NewStore creates a new store.
@@ -26,7 +36,7 @@ func (s *Store) getUserSession(r *http.Request) (*sessions.Session, error) {
 }
 
 // NewUserSession creates a new session and stores the User containing the
-func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username string, db *DB) error {
+func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username string, db *db.DB) error {
 	session, err := s.getUserSession(r)
 	if err != nil {
 		return err
@@ -44,7 +54,7 @@ func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username 
 // SessionUser gets the user stored in the user session.
 // If there is a User stored in the session and can be retrieved it returns the user and true, else the boolean will be
 // false.
-func (s *Store) SessionUser(r *http.Request) (*User, bool) {
+func (s *Store) SessionUser(r *http.Request) (*models.User, bool) {
 	session, err := s.getUserSession(r)
 	if err != nil {
 		return nil, false
@@ -55,7 +65,7 @@ func (s *Store) SessionUser(r *http.Request) (*User, bool) {
 		return nil, false
 	}
 
-	user, ok := u.(*User)
+	user, ok := u.(*models.User)
 	return user, ok
 }
 

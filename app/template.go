@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"fmt"
@@ -30,14 +30,14 @@ func LoadTemplates(path string) map[string]*template.Template {
 // RenderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func (a *App) RenderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
-	tmpl, ok := a.templates[name]
+	tmpl, ok := a.Templates[name]
 	if !ok {
 		http.Error(w, fmt.Sprintf("The template %s does not exist.", name), http.StatusInternalServerError)
 		return
 	}
 
 	// add session user to data
-	if user, ok := a.store.SessionUser(r); ok {
+	if user, ok := a.Store.SessionUser(r); ok {
 		data["SessionUser"] = user
 	} else {
 		// make sure user is nil so templates don't render a user
