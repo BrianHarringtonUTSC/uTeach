@@ -2,10 +2,13 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/umairidris/uTeach/app"
 	"github.com/umairidris/uTeach/middleware"
@@ -13,7 +16,17 @@ import (
 )
 
 func main() {
-	app := app.New()
+	var configPath string
+	flag.StringVar(&configPath, "config_path", "",
+		"Path to JSON format config file. See github.com/UmairIdris/uTeach/sample_config.json for an example.")
+	flag.Parse()
+
+	if configPath == "" {
+		fmt.Println("config_path arg not provided. ")
+		return
+	}
+
+	app := app.New(configPath)
 
 	middleware := middleware.Middleware{app}
 	routeHandler := routes.RouteHandler{app}
@@ -37,5 +50,6 @@ func main() {
 	http.Handle("/", router)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
 
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	address := app.Config.Host + ":" + strconv.Itoa(app.Config.Port)
+	log.Fatal(http.ListenAndServe(address, nil))
 }

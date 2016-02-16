@@ -1,0 +1,7 @@
+{
+	"host": "",
+	"port": 8000,
+	"db_path": "uTeach.db",
+	"templates_path": "tmpl/",
+	"static_files_path": "static/"
+}
