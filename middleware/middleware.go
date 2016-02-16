@@ -7,6 +7,7 @@ import (
 	"github.com/umairidris/uTeach/app"
 )
 
+// Middleware provides middleware handlers.
 type Middleware struct {
 	App *app.App
 }

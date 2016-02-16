@@ -3,7 +3,7 @@ package db
 
 import (
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // the underscore will call init to register the sqlite driver with the sql package
 
 	"github.com/umairidris/uTeach/models"
 )
@@ -13,7 +13,7 @@ type DB struct {
 	*sqlx.DB
 }
 
-// NewDB opens a connection to an sqlite database at path and creates all necessary tables that the app uses.
+// New opens a connection to an sqlite database at path and creates all necessary tables that the app uses.
 func New(path string) *DB {
 	sqlDb := sqlx.MustOpen("sqlite3", path)
 

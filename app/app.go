@@ -17,7 +17,7 @@ type App struct {
 	Templates map[string]*template.Template
 }
 
-// NewApp initializes a new App.
+// New initializes a new App.
 func New(configPath string) *App {
 	config := config.Load(configPath)
 	db := db.New(config.DBPath)
