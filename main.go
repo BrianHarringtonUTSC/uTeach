@@ -18,7 +18,7 @@ import (
 func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config_path", "",
-		"Path to JSON format config file. See github.com/UmairIdris/uTeach/sample_config.json for an example.")
+		"Path to JSON config file. See github.com/UmairIdris/uTeach/blob/master/sample_config.json for an example.")
 	flag.Parse()
 
 	if configPath == "" {
