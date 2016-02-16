@@ -36,5 +36,6 @@ $GOPATH/bin/uTeach --config_path=sample_config.json
 - Admin pages + creating new threads
 - Comments
 - Middleware for logging/recovery (Gorilla, etc)
+- Don't expose sensitive error info through http.Error calls
 - Security (CSRF, etc)
 - HTTP tests
