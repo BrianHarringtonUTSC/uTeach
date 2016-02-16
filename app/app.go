@@ -4,9 +4,9 @@ package app
 import (
 	"html/template"
 
-	"github.com/umairidris/uTeach/config"
-	"github.com/umairidris/uTeach/db"
-	"github.com/umairidris/uTeach/session"
+	"github.com/UmairIdris/uTeach/config"
+	"github.com/UmairIdris/uTeach/db"
+	"github.com/UmairIdris/uTeach/session"
 )
 
 // App is the application context, the central struct binding all components of the app together.

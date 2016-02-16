@@ -4,7 +4,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/umairidris/uTeach/app"
+	"github.com/UmairIdris/uTeach/app"
 )
 
 // Middleware provides middleware handlers.

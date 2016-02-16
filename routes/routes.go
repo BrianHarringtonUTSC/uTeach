@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/umairidris/uTeach/app"
+	"github.com/UmairIdris/uTeach/app"
 )
 
 // RouteHandler provides routes endpoint implementations.

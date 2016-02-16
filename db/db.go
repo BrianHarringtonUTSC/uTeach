@@ -5,7 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
 
-	"github.com/umairidris/uTeach/models"
+	"github.com/UmairIdris/uTeach/models"
 )
 
 // DB wraps a generic sql DB to provide db functionality for models.

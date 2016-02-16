@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/umairidris/uTeach/app"
-	"github.com/umairidris/uTeach/middleware"
-	"github.com/umairidris/uTeach/routes"
+	"github.com/UmairIdris/uTeach/app"
+	"github.com/UmairIdris/uTeach/middleware"
+	"github.com/UmairIdris/uTeach/routes"
 )
 
 func main() {
