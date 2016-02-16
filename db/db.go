@@ -3,7 +3,7 @@ package db
 
 import (
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3" // the underscore will call init to register the sqlite driver with the sql package
+	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
 
 	"github.com/umairidris/uTeach/models"
 )
