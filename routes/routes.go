@@ -42,7 +42,7 @@ func (rh *RouteHandler) GetTopics(w http.ResponseWriter, r *http.Request) {
 	rh.App.RenderTemplate(w, r, "topics.html", data)
 }
 
-// GetTopics renders all threads for the subject and topic.
+// GetThreads renders all threads for the subject and topic.
 func (rh *RouteHandler) GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
