@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	if configPath == "" {
-		fmt.Println("config_path arg not provided. ")
+		fmt.Println("config_path arg not provided.")
 		return
 	}
 

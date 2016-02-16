@@ -102,7 +102,7 @@ func (rh *RouteHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	rh.App.RenderTemplate(w, r, "user.html", data)
 }
 
-// Login logs in the user.
+// Login logs the user in.
 func (rh *RouteHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if _, ok := rh.App.Store.SessionUser(r); ok {
 		fmt.Fprint(w, "Already logged in")
@@ -122,7 +122,7 @@ func (rh *RouteHandler) Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Logged in as: "+username)
 }
 
-// Logout logs out the user.
+// Logout logs the user out.
 func (rh *RouteHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	err := rh.App.Store.DeleteUserSession(w, r)
 	if err != nil {

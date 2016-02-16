@@ -10,7 +10,7 @@ $(function() {
 
 
 function handleVoteButtonClick(e, call_type, new_class, new_html) {
-	$(e.target).hide(); // stop multiple upvote clicks
+	$(e.target).prop('disabled', true); // stop multiple upvote clicks
   $.ajax({
   	url: '/upvote/' + e.target.value,
   	type: call_type,
