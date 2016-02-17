@@ -4,52 +4,25 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/justinas/alice"
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/UmairIdris/uTeach/app"
-	"github.com/UmairIdris/uTeach/middleware"
-	"github.com/UmairIdris/uTeach/routes"
+	"github.com/UmairIdris/uTeach/application"
+	"github.com/UmairIdris/uTeach/handlers"
 )
 
 func main() {
 	var configPath string
-	flag.StringVar(&configPath, "config_path", "",
+	flag.StringVar(&configPath, "config", "",
 		"Path to JSON config file. See github.com/UmairIdris/uTeach/blob/master/sample_config.json for an example.")
 	flag.Parse()
 
 	if configPath == "" {
-		fmt.Println("config_path arg not provided.")
+		fmt.Println("config arg not provided.")
 		return
 	}
 
-	app := app.New(configPath)
-
-	middleware := middleware.Middleware{app}
-	routeHandler := routes.RouteHandler{app}
-
-	authMiddleWare := alice.New(middleware.AuthorizedHandler)
-
-	router := mux.NewRouter()
-	router.HandleFunc("/", routeHandler.GetSubjects)
-	router.HandleFunc("/topics/{subjectName}", routeHandler.GetTopics)
-	router.HandleFunc("/threads/{subjectName}/{topicName}", routeHandler.GetThreads)
-	router.HandleFunc("/thread/{subjectName}/{topicName}/{threadID}", routeHandler.GetThread)
-
-	router.HandleFunc("/user/{username}", routeHandler.GetUser)
-
-	router.HandleFunc("/login/{username}", routeHandler.Login)
-	router.HandleFunc("/logout", routeHandler.Logout)
-
-	router.Handle("/upvote/{threadID}", authMiddleWare.ThenFunc(routeHandler.AddUpvote)).Methods("POST")
-	router.Handle("/upvote/{threadID}", authMiddleWare.ThenFunc(routeHandler.RemoveUpvote)).Methods("DELETE")
-
-	http.Handle("/", router)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static/"))))
-
-	address := app.Config.Host + ":" + strconv.Itoa(int(app.Config.Port))
-	log.Fatal(http.ListenAndServe(address, nil))
+	app := application.New(configPath)
+	http.Handle("/", handlers.Router(app))
+	log.Fatal(http.ListenAndServe(app.Config.HTTPAddress, nil))
 }

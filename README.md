@@ -12,7 +12,7 @@ Note: Ensure your GOPATH is correctly setup. Export $GOPATH/bin to your PATH for
 #### As a User
 ```
 go get github.com/UmairIdris/uTeach
-$GOPATH/bin/uTeach --config_path=$GOPATH/src/github.com/UmairIdris/uTeach/sample_config.json
+$GOPATH/bin/uTeach --config=$GOPATH/src/github.com/UmairIdris/uTeach/sample_config.json
 ```
 
 #### As a Developer
@@ -27,7 +27,7 @@ cd uTeach
 
 # Install the app and run
 go install
-$GOPATH/bin/uTeach --config_path=sample_config.json
+$GOPATH/bin/uTeach --config=sample_config.json
 ```
 
 ### TODO

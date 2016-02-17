@@ -4,19 +4,25 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/UmairIdris/uTeach/app"
+	"github.com/UmairIdris/uTeach/application"
 )
 
-// Middleware provides middleware handlers.
-type Middleware struct {
-	App *app.App
+// SetApp sets the app in the context for other handlers to use.
+func SetApplication(app *application.Application) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			application.SetContext(r, app)
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
-// AuthorizedHandler ensures that the next handler is only accessible by users that are logged in.
-func (m *Middleware) AuthorizedHandler(next http.Handler) http.Handler {
+// MustLogin ensures that the next handler is only accessible by users that are logged in.
+func MustLogin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if _, ok := m.App.Store.SessionUser(r); !ok {
+		app := application.Get(r)
+		if _, ok := app.Store.SessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
 			return
 		}

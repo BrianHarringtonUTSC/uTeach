@@ -1,7 +1,6 @@
 {
-	"host": "",
-	"port": 8000,
+	"http_address": ":8000",
 	"db_path": "uTeach.db",
-	"templates_path": "tmpl/",
+	"templates_path": "templates/",
 	"static_files_path": "static/"
 }

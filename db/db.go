@@ -86,10 +86,10 @@ func (db *DB) Topics(subjectName string) (topics []*models.Topic, err error) {
 // Threads gets all threads with the given subject and topic names.
 func (db *DB) Threads(subjectName string, topicName string) (threads []*models.Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
-		FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
-		WHERE threads.subject_name=? AND threads.topic_name=?
-		GROUP BY threads.rowid
-		ORDER BY count(upvotes.thread_id) DESC`
+			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
+			  WHERE threads.subject_name=? AND threads.topic_name=?
+			  GROUP BY threads.rowid
+			  ORDER BY count(upvotes.thread_id) DESC`
 	err = db.Select(&threads, query, subjectName, topicName)
 	return
 }

@@ -9,8 +9,7 @@ import (
 
 // Config stores user specific information to run the app.
 type Config struct {
-	Host            string `json:"host"`
-	Port            uint   `json:"port"`
+	HTTPAddress     string `json:"http_address"`
 	DBPath          string `json:"db_path"`
 	TemplatesPath   string `json:"templates_path"`
 	StaticFilesPath string `json:"static_files_path"`
