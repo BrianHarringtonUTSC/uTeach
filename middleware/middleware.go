@@ -7,7 +7,7 @@ import (
 	"github.com/UmairIdris/uTeach/application"
 )
 
-// SetApp sets the app in the context for other handlers to use.
+// SetApplication sets the application in the context for other handlers to use.
 func SetApplication(app *application.Application) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
