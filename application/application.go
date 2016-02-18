@@ -3,7 +3,6 @@ package application
 
 import (
 	"github.com/gorilla/context"
-
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -37,7 +36,8 @@ func New(configPath string) *Application {
 	return app
 }
 
-// Get gets the global application from the request.
+// Get gets the global application from the request. Application MUST be set in the context before, else the application
+// will be nil. See SetContext helper function.
 func Get(r *http.Request) *Application {
 	return context.Get(r, contextKey).(*Application)
 }

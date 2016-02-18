@@ -36,22 +36,12 @@ func (db *DB) createTables() {
 		)`)
 
 	db.MustExec(`
-		CREATE TABLE IF NOT EXISTS topics(
-			name TEXT NOT NULL,
-			title TEXT NOT NULL,
-			subject_name TEXT NOT NULL,
-			PRIMARY KEY(name, subject_name)
-			FOREIGN KEY(subject_name) REFERENCES subjects(name)
-		)`)
-
-	db.MustExec(`
 		CREATE TABLE IF NOT EXISTS threads(
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
 			subject_name TEXT NOT NULL,
-			topic_name TEXT NOT NULL,
 			created_by_username TEXT NOT NULL,
-			FOREIGN KEY(subject_name, topic_name) REFERENCES topics(subject_name, name)
+			FOREIGN KEY(subject_name) REFERENCES subjects(name)
 			FOREIGN KEY(created_by_username) REFERENCES users(username)
 		)`)
 
@@ -77,20 +67,14 @@ func (db *DB) Subjects() (subjects []*models.Subject, err error) {
 	return
 }
 
-// Topics gets all topics with the given subject name.
-func (db *DB) Topics(subjectName string) (topics []*models.Topic, err error) {
-	err = db.Select(&topics, "SELECT * FROM topics WHERE subject_name=?", subjectName)
-	return
-}
-
-// Threads gets all threads with the given subject and topic names.
-func (db *DB) Threads(subjectName string, topicName string) (threads []*models.Thread, err error) {
+// Threads gets all threads with the given subject.
+func (db *DB) Threads(subjectName string) (threads []*models.Thread, err error) {
 	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
 			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
-			  WHERE threads.subject_name=? AND threads.topic_name=?
+			  WHERE threads.subject_name=?
 			  GROUP BY threads.rowid
 			  ORDER BY count(upvotes.thread_id) DESC`
-	err = db.Select(&threads, query, subjectName, topicName)
+	err = db.Select(&threads, query, subjectName)
 	return
 }
 

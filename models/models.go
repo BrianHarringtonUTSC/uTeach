@@ -12,13 +12,6 @@ type Subject struct {
 	Title string
 }
 
-// Topic is a sub category within subject.
-type Topic struct {
-	Name        string
-	Title       string
-	SubjectName string `db:"subject_name"`
-}
-
 // Thread is a post inside of a topic.
 type Thread struct {
 	ID                int `db:"rowid"`
@@ -26,6 +19,5 @@ type Thread struct {
 	Content           string
 	Score             int
 	SubjectName       string `db:"subject_name"`
-	TopicName         string `db:"topic_name"`
 	CreatedByUsername string `db:"created_by_username"`
 }

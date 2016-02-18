@@ -20,9 +20,8 @@ func Router(app *application.Application) *mux.Router {
 
 	router := mux.NewRouter()
 	router.Handle("/", stdChain.ThenFunc(GetSubjects))
-	router.Handle("/topics/{subjectName}", stdChain.ThenFunc(GetTopics))
-	router.Handle("/threads/{subjectName}/{topicName}", stdChain.ThenFunc(GetThreads))
-	router.Handle("/thread/{subjectName}/{topicName}/{threadID}", stdChain.ThenFunc(GetThread))
+	router.Handle("/threads/{subjectName}", stdChain.ThenFunc(GetThreads))
+	router.Handle("/thread/{subjectName}/{threadID}", stdChain.ThenFunc(GetThread))
 
 	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
 
@@ -77,30 +76,13 @@ func GetSubjects(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, r, "subjects.html", data)
 }
 
-// GetTopics renders all topics for the subject.
-func GetTopics(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	subjectName := vars["subjectName"]
-
-	app := application.Get(r)
-	topics, err := app.DB.Topics(subjectName)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	data := map[string]interface{}{"Topics": topics}
-	renderTemplate(w, r, "topics.html", data)
-}
-
-// GetThreads renders all threads for the subject and topic.
+// GetThreads renders all threads for the subject.
 func GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subjectName := vars["subjectName"]
-	topicName := vars["topicName"]
 
 	app := application.Get(r)
-	threads, err := app.DB.Threads(subjectName, topicName)
+	threads, err := app.DB.Threads(subjectName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
