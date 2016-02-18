@@ -22,6 +22,7 @@ func Router(app *application.Application) *mux.Router {
 	router.Handle("/", stdChain.ThenFunc(GetSubjects))
 	router.Handle("/threads/{subjectName}", stdChain.ThenFunc(GetThreads))
 	router.Handle("/thread/{subjectName}/{threadID}", stdChain.ThenFunc(GetThread))
+	outer.Handle("/thread/{subjectName}/submit", stdChain.ThenFunc(GetNewThread))
 
 	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
 
@@ -47,6 +48,10 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data ma
 	if !ok {
 		http.Error(w, fmt.Sprintf("The template %s does not exist.", name), http.StatusInternalServerError)
 		return
+	}
+
+	if data == nil {
+		data = map[string]interface{}{}
 	}
 
 	// add session user to data
@@ -120,6 +125,10 @@ func GetThread(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{"Thread": thread}
 	renderTemplate(w, r, "thread.html", data)
+}
+
+func GetNewThread(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, r, "new_thread.html", nil)
 }
 
 // GetUser renders user info.

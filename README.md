@@ -33,6 +33,7 @@ $GOPATH/bin/uTeach --config=sample_config.json
 ### TODO
 - SAML login
 - Add 'tags' to threads
+- DB index
 - HTTPS
 - Admin pages + creating new threads
 - Comments
