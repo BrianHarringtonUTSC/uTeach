@@ -1,7 +1,7 @@
 {{define "content"}}
 <ul>
 	{{range $subject := .Subjects}}
-	<li><a href="/threads/{{$subject.Name}}">{{$subject.Title}}</a></li>
+	<li><a href="/s/{{$subject.Name}}">{{$subject.Title}}</a></li>
 	{{end}}
 </ul>
 {{end}}

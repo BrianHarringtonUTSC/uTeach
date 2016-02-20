@@ -20,9 +20,10 @@ func Router(app *application.Application) *mux.Router {
 
 	router := mux.NewRouter()
 	router.Handle("/", stdChain.ThenFunc(GetSubjects))
-	router.Handle("/threads/{subjectName}", stdChain.ThenFunc(GetThreads))
-	router.Handle("/thread/{subjectName}/{threadID}", stdChain.ThenFunc(GetThread))
-	outer.Handle("/thread/{subjectName}/submit", stdChain.ThenFunc(GetNewThread))
+	router.Handle("/s/{subject}", stdChain.ThenFunc(GetThreads))
+	router.Handle("/s/{subject}/submit", authChain.ThenFunc(GetNewThread)).Methods("GET")
+	router.Handle("/s/{subject}/submit", authChain.ThenFunc(PostNewThread)).Methods("POST")
+	router.Handle("/s/{subject}/{threadID}", stdChain.ThenFunc(GetThread))
 
 	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
 
@@ -84,10 +85,10 @@ func GetSubjects(w http.ResponseWriter, r *http.Request) {
 // GetThreads renders all threads for the subject.
 func GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	subjectName := vars["subjectName"]
+	subject := vars["subject"]
 
 	app := application.Get(r)
-	threads, err := app.DB.Threads(subjectName)
+	threads, err := app.DB.Threads(subject)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -110,7 +111,7 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 // GetThread renders a thread.
 func GetThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	threadID, err := strconv.Atoi(vars["threadID"])
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -127,8 +128,28 @@ func GetThread(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, r, "thread.html", data)
 }
 
+// GetNewThread renders the new thread page.
 func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, r, "new_thread.html", nil)
+}
+
+// PostNewThread adds a new thread in the db and redirects to it, if successful.
+func PostNewThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	subject := vars["subject"]
+
+	app := application.Get(r)
+	user, _ := app.Store.SessionUser(r)
+
+	title := r.FormValue("title")
+	text := r.FormValue("text")
+
+	thread, err := app.DB.NewThread(title, text, subject, user.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, thread.URL(), 301)
 }
 
 // GetUser renders user info.
@@ -181,20 +202,16 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 // upvote is a helper for handling upvotes.
-func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int) error) {
+func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int64) error) {
 	vars := mux.Vars(r)
-	threadID, err := strconv.Atoi(vars["threadID"])
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	app := application.Get(r)
-	user, ok := app.Store.SessionUser(r)
-	if !ok {
-		http.Error(w, "Failed to get user", http.StatusInternalServerError)
-		return
-	}
+	user, _ := app.Store.SessionUser(r)
 
 	err = upvoteFn(user.Username, threadID)
 	if err != nil {

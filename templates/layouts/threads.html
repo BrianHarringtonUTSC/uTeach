@@ -1,9 +1,14 @@
 {{define "content"}}
+
+{{if .SessionUser}}
+<input type="submit" value="New Thread" onclick="window.location=window.location+'/submit';" />
+{{end}}
+
 {{$base := .}}
 <ul id="threads">
 	{{range $thread := .Threads}}
 	<li>
-		<a href="/thread/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
+		<a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
 		<br />
 
 		{{$thread.Score}}

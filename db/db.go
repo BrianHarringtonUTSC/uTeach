@@ -2,6 +2,7 @@
 package db
 
 import (
+	"database/sql/driver"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
 
@@ -19,7 +20,7 @@ func New(path string) *DB {
 
 	db := &DB{sqlDb}
 	db.createTables()
-
+	db.MustExec("PRAGMA foreign_keys=ON;")
 	return db
 }
 
@@ -37,20 +38,22 @@ func (db *DB) createTables() {
 
 	db.MustExec(`
 		CREATE TABLE IF NOT EXISTS threads(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			title TEXT NOT NULL,
 			content TEXT NOT NULL,
 			subject_name TEXT NOT NULL,
 			created_by_username TEXT NOT NULL,
-			FOREIGN KEY(subject_name) REFERENCES subjects(name)
-			FOREIGN KEY(created_by_username) REFERENCES users(username)
+			FOREIGN KEY(subject_name) REFERENCES subjects(name) ON DELETE CASCADE,
+			FOREIGN KEY(created_by_username) REFERENCES users(username) ON DELETE CASCADE
 		)`)
 
 	db.MustExec(`
 		CREATE TABLE IF NOT EXISTS upvotes(
-			username TEXT NOT NULL,
+			username TEXT  NOT NULL,
 			thread_id INTEGER NOT NULL,
-			FOREIGN KEY(username) REFERENCES users(username)
-			FOREIGN KEY(thread_id) REFERENCES threads(rowid)
+			PRIMARY KEY (username, thread_id),
+			FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE,
+			FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
 		)`)
 }
 
@@ -69,10 +72,10 @@ func (db *DB) Subjects() (subjects []*models.Subject, err error) {
 
 // Threads gets all threads with the given subject.
 func (db *DB) Threads(subjectName string) (threads []*models.Thread, err error) {
-	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
+	query := `SELECT threads.*, count(upvotes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
 			  WHERE threads.subject_name=?
-			  GROUP BY threads.rowid
+			  GROUP BY threads.id
 			  ORDER BY count(upvotes.thread_id) DESC`
 	err = db.Select(&threads, query, subjectName)
 	return
@@ -80,21 +83,21 @@ func (db *DB) Threads(subjectName string) (threads []*models.Thread, err error) 
 
 // UserCreatedThreads gets all threads created by the user.
 func (db *DB) UserCreatedThreads(username string) (threads []*models.Thread, err error) {
-	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
+	query := `SELECT threads.*, count(upvotes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
 			  WHERE threads.created_by_username=?
-			  GROUP BY threads.rowid
+			  GROUP BY threads.id
 			  ORDER BY count(upvotes.thread_id) DESC`
 	err = db.Select(&threads, query, username)
 	return
 }
 
 // Thread gets the thread with the given id.
-func (db *DB) Thread(id int) (thread *models.Thread, err error) {
-	query := `SELECT threads.rowid, threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.rowid=upvotes.thread_id
-			  WHERE threads.rowid=?
-			  GROUP BY threads.rowid`
+func (db *DB) Thread(id int64) (thread *models.Thread, err error) {
+	query := `SELECT threads.*, count(upvotes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
+			  WHERE threads.id=?
+			  GROUP BY threads.id`
 	thread = &models.Thread{}
 	err = db.Get(thread, query, id)
 	return
@@ -102,15 +105,15 @@ func (db *DB) Thread(id int) (thread *models.Thread, err error) {
 
 // UserUpvotedThreadIDs returns the IDs of the threads that the user has upvoted.
 // All threadIDs are mapped to "true". The purpose of the map is to act as a set.
-func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err error) {
+func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int64]bool, err error) {
 	rows, err := db.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 
-	threadIDs = make(map[int]bool)
-	var threadID int
+	threadIDs = map[int64]bool{}
+	var threadID int64
 	for rows.Next() {
 		rows.Scan(&threadID)
 		threadIDs[threadID] = true
@@ -118,23 +121,42 @@ func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int]bool, err
 	return
 }
 
-func (db *DB) runUpvoteQuery(query string, username string, threadID int) (err error) {
+func (db *DB) exec(query string, params ...interface{}) (driver.Result, error) {
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(username, threadID)
-	return
+	return stmt.Exec(params...)
+}
+
+// NewThread adds a new thread.
+func (db *DB) NewThread(title string, content string, subject_name string, created_by_username string) (*models.Thread,
+	error) {
+
+	query := "INSERT INTO threads(title, content, subject_name, created_by_username) VALUES(?, ?, ?, ?)"
+	result, err := db.exec(query, title, content, subject_name, created_by_username)
+	if err != nil {
+		return nil, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return db.Thread(id)
 }
 
 // AddUpVote adds upvote for user on the thread.
-func (db *DB) AddUpVote(username string, threadID int) error {
-	return db.runUpvoteQuery("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
+func (db *DB) AddUpVote(username string, threadID int64) error {
+	_, err := db.exec("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
+	return err
 }
 
 // RemoveUpvote removes the vote for user on the thread.
-func (db *DB) RemoveUpvote(username string, threadID int) error {
-	return db.runUpvoteQuery("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
+func (db *DB) RemoveUpvote(username string, threadID int64) error {
+	_, err := db.exec("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
+	return err
 }
