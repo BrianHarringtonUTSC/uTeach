@@ -18,7 +18,7 @@ func main() {
 
 	if configPath == "" {
 		fmt.Println("config arg not provided.",
-			"See https://raw.githubusercontent.com/umairidris/uTeach/master//sample/config.json for an example.")
+			"See https://raw.githubusercontent.com/umairidris/uTeach/master/sample/config.json for an example.")
 		return
 	}
 
