@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/UmairIdris/uTeach/config"
-	"github.com/UmairIdris/uTeach/db"
-	"github.com/UmairIdris/uTeach/session"
+	"github.com/umairidris/uTeach/config"
+	"github.com/umairidris/uTeach/db"
+	"github.com/umairidris/uTeach/session"
 )
 
 const (

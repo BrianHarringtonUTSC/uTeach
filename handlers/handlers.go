@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/UmairIdris/uTeach/application"
-	"github.com/UmairIdris/uTeach/middleware"
+	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/middleware"
 )
 
 // Router gets the router with routes and their corresponding handlers defined.

@@ -4,7 +4,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/UmairIdris/uTeach/application"
+	"github.com/umairidris/uTeach/application"
 )
 
 // SetApplication sets the application in the context for other handlers to use.

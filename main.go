@@ -7,14 +7,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/UmairIdris/uTeach/application"
-	"github.com/UmairIdris/uTeach/handlers"
+	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/handlers"
 )
 
 func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "",
-		"Path to JSON config file. See github.com/UmairIdris/uTeach/blob/master/sample_config.json for an example.")
+		"Path to JSON config file. See github.com/umairidris/uTeach/blob/master/sample/config.json for an example.")
 	flag.Parse()
 
 	if configPath == "" {

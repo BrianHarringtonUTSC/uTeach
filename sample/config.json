@@ -1,0 +1,6 @@
+{
+	"http_address": ":8000",
+	"db_path": "test.db",
+	"templates_path": "../templates/",
+	"static_files_path": "../static/"
+}

@@ -6,8 +6,8 @@ import (
 	"github.com/gorilla/sessions"
 	"net/http"
 
-	"github.com/UmairIdris/uTeach/db"
-	"github.com/UmairIdris/uTeach/models"
+	"github.com/umairidris/uTeach/db"
+	"github.com/umairidris/uTeach/models"
 )
 
 const (
