@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/handlers"
@@ -17,9 +18,9 @@ func main() {
 	flag.Parse()
 
 	if configPath == "" {
-		fmt.Println("config arg not provided.",
+		fmt.Println("ERROR: --config arg is missing.",
 			"See https://raw.githubusercontent.com/umairidris/uTeach/master/sample/config.json for an example.")
-		return
+		os.Exit(1)
 	}
 
 	app := application.New(configPath)
