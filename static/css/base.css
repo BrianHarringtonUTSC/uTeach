@@ -46,6 +46,11 @@ ul {
   margin: 0;
 }
 
+img {
+  max-width: 600px;
+  width: 100%;
+}
+
 #main-title {
   display: inline-block;
 }

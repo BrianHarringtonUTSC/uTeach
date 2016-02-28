@@ -3,6 +3,8 @@ package application
 
 import (
 	"github.com/gorilla/context"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 	"html/template"
 	"net/http"
 	"path/filepath"
@@ -47,13 +49,21 @@ func SetContext(r *http.Request, app *Application) {
 	context.Set(r, contextKey, app)
 }
 
+// markdownToHTML converts the markdown into HTML.
+func markdownToHTML(markdown string) template.HTML {
+	unsafe := blackfriday.MarkdownBasic([]byte(markdown))
+	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+	return template.HTML(safe)
+}
+
 // loadTemplates gets all templates at path into a mapping of the template name to its template object.
 // The path should contain a file "base.html" which is the base template.
 // It should also contain a "layouts" subfolder which contains child templates to join with the base.
 func loadTemplates(path string) map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 
-	baseTemplate := template.Must(template.ParseFiles(filepath.Join(path, "base.html")))
+	funcMap := template.FuncMap{"markdownToHTML": markdownToHTML}
+	baseTemplate := template.Must(template.New("base").Funcs(funcMap).ParseFiles(filepath.Join(path, "base.html")))
 
 	layoutFiles, _ := filepath.Glob(filepath.Join(path, "layouts/*.html"))
 	for _, layoutFile := range layoutFiles {

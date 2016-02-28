@@ -3,5 +3,5 @@
 <br/><br/>
 Posted By: {{.Thread.CreatedByUsername}}
 <br/><br/>
-<div id="thread-content">{{.Thread.Content}}</div>
+<div id="thread-content">{{.Thread.Content | markdownToHTML}}</div>
 {{end}}

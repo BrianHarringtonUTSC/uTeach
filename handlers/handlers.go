@@ -215,7 +215,6 @@ func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int64)
 
 	err = upvoteFn(user.Username, threadID)
 	if err != nil {
-		fmt.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
