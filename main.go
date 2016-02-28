@@ -13,12 +13,12 @@ import (
 
 func main() {
 	var configPath string
-	flag.StringVar(&configPath, "config", "",
-		"Path to JSON config file. See github.com/umairidris/uTeach/blob/master/sample/config.json for an example.")
+	flag.StringVar(&configPath, "config", "", "Path to JSON config file.")
 	flag.Parse()
 
 	if configPath == "" {
-		fmt.Println("config arg not provided.")
+		fmt.Println("config arg not provided.",
+			"See https://raw.githubusercontent.com/umairidris/uTeach/master//sample/config.json for an example.")
 		return
 	}
 

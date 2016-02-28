@@ -75,7 +75,7 @@ My guess is that that large parts of uTeach will be rewritten to use a client si
 At the time of writing this, the landscape of the web is rapidly changing.
 Backbone (taught in C09) is on a decline, Angular is being replaced by Angular 2 which is not backwards compatible.
 React is popular now, but might be overshadowed by other libraries once Web Components are standardized (Polymer, etc).
-Picking a library now might be outdated in only a month or so.
+Picking a library now might be outdated in only a few months.
 Thus, until the landscape has settled, it will be easier to develop the app as a pure server side, then convert it to a client side app down the line.
 
 ### Why SQL? Why Sqlite?
