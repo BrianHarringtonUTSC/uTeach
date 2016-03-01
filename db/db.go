@@ -76,7 +76,7 @@ func (db *DB) User(username string) (*models.User, error) {
 }
 
 func (db *DB) AddUser(username string) (*models.User, error) {
-	if (len(username)) == 0 {
+	if len(username) == 0 {
 		return nil, errors.New("Empty username")
 	}
 	_, err := db.exec("INSERT INTO users(username) VALUES(?)", username)
@@ -147,6 +147,10 @@ func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int64]bool, e
 // NewThread adds a new thread.
 func (db *DB) NewThread(title string, content string, subject_name string, created_by_username string) (*models.Thread,
 	error) {
+
+	if title == "" || content == "" || subject_name == "" || created_by_username == "" {
+		return errors.New("Empty values not allowed.")
+	}
 
 	query := "INSERT INTO threads(title, content, subject_name, created_by_username) VALUES(?, ?, ?, ?)"
 	result, err := db.exec(query, title, content, subject_name, created_by_username)
