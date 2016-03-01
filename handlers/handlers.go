@@ -12,6 +12,7 @@ import (
 	"github.com/umairidris/uTeach/middleware"
 )
 
+
 // Router gets the router with routes and their corresponding handlers defined.
 // It also serves static files based on the static files path specified in the app config.
 func Router(app *application.Application) *mux.Router {
@@ -27,7 +28,9 @@ func Router(app *application.Application) *mux.Router {
 
 	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
 
-	router.Handle("/login/{username}", stdChain.ThenFunc(Login))
+	router.Handle("/login", stdChain.ThenFunc(sendOauth2Request))
+	router.Handle("/oauth2callback", stdChain.ThenFunc(oauth2Callback))
+
 	router.Handle("/logout", stdChain.ThenFunc(Logout))
 
 	router.Handle("/upvote/{threadID}", authChain.ThenFunc(AddUpvote)).Methods("POST")
@@ -166,28 +169,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
 	renderTemplate(w, r, "user.html", data)
-}
-
-// Login logs the user in.
-func Login(w http.ResponseWriter, r *http.Request) {
-	app := application.Get(r)
-
-	if _, ok := app.Store.SessionUser(r); ok {
-		fmt.Fprint(w, "Already logged in")
-		return
-	}
-
-	vars := mux.Vars(r)
-	username := vars["username"]
-
-	// TODO: replace this with SAML login for username
-
-	err := app.Store.NewUserSession(w, r, username, app.DB)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprint(w, "Logged in as: "+username)
 }
 
 // Logout logs the user out.
