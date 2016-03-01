@@ -12,7 +12,6 @@ import (
 	"github.com/umairidris/uTeach/middleware"
 )
 
-
 // Router gets the router with routes and their corresponding handlers defined.
 // It also serves static files based on the static files path specified in the app config.
 func Router(app *application.Application) *mux.Router {
@@ -28,8 +27,8 @@ func Router(app *application.Application) *mux.Router {
 
 	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
 
-	router.Handle("/login", stdChain.ThenFunc(sendOauth2Request))
-	router.Handle("/oauth2callback", stdChain.ThenFunc(oauth2Callback))
+	router.Handle("/login", stdChain.ThenFunc(GetLogin))
+	router.Handle("/oauth2callback", stdChain.ThenFunc(GetOauth2Callback))
 
 	router.Handle("/logout", stdChain.ThenFunc(Logout))
 
@@ -169,17 +168,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
 	renderTemplate(w, r, "user.html", data)
-}
-
-// Logout logs the user out.
-func Logout(w http.ResponseWriter, r *http.Request) {
-	app := application.Get(r)
-	err := app.Store.DeleteUserSession(w, r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprint(w, "Logged out")
 }
 
 // upvote is a helper for handling upvotes.

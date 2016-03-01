@@ -24,6 +24,8 @@ func main() {
 	}
 
 	app := application.New(configPath)
-	http.Handle("/", handlers.Router(app))
+	router := handlers.Router(app)
+	http.Handle("/", router)
+
 	log.Fatal(http.ListenAndServe(app.Config.HTTPAddress, nil))
 }

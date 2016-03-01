@@ -2,6 +2,7 @@
 package session
 
 import (
+	"database/sql"
 	"encoding/gob"
 	"github.com/gorilla/sessions"
 	"net/http"
@@ -43,6 +44,9 @@ func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username 
 	}
 
 	user, err := db.User(username)
+	if err == sql.ErrNoRows {
+		user, err = db.AddUser(username)
+	}
 	if err != nil {
 		return err
 	}

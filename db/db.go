@@ -3,6 +3,7 @@ package db
 
 import (
 	"database/sql/driver"
+	"errors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
 
@@ -57,11 +58,33 @@ func (db *DB) createTables() {
 		)`)
 }
 
+func (db *DB) exec(query string, params ...interface{}) (driver.Result, error) {
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	return stmt.Exec(params...)
+}
+
 // User gets the user at the given username.
-func (db *DB) User(username string) (user *models.User, err error) {
-	user = &models.User{}
-	err = db.Get(user, "SELECT * FROM users WHERE username=?", username)
-	return
+func (db *DB) User(username string) (*models.User, error) {
+	user := &models.User{}
+	err := db.Get(user, "SELECT * FROM users WHERE username=?", username)
+	return user, err
+}
+
+func (db *DB) AddUser(username string) (*models.User, error) {
+	if (len(username)) == 0 {
+		return nil, errors.New("Empty username")
+	}
+	_, err := db.exec("INSERT INTO users(username) VALUES(?)", username)
+	if err != nil {
+		return nil, err
+	}
+
+	return db.User(username)
 }
 
 // Subjects gets all subjects.
@@ -119,16 +142,6 @@ func (db *DB) UserUpvotedThreadIDs(username string) (threadIDs map[int64]bool, e
 		threadIDs[threadID] = true
 	}
 	return
-}
-
-func (db *DB) exec(query string, params ...interface{}) (driver.Result, error) {
-	stmt, err := db.Prepare(query)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	return stmt.Exec(params...)
 }
 
 // NewThread adds a new thread.
