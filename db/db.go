@@ -149,7 +149,7 @@ func (db *DB) NewThread(title string, content string, subject_name string, creat
 	error) {
 
 	if title == "" || content == "" || subject_name == "" || created_by_username == "" {
-		return errors.New("Empty values not allowed.")
+		return nil, errors.New("Empty values not allowed.")
 	}
 
 	query := "INSERT INTO threads(title, content, subject_name, created_by_username) VALUES(?, ?, ?, ?)"
