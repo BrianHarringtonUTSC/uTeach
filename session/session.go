@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"encoding/gob"
 	"github.com/gorilla/sessions"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 
-	"github.com/umairidris/uTeach/db"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -37,15 +37,16 @@ func (s *Store) getUserSession(r *http.Request) (*sessions.Session, error) {
 }
 
 // NewUserSession creates a new session and stores the User containing the
-func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username string, db *db.DB) error {
+func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username string, db *sqlx.DB) error {
 	session, err := s.getUserSession(r)
 	if err != nil {
 		return err
 	}
 
-	user, err := db.User(username)
+	u := models.NewUserModel(db)
+	user, err := u.GetUserByUsername(username)
 	if err == sql.ErrNoRows {
-		user, err = db.AddUser(username)
+		user, err = u.Signup(username)
 	}
 	if err != nil {
 		return err

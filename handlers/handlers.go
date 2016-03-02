@@ -28,7 +28,6 @@ func Router(app *application.Application) *mux.Router {
 
 	router.Handle("/login", stdChain.ThenFunc(GetLogin))
 	router.Handle("/oauth2callback", stdChain.ThenFunc(GetOauth2Callback))
-
 	router.Handle("/logout", stdChain.ThenFunc(Logout))
 
 	router.Handle("/upvote/{threadID}", authChain.ThenFunc(AddUpvote)).Methods("POST")
@@ -44,7 +43,7 @@ func Router(app *application.Application) *mux.Router {
 // renderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
-	app := application.Get(r)
+	app := application.GetFromContext(r)
 
 	tmpl, ok := app.Templates[name]
 	if !ok {

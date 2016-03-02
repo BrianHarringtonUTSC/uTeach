@@ -11,7 +11,7 @@ import (
 func SetApplication(app *application.Application) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			application.SetContext(r, app)
+			application.SetInContext(r, app)
 			next.ServeHTTP(w, r)
 		})
 	}
@@ -21,7 +21,7 @@ func SetApplication(app *application.Application) func(http.Handler) http.Handle
 func MustLogin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		app := application.Get(r)
+		app := application.GetFromContext(r)
 		if _, ok := app.Store.SessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
 			return

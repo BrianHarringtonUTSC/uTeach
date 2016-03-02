@@ -6,10 +6,11 @@ import (
 	"strconv"
 
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/models"
 )
 
 // upvote is a helper for handling upvotes.
-func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int64) error) {
+func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(int64, string) error) {
 	vars := mux.Vars(r)
 	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
 	if err != nil {
@@ -17,10 +18,10 @@ func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int64)
 		return
 	}
 
-	app := application.Get(r)
+	app := application.GetFromContext(r)
 	user, _ := app.Store.SessionUser(r)
 
-	err = upvoteFn(user.Username, threadID)
+	err = upvoteFn(threadID, user.Username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -31,12 +32,14 @@ func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(string, int64)
 
 // AddUpvote adds an upvote for the user on a thread.
 func AddUpvote(w http.ResponseWriter, r *http.Request) {
-	app := application.Get(r)
-	upvote(w, r, app.DB.AddUpVote)
+	app := application.GetFromContext(r)
+	t := models.NewThreadModel(app.DB)
+	upvote(w, r, t.AddThreadVoteForUser)
 }
 
 // RemoveUpvote removes an upvote for the user on a thread.
 func RemoveUpvote(w http.ResponseWriter, r *http.Request) {
-	app := application.Get(r)
-	upvote(w, r, app.DB.RemoveUpvote)
+	app := application.GetFromContext(r)
+	t := models.NewThreadModel(app.DB)
+	upvote(w, r, t.RemoveTheadVoteForUser)
 }
