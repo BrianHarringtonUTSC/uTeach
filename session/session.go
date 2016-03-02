@@ -27,8 +27,8 @@ func init() {
 }
 
 // NewStore creates a new store.
-func NewStore(authenticationKey string) *Store {
-	return &Store{sessions.NewCookieStore([]byte(authenticationKey))}
+func NewStore(authenticationKey string, encryptionKey string) *Store {
+	return &Store{sessions.NewCookieStore([]byte(authenticationKey), []byte(encryptionKey))}
 }
 
 // getUserSession gets the session containing the user.
@@ -52,6 +52,7 @@ func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username 
 	}
 
 	session.Values[userKey] = user
+	session.Options.HttpOnly = true
 	return session.Save(r, w)
 }
 

@@ -3,10 +3,10 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
-	"os"
 
 	"github.com/umairidris/uTeach/application"
 )
@@ -15,16 +15,23 @@ const (
 	googleUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
 )
 
-// credentials should be obtained from the Google Developer Console (https://console.developers.google.com).
-var conf = &oauth2.Config{
-	ClientID:     os.Getenv("UTEACH_GOOGLE_CLIENT_ID"),
-	ClientSecret: os.Getenv("UTEACH_GOOGLE_CLIENT_SECRET"),
-	RedirectURL:  "http://localhost:8000/oauth2callback",
-	Scopes: []string{
-		"https://www.googleapis.com/auth/userinfo.profile",
-		"https://www.googleapis.com/auth/userinfo.email",
-	},
-	Endpoint: google.Endpoint,
+// getGoogleConfig gets an oauth2 Config for doing authentication with Google.
+func getGoogleConfig(r *http.Request) *oauth2.Config {
+	app := application.Get(r)
+
+	googleConfig := &oauth2.Config{
+		Scopes: []string{
+			"https://www.googleapis.com/auth/userinfo.profile",
+			"https://www.googleapis.com/auth/userinfo.email",
+		},
+		Endpoint: google.Endpoint,
+	}
+
+	googleConfig.RedirectURL = app.Config.GoogleRedirectURL
+	googleConfig.ClientID = app.Config.GoogleClientID
+	googleConfig.ClientSecret = app.Config.GoogleClientSecret
+
+	return googleConfig
 }
 
 // GetLogin makes a request to Google Oauth2 authenticator.
@@ -35,28 +42,26 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if conf.ClientID == "" || conf.ClientSecret == "" {
-		http.Error(w, "Google Oauth2 Client ID and/or secret not set.", http.StatusInternalServerError)
-		return
-	}
-
+	googleConfig := getGoogleConfig(r)
 	// redirect user to Google's consent page to ask for permission for the scopes specified above.
-	url := conf.AuthCodeURL("uteach-login") // TODO: replace with CSRF token
+	url := googleConfig.AuthCodeURL("uteach-login") // TODO: replace with CSRF token
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
 // GetOauth2Callback responds to callbacks from Google Oauth2 authenticator.
 func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
+	googleConfig := getGoogleConfig(r)
+
 	// handle the exchange code to initiate a transport
 	authcode := r.FormValue("code")
-	tok, err := conf.Exchange(oauth2.NoContext, authcode)
+	tok, err := googleConfig.Exchange(oauth2.NoContext, authcode)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// make get request to get user info using token
-	client := conf.Client(oauth2.NoContext, tok)
+	client := googleConfig.Client(oauth2.NoContext, tok)
 	response, err := client.Get(googleUserInfoURL)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -72,7 +77,7 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create new user session using info from user info
+	// create new user session
 	app := application.Get(r)
 	email := m["email"].(string)
 
@@ -93,4 +98,20 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// GetUser renders user info.
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	username := vars["username"]
+
+	app := application.Get(r)
+	userCreatedThreads, err := app.DB.UserCreatedThreads(username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
+	renderTemplate(w, r, "user.html", data)
 }

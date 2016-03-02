@@ -30,7 +30,9 @@ type Application struct {
 func New(configPath string) *Application {
 	config := config.Load(configPath)
 	db := db.New(config.DBPath)
-	store := session.NewStore("todo-proper-secret")
+
+	// cookie encryption key must be 32 bytes
+	store := session.NewStore(config.CookieAuthenticationKey, config.CookieEncryptionKey)
 	templates := loadTemplates(config.TemplatesPath)
 
 	app := &Application{config, db, store, templates}

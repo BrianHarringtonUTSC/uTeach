@@ -2,5 +2,8 @@
 	"http_address": ":8000",
 	"db_path": "test.db",
 	"templates_path": "../templates/",
-	"static_files_path": "../static/"
+	"static_files_path": "../static/",
+	"cookie_authentication_key": "authentication",
+	"cookie_encryption_key": "12345678901234567890123456789012",
+	"google_redirect_url": "http://localhost:8000/oauth2callback"
 }
