@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"time"
 )
@@ -32,42 +33,47 @@ func (t *Thread) URL() string {
 	return fmt.Sprintf("/s/%s/%d", t.SubjectName, t.ID)
 }
 
-// GetAllThreads gets all threads with the given subject.
-func (t *ThreadModel) GetThreadsBySubject(subject string) ([]*Thread, error) {
+func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 	threads := []*Thread{}
-	query := `SELECT threads.*, count(thread_votes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
-			  WHERE threads.subject_name=?
-			  GROUP BY threads.id
-			  ORDER BY count(thread_votes.thread_id) DESC`
-	err := t.db.Select(&threads, query, subject)
+
+	builder := squirrel.Select("threads.*, count(thread_votes.thread_id) as score").
+		From("threads").
+		LeftJoin("thread_votes ON threads.id=thread_votes.thread_id").
+		Where(eq).
+		GroupBy("threads.id").
+		OrderBy("count(thread_votes.thread_id) DESC")
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+	err = tm.db.Select(&threads, query, args...)
 	return threads, err
 }
 
-func (t *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
-	thread := &Thread{}
-	query := `SELECT threads.*, count(thread_votes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
-			  WHERE threads.id=?
-			  GROUP BY threads.id`
-	err := t.db.Get(thread, query, id)
-	return thread, err
+func (tm *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
+	threads, err := tm.getThreads(squirrel.Eq{"threads.id": id})
+	if err != nil {
+		return nil, err
+	}
+	if len(threads) != 1 {
+		return nil, errors.New("Thread not found.")
+	}
+	return threads[0], err
+}
+
+// GetThreadsBySubject gets all threads with the given subject.
+func (tm *ThreadModel) GetThreadsBySubject(subject string) ([]*Thread, error) {
+	return tm.getThreads(squirrel.Eq{"threads.subject_name": subject})
 }
 
 // GetThreadsByEmail gets all threads created by the user with the email.
-func (t *ThreadModel) GetThreadsByEmail(email string) ([]*Thread, error) {
-	threads := []*Thread{}
-	query := `SELECT threads.*, count(thread_votes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
-			  WHERE threads.created_by_email=?
-			  GROUP BY threads.id
-			  ORDER BY count(thread_votes.thread_id) DESC`
-	err := t.db.Select(&threads, query, email)
-	return threads, err
+func (tm *ThreadModel) GetThreadsByEmail(email string) ([]*Thread, error) {
+	return tm.getThreads(squirrel.Eq{"threads.created_by_email": email})
 }
 
-func (t *ThreadModel) GetThreadIdsUpvotedByEmail(email string) (map[int64]bool, error) {
-	rows, err := t.db.Query("SELECT thread_id FROM thread_votes WHERE email=?", email)
+func (tm *ThreadModel) GetThreadIdsUpvotedByEmail(email string) (map[int64]bool, error) {
+	rows, err := tm.db.Query("SELECT thread_id FROM thread_votes WHERE email=?", email)
 	if err != nil {
 		return nil, err
 	}
@@ -82,13 +88,13 @@ func (t *ThreadModel) GetThreadIdsUpvotedByEmail(email string) (map[int64]bool, 
 	return threadIDs, err
 }
 
-func (t *ThreadModel) AddThread(title, content, subject_name, created_by_email string) (*Thread, error) {
+func (tm *ThreadModel) AddThread(title, content, subject_name, created_by_email string) (*Thread, error) {
 	if title == "" || content == "" || subject_name == "" || created_by_email == "" {
 		return nil, errors.New("Empty values not allowed.")
 	}
 
 	query := "INSERT INTO threads(title, content, subject_name, created_by_email) VALUES(?, ?, ?, ?)"
-	result, err := t.exec(query, title, content, subject_name, created_by_email)
+	result, err := tm.exec(query, title, content, subject_name, created_by_email)
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +104,20 @@ func (t *ThreadModel) AddThread(title, content, subject_name, created_by_email s
 		return nil, err
 	}
 
-	return t.GetThreadByID(id)
+	return tm.GetThreadByID(id)
 }
 
-func (t *ThreadModel) AddThreadVoteForUser(threadID int64, email string) error {
-	_, err := t.exec("INSERT INTO thread_votes(email, thread_id) VALUES(?, ?)", email, threadID)
+func (tm *ThreadModel) AddThreadVoteForUser(threadID int64, email string) error {
+	_, err := tm.exec("INSERT INTO thread_votes(email, thread_id) VALUES(?, ?)", email, threadID)
 	return err
 }
 
-func (t *ThreadModel) RemoveTheadVoteForUser(threadID int64, email string) error {
-	_, err := t.exec("DELETE FROM thread_votes where email=? AND thread_id=?", email, threadID)
+func (tm *ThreadModel) RemoveTheadVoteForUser(threadID int64, email string) error {
+	_, err := tm.exec("DELETE FROM thread_votes where email=? AND thread_id=?", email, threadID)
+	return err
+}
+
+func (tm *ThreadModel) HideThread(id int64) error {
+	_, err := tm.exec("UPDATE threads SET is_visible=? WHERE id=?", false, id)
 	return err
 }

@@ -24,14 +24,15 @@ func Router(app *application.Application) *mux.Router {
 	router.Handle("/s/{subject}/submit", authChain.ThenFunc(PostNewThread)).Methods("POST")
 	router.Handle("/s/{subject}/{threadID}", stdChain.ThenFunc(GetThread))
 
+	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(PostThreadVote)).Methods("POST")
+	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(DeleteThreadVote)).Methods("DELETE")
+	router.Handle("/t/{threadID}/hide", authChain.ThenFunc(PostHideThread)).Methods("POST")
+
 	router.Handle("/user/{email}", stdChain.ThenFunc(GetUser))
 
 	router.Handle("/login", stdChain.ThenFunc(GetLogin))
 	router.Handle("/oauth2callback", stdChain.ThenFunc(GetOauth2Callback))
 	router.Handle("/logout", stdChain.ThenFunc(Logout))
-
-	router.Handle("/upvote/{threadID}", authChain.ThenFunc(AddUpvote)).Methods("POST")
-	router.Handle("/upvote/{threadID}", authChain.ThenFunc(RemoveUpvote)).Methods("DELETE")
 
 	// serve static files -- should be the last route
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
@@ -58,9 +59,11 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data ma
 	// add session user to data
 	if user, ok := app.Store.SessionUser(r); ok {
 		data["SessionUser"] = user
+		data["IsAdmin"] = user.IsAdmin
 	} else {
 		// make sure user is nil so templates don't render a user
 		data["SessionUser"] = nil
+		data["IsAdmin"] = false
 	}
 
 	err := tmpl.ExecuteTemplate(w, "base", data)

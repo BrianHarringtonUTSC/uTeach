@@ -17,8 +17,8 @@ type SubjectModel struct {
 	Base
 }
 
-func (s *SubjectModel) GetAllSubjects() ([]*Subject, error) {
+func (sm *SubjectModel) GetAllSubjects() ([]*Subject, error) {
 	subjects := []*Subject{}
-	err := s.db.Select(&subjects, "SELECT * FROM subjects")
+	err := sm.db.Select(&subjects, "SELECT * FROM subjects")
 	return subjects, err
 }

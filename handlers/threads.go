@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -83,4 +84,59 @@ func PostNewThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, thread.URL(), 301)
+}
+
+// thread_vote is a helper for handling upvotes.
+func thread_vote(w http.ResponseWriter, r *http.Request, upvoteFn func(int64, string) error) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	app := application.GetFromContext(r)
+	user, _ := app.Store.SessionUser(r)
+
+	err = upvoteFn(threadID, user.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// PostThreadVote adds a vote for the useruser on a thread.
+func PostThreadVote(w http.ResponseWriter, r *http.Request) {
+	app := application.GetFromContext(r)
+	t := models.NewThreadModel(app.DB)
+	thread_vote(w, r, t.AddThreadVoteForUser)
+}
+
+// DeleteThreadVote removes a vote for the user on a thread.
+func DeleteThreadVote(w http.ResponseWriter, r *http.Request) {
+	app := application.GetFromContext(r)
+	t := models.NewThreadModel(app.DB)
+	thread_vote(w, r, t.RemoveTheadVoteForUser)
+}
+
+func PostHideThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	app := application.GetFromContext(r)
+
+	t := models.NewThreadModel(app.DB)
+	err = t.HideThread(threadID)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

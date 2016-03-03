@@ -3,7 +3,7 @@
 <br/><br/>
 Posted By: {{.Thread.CreatedByEmail}}
 <br/>
-Posted At: {{.Thread.TimeCreated.Local}}
+Posted At: {{.Thread.TimeCreated | formatAndLocalizeTime}}
 <br/><br/>
 <div id="thread-content">{{.Thread.Content | markdownToHTML}}</div>
 {{end}}

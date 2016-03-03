@@ -7,20 +7,25 @@
 {{$base := .}}
 <ul id="threads">
 	{{range $thread := .Threads}}
-	<li>
-		<a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
-		<br />
+		{{if or $thread.IsVisible $base.IsAdmin}}
+			<li>
+				{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
+				<br />
 
-		{{$thread.Score}}
-		{{if $base.SessionUser}}
-			|
-			{{if index $base.UserUpvotedThreadIDs $thread.ID}}
-				<button class="thread_remove_vote_button" type="button" value="{{$thread.ID}}">remove vote</button>
-			{{else}}
-				<button class="thread_upvote_button" type="button" value="{{$thread.ID}}">upvote</button>
-			{{end}}
+
+				{{if and $base.SessionUser $thread.IsVisible}}
+					{{if index $base.UserUpvotedThreadIDs $thread.ID}}
+						<button class="thread_remove_vote_button" type="button" value="{{$thread.ID}}">remove vote</button>
+					{{else}}
+						<button class="thread_upvote_button" type="button" value="{{$thread.ID}}">upvote</button>
+					{{end}}
+
+					{{if eq $base.SessionUser.Email $thread.CreatedByEmail}}
+						<button class="hide" type="button" value="{{$thread.ID}}">hide</button>
+					{{end}}
+				{{end}}
+			</li>
 		{{end}}
-	</li>
 	{{end}}
 </ul>
 {{end}}
