@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 func NewThreadModel(db *sqlx.DB) *ThreadModel {
@@ -11,12 +12,15 @@ func NewThreadModel(db *sqlx.DB) *ThreadModel {
 }
 
 type Thread struct {
-	ID                int64
-	Title             string
-	Content           string
-	Score             int
-	SubjectName       string `db:"subject_name"`
-	CreatedByUsername string `db:"created_by_username"`
+	ID             int64
+	Title          string
+	Content        string
+	Score          int
+	SubjectName    string    `db:"subject_name"`
+	CreatedByEmail string    `db:"created_by_email"`
+	TimeCreated    time.Time `db:"time_created"`
+	IsPinned       bool      `db:"is_pinned"`
+	IsVisible      bool      `db:"is_visible"`
 }
 
 type ThreadModel struct {
@@ -31,39 +35,39 @@ func (t *Thread) URL() string {
 // GetAllThreads gets all threads with the given subject.
 func (t *ThreadModel) GetThreadsBySubject(subject string) ([]*Thread, error) {
 	threads := []*Thread{}
-	query := `SELECT threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
+	query := `SELECT threads.*, count(thread_votes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
 			  WHERE threads.subject_name=?
 			  GROUP BY threads.id
-			  ORDER BY count(upvotes.thread_id) DESC`
+			  ORDER BY count(thread_votes.thread_id) DESC`
 	err := t.db.Select(&threads, query, subject)
 	return threads, err
 }
 
 func (t *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
 	thread := &Thread{}
-	query := `SELECT threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
+	query := `SELECT threads.*, count(thread_votes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
 			  WHERE threads.id=?
 			  GROUP BY threads.id`
 	err := t.db.Get(thread, query, id)
 	return thread, err
 }
 
-// GetThreadsByUsername gets all threads created by the user.
-func (t *ThreadModel) GetThreadsByUsername(username string) ([]*Thread, error) {
+// GetThreadsByEmail gets all threads created by the user with the email.
+func (t *ThreadModel) GetThreadsByEmail(email string) ([]*Thread, error) {
 	threads := []*Thread{}
-	query := `SELECT threads.*, count(upvotes.thread_id) as score
-			  FROM threads LEFT OUTER JOIN upvotes ON threads.id=upvotes.thread_id
-			  WHERE threads.created_by_username=?
+	query := `SELECT threads.*, count(thread_votes.thread_id) as score
+			  FROM threads LEFT OUTER JOIN thread_votes ON threads.id=thread_votes.thread_id
+			  WHERE threads.created_by_email=?
 			  GROUP BY threads.id
-			  ORDER BY count(upvotes.thread_id) DESC`
-	err := t.db.Select(&threads, query, username)
+			  ORDER BY count(thread_votes.thread_id) DESC`
+	err := t.db.Select(&threads, query, email)
 	return threads, err
 }
 
-func (t *ThreadModel) GetThreadIdsUpvotedByUsername(username string) (map[int64]bool, error) {
-	rows, err := t.db.Query("SELECT thread_id FROM upvotes WHERE username=?", username)
+func (t *ThreadModel) GetThreadIdsUpvotedByEmail(email string) (map[int64]bool, error) {
+	rows, err := t.db.Query("SELECT thread_id FROM thread_votes WHERE email=?", email)
 	if err != nil {
 		return nil, err
 	}
@@ -78,13 +82,13 @@ func (t *ThreadModel) GetThreadIdsUpvotedByUsername(username string) (map[int64]
 	return threadIDs, err
 }
 
-func (t *ThreadModel) AddThread(title, content, subject_name, created_by_username string) (*Thread, error) {
-	if title == "" || content == "" || subject_name == "" || created_by_username == "" {
+func (t *ThreadModel) AddThread(title, content, subject_name, created_by_email string) (*Thread, error) {
+	if title == "" || content == "" || subject_name == "" || created_by_email == "" {
 		return nil, errors.New("Empty values not allowed.")
 	}
 
-	query := "INSERT INTO threads(title, content, subject_name, created_by_username) VALUES(?, ?, ?, ?)"
-	result, err := t.exec(query, title, content, subject_name, created_by_username)
+	query := "INSERT INTO threads(title, content, subject_name, created_by_email) VALUES(?, ?, ?, ?)"
+	result, err := t.exec(query, title, content, subject_name, created_by_email)
 	if err != nil {
 		return nil, err
 	}
@@ -97,12 +101,12 @@ func (t *ThreadModel) AddThread(title, content, subject_name, created_by_usernam
 	return t.GetThreadByID(id)
 }
 
-func (t *ThreadModel) AddThreadVoteForUser(threadID int64, username string) error {
-	_, err := t.exec("INSERT INTO upvotes(username, thread_id) VALUES(?, ?)", username, threadID)
+func (t *ThreadModel) AddThreadVoteForUser(threadID int64, email string) error {
+	_, err := t.exec("INSERT INTO thread_votes(email, thread_id) VALUES(?, ?)", email, threadID)
 	return err
 }
 
-func (t *ThreadModel) RemoveTheadVoteForUser(threadID int64, username string) error {
-	_, err := t.exec("DELETE FROM upvotes where username=? AND thread_id=?", username, threadID)
+func (t *ThreadModel) RemoveTheadVoteForUser(threadID int64, email string) error {
+	_, err := t.exec("DELETE FROM thread_votes where email=? AND thread_id=?", email, threadID)
 	return err
 }

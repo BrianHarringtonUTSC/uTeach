@@ -1,7 +1,7 @@
 {{define "content"}}
-<h4>Threads by {{.Username}}</h3>
+<h4>Threads by {{.Email}}</h3>
 <ul>
-	{{range $thread := .UserCreatedThreads}}
+	{{range $thread := .CreatedThreads}}
 		<li>{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a></li>
 	{{end}}
 </ul>

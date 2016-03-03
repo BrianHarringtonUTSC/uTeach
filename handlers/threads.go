@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/models"
@@ -12,7 +13,7 @@ import (
 // GetThreads renders all threads for the subject.
 func GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	subject := vars["subject"]
+	subject := strings.ToLower(vars["subject"])
 
 	app := application.GetFromContext(r)
 
@@ -26,7 +27,7 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 	data := map[string]interface{}{"Threads": threads}
 
 	if user, ok := app.Store.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := t.GetThreadIdsUpvotedByUsername(user.Username)
+		userUpvotedThreadIDs, err := t.GetThreadIdsUpvotedByEmail(user.Email)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -67,7 +68,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 // PostNewThread adds a new thread in the db and redirects to it, if successful.
 func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	subject := vars["subject"]
+	subject := strings.ToLower(vars["subject"])
 
 	app := application.GetFromContext(r)
 	user, _ := app.Store.SessionUser(r)
@@ -76,7 +77,7 @@ func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	text := r.FormValue("text")
 
 	t := models.NewThreadModel(app.DB)
-	thread, err := t.AddThread(title, text, subject, user.Username)
+	thread, err := t.AddThread(title, text, subject, user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

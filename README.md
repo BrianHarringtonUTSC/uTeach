@@ -4,7 +4,8 @@ uTeach is a reddit-like community oriented platform for sharing educational mate
 
 ### Requirements
 - Golang 1.4+
-- GCC
+- GCC (Sqlite3 dependency)
+- Python 3.0+ (if running the database helper)
 
 ### Installation Instructions
 Notes:
@@ -35,16 +36,17 @@ $GOPATH/bin/uTeach --config=sample/config.json
 ```
 
 ### TODO
-- SAML login
 - Add 'tags' to threads
 - DB index
 - HTTPS
-- Admin pages + creating new threads
-- Comments
+- Admin pages
 - Middleware for logging/recovery (Gorilla, etc)
 - Don't expose sensitive error info through http.Error calls
 - Security (CSRF, etc)
-- HTTP tests
+- Front end UI work
+- Thread visibility
+- Thread pinning
+- Fix relative config paths
 
 ### FAQ
 
@@ -90,5 +92,5 @@ Sqlite made it easy to get going, thus I used it over others. It should be trivi
 - Make sure to do the "Tour of Go" to learn the language quickly (you do not need to do the concurrency sections for this web app).
 - Familiarize yourself with Javascript and CSS.
 - uTeach is roughly based on the [Go Bootstrap Project](http://go-bootstrap.io/). Some technologies are different, but most of it is the same. More importantly, the structure and layout of the app is closely matched. If you are confused on any part of the project, take a look and see how Go Bootstrap does it for better understanding.
-- Check out [Go for Pythonistas](s3.amazonaws.com/golangweekly/go_for_pythonistas.pdf) for a guide on Go for Python programmers (if you have finished A08/A48).
+- Check out [Go for Pythonistas](http://s3.amazonaws.com/golangweekly/go_for_pythonistas.pdf) for a guide on Go for Python programmers (if you have finished A08/A48).
 - [Comprehensive guide on writing Web apps in Go](https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/)

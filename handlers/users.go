@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"net/http"
+	"strings"
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/models"
@@ -81,8 +82,9 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	// create new user session
 	app := application.GetFromContext(r)
 	email := m["email"].(string)
+	name := m["name"].(string)
 
-	err = app.Store.NewUserSession(w, r, email, app.DB) // username is email for now
+	err = app.Store.NewUserSession(w, r, email, name, app.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -104,17 +106,17 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 // GetUser renders user info.
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	username := vars["username"]
+	email := strings.ToLower(vars["email"])
 
 	app := application.GetFromContext(r)
 
 	t := models.NewThreadModel(app.DB)
-	userCreatedThreads, err := t.GetThreadsByUsername(username)
+	createdThreads, err := t.GetThreadsByEmail(email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data := map[string]interface{}{"Username": username, "UserCreatedThreads": userCreatedThreads}
+	data := map[string]interface{}{"Email": email, "CreatedThreads": createdThreads}
 	renderTemplate(w, r, "user.html", data)
 }

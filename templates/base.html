@@ -14,7 +14,7 @@
   		</div>
 	  	<div id="signin-status">
   		{{if .SessionUser}}
-  			Signed in as: {{.SessionUser.Username}} | <a href="/logout">Logout</a>
+  			<a href="/user/{{.SessionUser.Email}}">{{.SessionUser.Email}}</a> | <a href="/logout">Logout</a>
   		{{else}}
   			<a href="/login">Sign in with Google</a>
   		{{end}}

@@ -1,27 +1,31 @@
 CREATE TABLE IF NOT EXISTS users(
-	username TEXT PRIMARY KEY
-)
+	email TEXT PRIMARY KEY,
+	name TEXT NOT NULL,
+	is_admin BOOLEAN DEFAULT 0 NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS subjects(
 	name TEXT PRIMARY KEY,
 	title TEXT NOT NULL
-)
+);
 
 CREATE TABLE IF NOT EXISTS threads(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	title TEXT NOT NULL,
 	content TEXT NOT NULL,
 	subject_name TEXT NOT NULL,
-	created_by_username TEXT NOT NULL,
+	created_by_email TEXT NOT NULL,
+	time_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	is_pinned BOOLEAN DEFAULT 0 NOT NULL,
+	is_visible BOOLEAN DEFAULT 1 NOT NULL,
 	FOREIGN KEY(subject_name) REFERENCES subjects(name) ON DELETE CASCADE,
-	FOREIGN KEY(created_by_username) REFERENCES users(username) ON DELETE CASCADE
-)
+	FOREIGN KEY(created_by_email) REFERENCES users(email) ON DELETE CASCADE
+);
 
-
-CREATE TABLE IF NOT EXISTS upvotes(
-	username TEXT  NOT NULL,
+CREATE TABLE IF NOT EXISTS thread_votes(
 	thread_id INTEGER NOT NULL,
-	PRIMARY KEY (username, thread_id),
-	FOREIGN KEY(username) REFERENCES users(username) ON DELETE CASCADE,
-	FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE
-)
+	email TEXT  NOT NULL,
+	PRIMARY KEY (thread_id, email),
+	FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+	FOREIGN KEY(email) REFERENCES users(email) ON DELETE CASCADE
+);

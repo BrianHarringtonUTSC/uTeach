@@ -21,7 +21,7 @@ func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(int64, string)
 	app := application.GetFromContext(r)
 	user, _ := app.Store.SessionUser(r)
 
-	err = upvoteFn(threadID, user.Username)
+	err = upvoteFn(threadID, user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -30,7 +30,7 @@ func upvote(w http.ResponseWriter, r *http.Request, upvoteFn func(int64, string)
 	w.WriteHeader(http.StatusOK)
 }
 
-// AddUpvote adds an upvote for the user on a thread.
+// AddUpvote adds an upvote for the useruser on a thread.
 func AddUpvote(w http.ResponseWriter, r *http.Request) {
 	app := application.GetFromContext(r)
 	t := models.NewThreadModel(app.DB)

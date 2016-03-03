@@ -1,7 +1,9 @@
 {{define "content"}}
 {{.Thread.Title}}
 <br/><br/>
-Posted By: {{.Thread.CreatedByUsername}}
+Posted By: {{.Thread.CreatedByEmail}}
+<br/>
+Posted At: {{.Thread.TimeCreated.Local}}
 <br/><br/>
 <div id="thread-content">{{.Thread.Content | markdownToHTML}}</div>
 {{end}}

@@ -37,16 +37,16 @@ func (s *Store) getUserSession(r *http.Request) (*sessions.Session, error) {
 }
 
 // NewUserSession creates a new session and stores the User containing the
-func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, username string, db *sqlx.DB) error {
+func (s *Store) NewUserSession(w http.ResponseWriter, r *http.Request, email string, name string, db *sqlx.DB) error {
 	session, err := s.getUserSession(r)
 	if err != nil {
 		return err
 	}
 
 	u := models.NewUserModel(db)
-	user, err := u.GetUserByUsername(username)
+	user, err := u.GetUserByEmail(email)
 	if err == sql.ErrNoRows {
-		user, err = u.Signup(username)
+		user, err = u.Signup(email, name)
 	}
 	if err != nil {
 		return err

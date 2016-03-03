@@ -24,7 +24,7 @@ func Router(app *application.Application) *mux.Router {
 	router.Handle("/s/{subject}/submit", authChain.ThenFunc(PostNewThread)).Methods("POST")
 	router.Handle("/s/{subject}/{threadID}", stdChain.ThenFunc(GetThread))
 
-	router.Handle("/user/{username}", stdChain.ThenFunc(GetUser))
+	router.Handle("/user/{email}", stdChain.ThenFunc(GetUser))
 
 	router.Handle("/login", stdChain.ThenFunc(GetLogin))
 	router.Handle("/oauth2callback", stdChain.ThenFunc(GetOauth2Callback))
