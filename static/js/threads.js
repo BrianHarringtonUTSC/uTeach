@@ -1,39 +1,17 @@
 $(function() {
-  $('#threads').on('click', '.thread_upvote_button', function(e) {
-  	handleVoteButtonClick(e, 'POST', 'thread_remove_vote_button', 'remove vote');
-  });
-
-  $('#threads').on('click', '.thread_remove_vote_button', function(e) {
-  	handleVoteButtonClick(e, 'DELETE', 'thread_upvote_button', 'upvote');
-  });
-
-  $('#threads').on('click', '.hide', handleHideButtonClick);
+  $('#threads').on('click', '.thread_action', handleThreadActionButtonClick);
 });
 
 
-function handleVoteButtonClick(e, call_type, new_class, new_html) {
-	$(e.target).prop('disabled', true); // stop multiple clicks
+// TODO: dynamically update vote count instead of reloading the page
+function handleThreadActionButtonClick(e) {
+  var target = $(e.target);
+  target.prop('disabled', true); // stop multiple clicks
   $.ajax({
-  	url: '/t/' + e.target.value + '/upvote',
-  	type: call_type,
-  	success: function(result) {
+    url: '/t/' + target.val() + '/' + target.attr('endpoint'),
+    type: target.attr('method'),
+    success: function(result) {
       location.reload();
-      // TODO: dynamically update vote count instead of reloading the page
-
-      // $(e.target).attr('class', new_class)
-      // $(e.target).html(new_html);
-      // $(e.target).show();
-	  }
-  });
-}
-
-function handleHideButtonClick(e) {
-    $(e.target).prop('disabled', true); // stop multiple clicks
-    $.ajax({
-      url: '/t/' + e.target.value + '/hide',
-      type: 'POST',
-      success: function(result) {
-        location.reload();
     }
   });
 }

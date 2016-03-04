@@ -63,8 +63,8 @@ func (tm *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
 }
 
 // GetThreadsBySubject gets all threads with the given subject.
-func (tm *ThreadModel) GetThreadsBySubject(subject string) ([]*Thread, error) {
-	return tm.getThreads(squirrel.Eq{"threads.subject_name": subject})
+func (tm *ThreadModel) GetThreadsBySubjectAndIsPinned(subject string, isPinned bool) ([]*Thread, error) {
+	return tm.getThreads(squirrel.Eq{"threads.subject_name": subject, "threads.is_pinned": isPinned})
 }
 
 // GetThreadsByEmail gets all threads created by the user with the email.
@@ -119,5 +119,20 @@ func (tm *ThreadModel) RemoveTheadVoteForUser(threadID int64, email string) erro
 
 func (tm *ThreadModel) HideThread(id int64) error {
 	_, err := tm.exec("UPDATE threads SET is_visible=? WHERE id=?", false, id)
+	return err
+}
+
+func (tm *ThreadModel) UnhideThread(id int64) error {
+	_, err := tm.exec("UPDATE threads SET is_visible=? WHERE id=?", true, id)
+	return err
+}
+
+func (tm *ThreadModel) PinThread(id int64) error {
+	_, err := tm.exec("UPDATE threads SET is_pinned=? WHERE id=?", true, id)
+	return err
+}
+
+func (tm *ThreadModel) UnpinThread(id int64) error {
+	_, err := tm.exec("UPDATE threads SET is_pinned=? WHERE id=?", false, id)
 	return err
 }

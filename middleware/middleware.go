@@ -30,3 +30,37 @@ func MustLogin(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func isSessionUserAdmin(r *http.Request) bool {
+	app := application.GetFromContext(r)
+	user, _ := app.Store.SessionUser(r)
+	return user.IsAdmin
+}
+
+func MustBeAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if !isSessionUserAdmin(r) {
+			http.Error(w, "You must be an admin to access this link.", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func MustBeAdminOrThreadOwner(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// TODO
+		next.ServeHTTP(w, r)
+	})
+}
+
+func SetThreadID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// TODO
+		next.ServeHTTP(w, r)
+	})
+}

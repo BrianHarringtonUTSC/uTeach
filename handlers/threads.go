@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
@@ -19,14 +18,26 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 	app := application.GetFromContext(r)
 
 	t := models.NewThreadModel(app.DB)
-	threads, err := t.GetThreadsBySubject(subject)
+
+	data := map[string]interface{}{}
+
+	// add pinned posts
+	pinnedThreads, err := t.GetThreadsBySubjectAndIsPinned(subject, true)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	data := map[string]interface{}{"Threads": threads}
+	unpinnedThreads, err := t.GetThreadsBySubjectAndIsPinned(subject, false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	data["PinnedThreads"] = pinnedThreads
+	data["UnpinnedThreads"] = unpinnedThreads
+
+	//  if there is a user, get the user's upvoted threads
 	if user, ok := app.Store.SessionUser(r); ok {
 		userUpvotedThreadIDs, err := t.GetThreadIdsUpvotedByEmail(user.Email)
 		if err != nil {
@@ -134,7 +145,63 @@ func PostHideThread(w http.ResponseWriter, r *http.Request) {
 	t := models.NewThreadModel(app.DB)
 	err = t.HideThread(threadID)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func DeleteHideThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	app := application.GetFromContext(r)
+
+	t := models.NewThreadModel(app.DB)
+	err = t.UnhideThread(threadID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func PostPinThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	app := application.GetFromContext(r)
+
+	t := models.NewThreadModel(app.DB)
+	err = t.PinThread(threadID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func DeletePinThread(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	app := application.GetFromContext(r)
+
+	t := models.NewThreadModel(app.DB)
+	err = t.UnpinThread(threadID)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

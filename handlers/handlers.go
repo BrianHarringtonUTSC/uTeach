@@ -16,6 +16,7 @@ import (
 func Router(app *application.Application) *mux.Router {
 	stdChain := alice.New(middleware.SetApplication(app))
 	authChain := stdChain.Append(middleware.MustLogin)
+	// adminChain := authChain.Append(middleware.MustBeAdmin)
 
 	router := mux.NewRouter()
 	router.Handle("/", stdChain.ThenFunc(GetSubjects))
@@ -27,6 +28,9 @@ func Router(app *application.Application) *mux.Router {
 	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(PostThreadVote)).Methods("POST")
 	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(DeleteThreadVote)).Methods("DELETE")
 	router.Handle("/t/{threadID}/hide", authChain.ThenFunc(PostHideThread)).Methods("POST")
+	router.Handle("/t/{threadID}/hide", authChain.ThenFunc(DeleteHideThread)).Methods("DELETE")
+	router.Handle("/t/{threadID}/pin", authChain.ThenFunc(PostPinThread)).Methods("POST")
+	router.Handle("/t/{threadID}/pin", authChain.ThenFunc(DeletePinThread)).Methods("DELETE")
 
 	router.Handle("/user/{email}", stdChain.ThenFunc(GetUser))
 
