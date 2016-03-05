@@ -2,27 +2,48 @@
 package middleware
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
+	"github.com/umairidris/uTeach/models"
+	"github.com/umairidris/uTeach/session"
 )
 
 // SetApplication sets the application in the context for other handlers to use.
-func SetApplication(app *application.Application) func(http.Handler) http.Handler {
+func SetApplication(a *application.App) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			application.SetInContext(r, app)
+			context.SetApp(r, a)
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func SetThreadIDVar(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		context.SetThreadID(r, threadID)
+		next.ServeHTTP(w, r)
+	})
+
 }
 
 // MustLogin ensures that the next handler is only accessible by users that are logged in.
 func MustLogin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		app := application.GetFromContext(r)
-		if _, ok := app.Store.SessionUser(r); !ok {
+		app := context.GetApp(r)
+		usm := session.NewUserSessionManager(app.Store)
+		if _, ok := usm.SessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
 			return
 		}
@@ -31,16 +52,31 @@ func MustLogin(next http.Handler) http.Handler {
 	})
 }
 
-func isSessionUserAdmin(r *http.Request) bool {
-	app := application.GetFromContext(r)
-	user, _ := app.Store.SessionUser(r)
+func isAdmin(r *http.Request) bool {
+	app := context.GetApp(r)
+	usm := session.NewUserSessionManager(app.Store)
+	user, _ := usm.SessionUser(r)
 	return user.IsAdmin
+}
+
+func isThreadCreator(r *http.Request) bool {
+	app := context.GetApp(r)
+	tm := models.NewThreadModel(app.DB)
+	threadID := context.GetThreadID(r)
+	thread, err := tm.GetThreadByID(threadID)
+	if err != nil {
+		return false
+	}
+	usm := session.NewUserSessionManager(app.Store)
+	user, _ := usm.SessionUser(r)
+	return thread.CreatedByEmail == user.Email
+
 }
 
 func MustBeAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if !isSessionUserAdmin(r) {
+		if !isAdmin(r) {
 			http.Error(w, "You must be an admin to access this link.", http.StatusForbidden)
 			return
 		}
@@ -49,18 +85,14 @@ func MustBeAdmin(next http.Handler) http.Handler {
 	})
 }
 
-func MustBeAdminOrThreadOwner(next http.Handler) http.Handler {
+func MustBeAdminOrThreadCreator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// TODO
-		next.ServeHTTP(w, r)
-	})
-}
+		if !isThreadCreator(r) && !isAdmin(r) {
+			http.Error(w, "You must be an admin or creator of the thread to access this link.", http.StatusForbidden)
+			return
+		}
 
-func SetThreadID(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		// TODO
 		next.ServeHTTP(w, r)
 	})
 }

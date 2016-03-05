@@ -3,10 +3,9 @@ package handlers
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 	"strings"
 
-	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -15,31 +14,29 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
-	app := application.GetFromContext(r)
+	// TODO: check if subject exists
+	app := context.GetApp(r)
+	tm := models.NewThreadModel(app.DB)
 
-	t := models.NewThreadModel(app.DB)
+	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	data := map[string]interface{}{}
-
-	// add pinned posts
-	pinnedThreads, err := t.GetThreadsBySubjectAndIsPinned(subject, true)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	unpinnedThreads, err := t.GetThreadsBySubjectAndIsPinned(subject, false)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	data["PinnedThreads"] = pinnedThreads
 	data["UnpinnedThreads"] = unpinnedThreads
 
 	//  if there is a user, get the user's upvoted threads
-	if user, ok := app.Store.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := t.GetThreadIdsUpvotedByEmail(user.Email)
+	if user, ok := getSessionUser(r); ok {
+		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByEmail(user.Email)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -52,17 +49,11 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 
 // GetThread renders a thread.
 func GetThread(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	app := context.GetApp(r)
+	tm := models.NewThreadModel(app.DB)
 
-	app := application.GetFromContext(r)
-	t := models.NewThreadModel(app.DB)
-
-	thread, err := t.GetThreadByID(threadID)
+	threadID := context.GetThreadID(r)
+	thread, err := tm.GetThreadByID(threadID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -82,14 +73,14 @@ func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
-	app := application.GetFromContext(r)
-	user, _ := app.Store.SessionUser(r)
+	app := context.GetApp(r)
+	user, _ := getSessionUser(r)
 
 	title := r.FormValue("title")
 	text := r.FormValue("text")
 
-	t := models.NewThreadModel(app.DB)
-	thread, err := t.AddThread(title, text, subject, user.Email)
+	tm := models.NewThreadModel(app.DB)
+	thread, err := tm.AddThread(title, text, subject, user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,113 +88,56 @@ func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, thread.URL(), 301)
 }
 
-// thread_vote is a helper for handling upvotes.
-func thread_vote(w http.ResponseWriter, r *http.Request, upvoteFn func(int64, string) error) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) error) {
+	threadID := context.GetThreadID(r)
 
-	app := application.GetFromContext(r)
-	user, _ := app.Store.SessionUser(r)
-
-	err = upvoteFn(threadID, user.Email)
-	if err != nil {
+	if err := f(threadID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 }
 
-// PostThreadVote adds a vote for the useruser on a thread.
+// DeleteThreadVote removes a vote for the user on a thread.
 func PostThreadVote(w http.ResponseWriter, r *http.Request) {
-	app := application.GetFromContext(r)
-	t := models.NewThreadModel(app.DB)
-	thread_vote(w, r, t.AddThreadVoteForUser)
+	user, _ := getSessionUser(r)
+	tm := getThreadModel(r)
+
+	f := func(id int64) error {
+		return tm.AddThreadVoteForUser(id, user.Email)
+	}
+
+	handleThreadAction(w, r, f)
 }
 
 // DeleteThreadVote removes a vote for the user on a thread.
 func DeleteThreadVote(w http.ResponseWriter, r *http.Request) {
-	app := application.GetFromContext(r)
-	t := models.NewThreadModel(app.DB)
-	thread_vote(w, r, t.RemoveTheadVoteForUser)
+	user, _ := getSessionUser(r)
+	tm := getThreadModel(r)
+
+	f := func(id int64) error {
+		return tm.RemoveTheadVoteForUser(id, user.Email)
+	}
+
+	handleThreadAction(w, r, f)
 }
 
 func PostHideThread(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	app := application.GetFromContext(r)
-
-	t := models.NewThreadModel(app.DB)
-	err = t.HideThread(threadID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	tm := getThreadModel(r)
+	handleThreadAction(w, r, tm.HideThread)
 }
 
 func DeleteHideThread(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	app := application.GetFromContext(r)
-
-	t := models.NewThreadModel(app.DB)
-	err = t.UnhideThread(threadID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	tm := getThreadModel(r)
+	handleThreadAction(w, r, tm.UnhideThread)
 }
 
 func PostPinThread(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	app := application.GetFromContext(r)
-
-	t := models.NewThreadModel(app.DB)
-	err = t.PinThread(threadID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	tm := getThreadModel(r)
+	handleThreadAction(w, r, tm.PinThread)
 }
 
 func DeletePinThread(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	app := application.GetFromContext(r)
-
-	t := models.NewThreadModel(app.DB)
-	err = t.UnpinThread(threadID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
+	tm := getThreadModel(r)
+	handleThreadAction(w, r, tm.UnpinThread)
 }

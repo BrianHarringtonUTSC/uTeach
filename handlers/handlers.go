@@ -8,35 +8,35 @@ import (
 	"net/http"
 
 	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/middleware"
+	"github.com/umairidris/uTeach/context"
+	m "github.com/umairidris/uTeach/middleware"
+	"github.com/umairidris/uTeach/models"
+	"github.com/umairidris/uTeach/session"
 )
 
 // Router gets the router with routes and their corresponding handlers defined.
 // It also serves static files based on the static files path specified in the app config.
-func Router(app *application.Application) *mux.Router {
-	stdChain := alice.New(middleware.SetApplication(app))
-	authChain := stdChain.Append(middleware.MustLogin)
-	// adminChain := authChain.Append(middleware.MustBeAdmin)
-
+func Router(app *application.App) *mux.Router {
 	router := mux.NewRouter()
-	router.Handle("/", stdChain.ThenFunc(GetSubjects))
-	router.Handle("/s/{subject}", stdChain.ThenFunc(GetThreads))
-	router.Handle("/s/{subject}/submit", authChain.ThenFunc(GetNewThread)).Methods("GET")
-	router.Handle("/s/{subject}/submit", authChain.ThenFunc(PostNewThread)).Methods("POST")
-	router.Handle("/s/{subject}/{threadID}", stdChain.ThenFunc(GetThread))
 
-	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(PostThreadVote)).Methods("POST")
-	router.Handle("/t/{threadID}/upvote", authChain.ThenFunc(DeleteThreadVote)).Methods("DELETE")
-	router.Handle("/t/{threadID}/hide", authChain.ThenFunc(PostHideThread)).Methods("POST")
-	router.Handle("/t/{threadID}/hide", authChain.ThenFunc(DeleteHideThread)).Methods("DELETE")
-	router.Handle("/t/{threadID}/pin", authChain.ThenFunc(PostPinThread)).Methods("POST")
-	router.Handle("/t/{threadID}/pin", authChain.ThenFunc(DeletePinThread)).Methods("DELETE")
+	c := alice.New(m.SetApplication(app))
+	router.Handle("/", c.ThenFunc(GetSubjects))
+	router.Handle("/s/{subject}", c.ThenFunc(GetThreads))
+	router.Handle("/s/{subject}/submit", c.ThenFunc(GetNewThread)).Methods("GET")
+	router.Handle("/s/{subject}/submit", c.Append(m.MustLogin).ThenFunc(PostNewThread)).Methods("POST")
+	router.Handle("/user/{email}", c.ThenFunc(GetUser))
+	router.Handle("/login", c.ThenFunc(GetLogin))
+	router.Handle("/oauth2callback", c.ThenFunc(GetOauth2Callback))
+	router.Handle("/logout", c.ThenFunc(Logout))
 
-	router.Handle("/user/{email}", stdChain.ThenFunc(GetUser))
-
-	router.Handle("/login", stdChain.ThenFunc(GetLogin))
-	router.Handle("/oauth2callback", stdChain.ThenFunc(GetOauth2Callback))
-	router.Handle("/logout", stdChain.ThenFunc(Logout))
+	t := c.Append(m.MustLogin, m.SetThreadIDVar)
+	router.Handle("/s/{subject}/{threadID}", c.Append(m.SetThreadIDVar).ThenFunc(GetThread))
+	router.Handle("/t/{threadID}/upvote", t.ThenFunc(PostThreadVote)).Methods("POST")
+	router.Handle("/t/{threadID}/upvote", t.ThenFunc(DeleteThreadVote)).Methods("DELETE")
+	router.Handle("/t/{threadID}/hide", t.Append(m.MustBeAdminOrThreadCreator).ThenFunc(PostHideThread)).Methods("POST")
+	router.Handle("/t/{threadID}/hide", t.Append(m.MustBeAdminOrThreadCreator).ThenFunc(DeleteHideThread)).Methods("DELETE")
+	router.Handle("/t/{threadID}/pin", t.Append(m.MustBeAdmin).ThenFunc(PostPinThread)).Methods("POST")
+	router.Handle("/t/{threadID}/pin", t.Append(m.MustBeAdmin).ThenFunc(DeletePinThread)).Methods("DELETE")
 
 	// serve static files -- should be the last route
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/",
@@ -48,7 +48,7 @@ func Router(app *application.Application) *mux.Router {
 // renderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
-	app := application.GetFromContext(r)
+	app := context.GetApp(r)
 
 	tmpl, ok := app.Templates[name]
 	if !ok {
@@ -61,7 +61,7 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data ma
 	}
 
 	// add session user to data
-	if user, ok := app.Store.SessionUser(r); ok {
+	if user, ok := getSessionUser(r); ok {
 		data["SessionUser"] = user
 		data["IsAdmin"] = user.IsAdmin
 	} else {
@@ -74,4 +74,15 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data ma
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
+}
+
+func getThreadModel(r *http.Request) *models.ThreadModel {
+	app := context.GetApp(r)
+	return models.NewThreadModel(app.DB)
+}
+
+func getSessionUser(r *http.Request) (*models.User, bool) {
+	app := context.GetApp(r)
+	usm := session.NewUserSessionManager(app.Store)
+	return usm.SessionUser(r)
 }

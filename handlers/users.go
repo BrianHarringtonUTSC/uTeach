@@ -9,8 +9,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
+	"github.com/umairidris/uTeach/session"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 
 // getGoogleConfig gets an oauth2 Config for doing authentication with Google.
 func getGoogleConfig(r *http.Request) *oauth2.Config {
-	app := application.GetFromContext(r)
+	app := context.GetApp(r)
 
 	googleConfig := &oauth2.Config{
 		Scopes: []string{
@@ -38,8 +39,7 @@ func getGoogleConfig(r *http.Request) *oauth2.Config {
 
 // GetLogin makes a request to Google Oauth2 authenticator.
 func GetLogin(w http.ResponseWriter, r *http.Request) {
-	app := application.GetFromContext(r)
-	if _, ok := app.Store.SessionUser(r); ok {
+	if _, ok := getSessionUser(r); ok {
 		fmt.Fprint(w, "Already logged in")
 		return
 	}
@@ -80,11 +80,12 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create new user session
-	app := application.GetFromContext(r)
+	app := context.GetApp(r)
 	email := m["email"].(string)
 	name := m["name"].(string)
 
-	err = app.Store.NewUserSession(w, r, email, name, app.DB)
+	usm := session.NewUserSessionManager(app.Store)
+	err = usm.New(w, r, email, name, app.DB)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -95,8 +96,9 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 
 // Logout logs the user out.
 func Logout(w http.ResponseWriter, r *http.Request) {
-	app := application.GetFromContext(r)
-	if err := app.Store.DeleteUserSession(w, r); err != nil {
+	app := context.GetApp(r)
+	usm := session.NewUserSessionManager(app.Store)
+	if err := usm.Delete(w, r); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -109,10 +111,10 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	email := strings.ToLower(vars["email"])
 
-	app := application.GetFromContext(r)
+	app := context.GetApp(r)
 
-	t := models.NewThreadModel(app.DB)
-	createdThreads, err := t.GetThreadsByEmail(email)
+	tm := models.NewThreadModel(app.DB)
+	createdThreads, err := tm.GetThreadsByEmail(email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

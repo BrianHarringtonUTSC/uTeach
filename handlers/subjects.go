@@ -3,16 +3,16 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
 )
 
 // GetSubjects renders all subjects.
 func GetSubjects(w http.ResponseWriter, r *http.Request) {
-	app := application.GetFromContext(r)
+	app := context.GetApp(r)
 
-	s := models.NewSubjectModel(app.DB)
-	subjects, err := s.GetAllSubjects()
+	sm := models.NewSubjectModel(app.DB)
+	subjects, err := sm.GetAllSubjects()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
