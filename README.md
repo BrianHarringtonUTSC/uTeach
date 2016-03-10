@@ -58,14 +58,14 @@ Let's begin with understand the environment that uTeach is being developed in.
 uTeach will be developed by a few students students at a time working for a period of a few months.
 After this, a whole new group of students will take over the project and continue working on it.
 The choice of tools should be resilient to several developers of varied skills and experiences working on it for short period of times.
-Part of this means looking for a statically typed language.
-The tools used cannot be complex, it should be easily picked up i.e. developers should become productive in working on the system in 1-2 weeks max.
+Having a statically typed language greatly solves many of these problems. However, we don't want to add too much overhead to decrease developer productivity. In addition, the tools used cannot be complex, it should be easily picked up i.e. developers should become productive in working on the system in 1-2 weeks max.
 It should be familiar (not doing too many new things), cross platform and fast.
 
 Go was a language designed at Google designed by pioneers of the field from the ground up to solve the problems that developers and projects are facing today.
 
 
 Below are a few links that highlight why Go is a good choice for this project:
+- [Used by many established companies to write high performant and stable production systems](https://github.com/golang/go/wiki/GoUsers)
 - [I keep seeing mature developers using languages like Go, Rust, Scala, and Erlang; how are those different from using the more common Node/JS, Ruby, PHP, and Python?](https://www.reddit.com/r/webdev/comments/2y3cbf)
 - [How we built Uber Engineering's Highest Query Per Second Service Using Go](https://eng.uber.com/go-geofence/)
 - [Go at Google: Language Design in the Service of Software Engineering](https://talks.golang.org/2012/splash.article)
