@@ -16,7 +16,7 @@ Notes:
 #### As a User
 ```
 go get github.com/umairidris/uTeach
-$GOPATH/bin/uTeach --config=$GOPATH/src/github.com/umairidris/uTeach/sample_config.json
+$GOPATH/bin/uTeach --config=$GOPATH/src/github.com/umairidris/uTeach/sample/config.json
 ```
 
 #### As a Developer
