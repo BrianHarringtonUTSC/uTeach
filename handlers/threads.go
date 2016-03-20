@@ -5,32 +5,28 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
+	"github.com/umairidris/uTeach/session"
 )
 
-func getThreadModel(r *http.Request) *models.ThreadModel {
-	return models.NewThreadModel(context.DB(r))
-}
-
 // GetThreads renders all threads for the subject.
-func GetThreads(w http.ResponseWriter, r *http.Request) {
+func GetThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
 	// TODO: check if subject exists
-	tm := getThreadModel(r)
+	tm := models.NewThreadModel(a.DB)
 
 	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
 	if err != nil {
-		handleError(w, err)
-		return
+		return err
 	}
 
 	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
 	if err != nil {
-		handleError(w, err)
-		return
+		return err
 	}
 
 	data := map[string]interface{}{}
@@ -38,107 +34,111 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 	data["UnpinnedThreads"] = unpinnedThreads
 
 	//  if there is a user, get the user's upvoted threads
-	if user, ok := getSessionUser(r); ok {
+	usm := session.NewUserSessionManager(a.CookieStore)
+	if user, ok := usm.SessionUser(r); ok {
 		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByEmail(user.Email)
 		if err != nil {
-			handleError(w, err)
-			return
+			return err
 		}
 		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
 	}
 
-	renderTemplate(w, r, "threads.html", data)
+	return renderTemplate(a, w, r, "threads.html", data)
 }
 
 // GetThread renders a thread.
-func GetThread(w http.ResponseWriter, r *http.Request) {
-	tm := models.NewThreadModel(context.DB(r))
+func GetThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewThreadModel(a.DB)
 
 	threadID := context.ThreadID(r)
 	thread, err := tm.GetThreadByID(threadID)
 	if err != nil {
-		handleError(w, err)
-		return
+		return err
 	}
 
 	data := map[string]interface{}{"Thread": thread}
-	renderTemplate(w, r, "thread.html", data)
+	return renderTemplate(a, w, r, "thread.html", data)
 }
 
 // GetNewThread renders the new thread page.
-func GetNewThread(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, r, "new_thread.html", nil)
+func GetNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	return renderTemplate(a, w, r, "new_thread.html", nil)
 }
 
 // PostNewThread adds a new thread in the db and redirects to it, if successful.
-func PostNewThread(w http.ResponseWriter, r *http.Request) {
+func PostNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
-	user, _ := getSessionUser(r)
+	usm := session.NewUserSessionManager(a.CookieStore)
+	user, _ := usm.SessionUser(r)
 
 	title := r.FormValue("title")
 	text := r.FormValue("text")
 
-	tm := models.NewThreadModel(context.DB(r))
+	tm := models.NewThreadModel(a.DB)
 	thread, err := tm.AddThread(title, text, subject, user.Email)
 	if err != nil {
-		handleError(w, err)
-		return
+		return err
 	}
 	http.Redirect(w, r, thread.URL(), 301)
+	return nil
 }
 
-func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) error) {
+func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) error) error {
 	threadID := context.ThreadID(r)
 
 	if err := f(threadID); err != nil {
-		handleError(w, err)
-		return
+		return err
 	}
 	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
 // DeleteThreadVote removes a vote for the user on a thread.
-func PostThreadVote(w http.ResponseWriter, r *http.Request) {
-	user, _ := getSessionUser(r)
-	tm := getThreadModel(r)
+func PostThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	usm := session.NewUserSessionManager(a.CookieStore)
+	user, _ := usm.SessionUser(r)
+
+	tm := models.NewThreadModel(a.DB)
 
 	f := func(id int64) error {
 		return tm.AddThreadVoteForUser(id, user.Email)
 	}
 
-	handleThreadAction(w, r, f)
+	return handleThreadAction(w, r, f)
 }
 
 // DeleteThreadVote removes a vote for the user on a thread.
-func DeleteThreadVote(w http.ResponseWriter, r *http.Request) {
-	user, _ := getSessionUser(r)
-	tm := getThreadModel(r)
+func DeleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	usm := session.NewUserSessionManager(a.CookieStore)
+	user, _ := usm.SessionUser(r)
+
+	tm := models.NewThreadModel(a.DB)
 
 	f := func(id int64) error {
 		return tm.RemoveTheadVoteForUser(id, user.Email)
 	}
 
-	handleThreadAction(w, r, f)
+	return handleThreadAction(w, r, f)
 }
 
-func PostHideThread(w http.ResponseWriter, r *http.Request) {
-	tm := getThreadModel(r)
-	handleThreadAction(w, r, tm.HideThread)
+func PostHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewThreadModel(a.DB)
+	return handleThreadAction(w, r, tm.HideThread)
 }
 
-func DeleteHideThread(w http.ResponseWriter, r *http.Request) {
-	tm := getThreadModel(r)
-	handleThreadAction(w, r, tm.UnhideThread)
+func DeleteHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewThreadModel(a.DB)
+	return handleThreadAction(w, r, tm.UnhideThread)
 }
 
-func PostPinThread(w http.ResponseWriter, r *http.Request) {
-	tm := getThreadModel(r)
-	handleThreadAction(w, r, tm.PinThread)
+func PostPinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewThreadModel(a.DB)
+	return handleThreadAction(w, r, tm.PinThread)
 }
 
-func DeletePinThread(w http.ResponseWriter, r *http.Request) {
-	tm := getThreadModel(r)
-	handleThreadAction(w, r, tm.UnpinThread)
+func DeletePinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewThreadModel(a.DB)
+	return handleThreadAction(w, r, tm.UnpinThread)
 }

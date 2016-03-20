@@ -1,8 +1,12 @@
 {{define "content"}}
 
+{{$userIsAdmin := false}}
+
 {{if .SessionUser}}
-<input type="submit" value="New Thread" onclick="window.location=window.location+'/submit';" />
+	<input type="submit" value="New Thread" onclick="window.location=window.location+'/submit';" />
+	{{$userIsAdmin := .SessionUser.IsAdmin}}
 {{end}}
+
 
 {{$base := .}}
 <div id="threads">
@@ -10,7 +14,7 @@
 	<ul id="pinned-threads">
 		<b>Pinned Threads</b>
 		{{range $thread := .PinnedThreads}}
-			{{if or $thread.IsVisible $base.IsAdmin}}
+			{{if or $thread.IsVisible $userIsAdmin}}
 				<li>
 					{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
 					<br />
@@ -44,7 +48,7 @@
 	</ul>
 	<ul id="unpinned-threads">
 		{{range $thread := .UnpinnedThreads}}
-			{{if or $thread.IsVisible $base.IsAdmin}}
+			{{if or $thread.IsVisible $userIsAdmin}}
 				<li>
 					{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
 					<br />
