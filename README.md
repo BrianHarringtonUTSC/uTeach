@@ -1,5 +1,7 @@
 # uTeach
 
+[![Go Report Card](https:///badge/github.com/UmairIdris/uTeach)](https:///report/github.com/UmairIdris/uTeach)
+
 uTeach is a reddit-like community oriented platform for sharing educational material and resources.
 
 ### Requirements
@@ -44,9 +46,6 @@ $GOPATH/bin/uTeach --config=sample/config.json
 - Don't expose sensitive error info through http.Error calls
 - Security (CSRF, etc)
 - Front end UI work
-- Thread visibility
-- Thread pinning
-- Fix relative config paths
 
 ### FAQ
 

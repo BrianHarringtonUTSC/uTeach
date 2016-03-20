@@ -36,7 +36,8 @@ func (t *Thread) URL() string {
 func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 	threads := []*Thread{}
 
-	builder := squirrel.Select("threads.*, count(thread_votes.thread_id) as score").
+	builder := squirrel.
+		Select("threads.*, count(thread_votes.thread_id) as score").
 		From("threads").
 		LeftJoin("thread_votes ON threads.id=thread_votes.thread_id").
 		Where(eq).
@@ -51,15 +52,19 @@ func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 	return threads, err
 }
 
-func (tm *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
-	threads, err := tm.getThreads(squirrel.Eq{"threads.id": id})
+func (tm *ThreadModel) getOneThread(eq squirrel.Eq) (*Thread, error) {
+	threads, err := tm.getThreads(eq)
 	if err != nil {
 		return nil, err
 	}
 	if len(threads) != 1 {
-		return nil, errors.New("Thread not found.")
+		return nil, fmt.Errorf("Expected: 1, got: %d.", len(threads))
 	}
 	return threads[0], err
+}
+
+func (tm *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
+	return tm.getOneThread(squirrel.Eq{"threads.id": id})
 }
 
 // GetThreadsBySubject gets all threads with the given subject.

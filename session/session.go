@@ -2,10 +2,8 @@
 package session
 
 import (
-	"database/sql"
 	"encoding/gob"
 	"github.com/gorilla/sessions"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 
 	"github.com/umairidris/uTeach/models"
@@ -22,7 +20,7 @@ func init() {
 }
 
 type UserSession struct {
-	store *sessions.CookieStore
+	cookieStore *sessions.CookieStore
 }
 
 func NewUserSessionManager(store *sessions.CookieStore) *UserSession {
@@ -31,21 +29,12 @@ func NewUserSessionManager(store *sessions.CookieStore) *UserSession {
 
 // getUserSession gets the session containing the user.
 func (us *UserSession) get(r *http.Request) (*sessions.Session, error) {
-	return us.store.Get(r, userSessionName)
+	return us.cookieStore.Get(r, userSessionName)
 }
 
 // New creates a new session and stores the User containing the
-func (us *UserSession) New(w http.ResponseWriter, r *http.Request, email string, name string, db *sqlx.DB) error {
+func (us *UserSession) New(w http.ResponseWriter, r *http.Request, user *models.User) error {
 	session, err := us.get(r)
-	if err != nil {
-		return err
-	}
-
-	u := models.NewUserModel(db)
-	user, err := u.GetUserByEmail(email)
-	if err == sql.ErrNoRows {
-		user, err = u.Signup(email, name)
-	}
 	if err != nil {
 		return err
 	}
@@ -64,12 +53,12 @@ func (us *UserSession) SessionUser(r *http.Request) (*models.User, bool) {
 		return nil, false
 	}
 
-	um, ok := session.Values[userKey]
+	u, ok := session.Values[userKey]
 	if !ok {
 		return nil, false
 	}
 
-	user, ok := um.(*models.User)
+	user, ok := u.(*models.User)
 	return user, ok
 }
 

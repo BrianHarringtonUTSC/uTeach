@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -20,7 +21,6 @@ const (
 
 // getGoogleConfig gets an oauth2 Config for doing authentication with Google.
 func getGoogleConfig(r *http.Request) *oauth2.Config {
-	app := context.GetApp(r)
 
 	googleConfig := &oauth2.Config{
 		Scopes: []string{
@@ -30,9 +30,10 @@ func getGoogleConfig(r *http.Request) *oauth2.Config {
 		Endpoint: google.Endpoint,
 	}
 
-	googleConfig.RedirectURL = app.Config.GoogleRedirectURL
-	googleConfig.ClientID = app.Config.GoogleClientID
-	googleConfig.ClientSecret = app.Config.GoogleClientSecret
+	config := context.Config(r)
+	googleConfig.RedirectURL = config.GoogleRedirectURL
+	googleConfig.ClientID = config.GoogleClientID
+	googleConfig.ClientSecret = config.GoogleClientSecret
 
 	return googleConfig
 }
@@ -50,6 +51,28 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
+func loginUser(w http.ResponseWriter, r *http.Request, email, name string) {
+	u := models.NewUserModel(context.DB(r))
+	user, err := u.GetUserByEmail(email)
+	// sign up if user is logging in for first time
+	if err == sql.ErrNoRows {
+		user, err = u.Signup(email, name)
+	}
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	usm := session.NewUserSessionManager(context.CookieStore(r))
+	err = usm.New(w, r, user)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 // GetOauth2Callback responds to callbacks from Google Oauth2 authenticator.
 func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	googleConfig := getGoogleConfig(r)
@@ -58,7 +81,7 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	authcode := r.FormValue("code")
 	tok, err := googleConfig.Exchange(oauth2.NoContext, authcode)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
@@ -66,7 +89,7 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	client := googleConfig.Client(oauth2.NoContext, tok)
 	response, err := client.Get(googleUserInfoURL)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 	defer response.Body.Close()
@@ -75,31 +98,20 @@ func GetOauth2Callback(w http.ResponseWriter, r *http.Request) {
 	m := map[string]interface{}{}
 	err = json.NewDecoder(response.Body).Decode(&m)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
-	// create new user session
-	app := context.GetApp(r)
 	email := m["email"].(string)
 	name := m["name"].(string)
-
-	usm := session.NewUserSessionManager(app.Store)
-	err = usm.New(w, r, email, name, app.DB)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/", http.StatusFound)
+	loginUser(w, r, email, name)
 }
 
 // Logout logs the user out.
 func Logout(w http.ResponseWriter, r *http.Request) {
-	app := context.GetApp(r)
-	usm := session.NewUserSessionManager(app.Store)
+	usm := session.NewUserSessionManager(context.CookieStore(r))
 	if err := usm.Delete(w, r); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
@@ -111,12 +123,10 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	email := strings.ToLower(vars["email"])
 
-	app := context.GetApp(r)
-
-	tm := models.NewThreadModel(app.DB)
+	tm := getThreadModel(r)
 	createdThreads, err := tm.GetThreadsByEmail(email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 

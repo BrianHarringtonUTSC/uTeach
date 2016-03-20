@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -48,11 +49,10 @@ func Router(app *application.App) *mux.Router {
 // renderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) {
-	app := context.GetApp(r)
-
-	tmpl, ok := app.Templates[name]
+	templates := context.Templates(r)
+	tmpl, ok := templates[name]
 	if !ok {
-		http.Error(w, fmt.Sprintf("The template %s does not exist.", name), http.StatusInternalServerError)
+		handleError(w, errors.New(fmt.Sprintf("The template %s does not exist.", name)))
 		return
 	}
 
@@ -76,13 +76,11 @@ func renderTemplate(w http.ResponseWriter, r *http.Request, name string, data ma
 	}
 }
 
-func getThreadModel(r *http.Request) *models.ThreadModel {
-	app := context.GetApp(r)
-	return models.NewThreadModel(app.DB)
+func handleError(w http.ResponseWriter, err error) {
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func getSessionUser(r *http.Request) (*models.User, bool) {
-	app := context.GetApp(r)
-	usm := session.NewUserSessionManager(app.Store)
+	usm := session.NewUserSessionManager(context.CookieStore(r))
 	return usm.SessionUser(r)
 }

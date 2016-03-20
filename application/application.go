@@ -13,10 +13,10 @@ import (
 
 // App is the application context which contains application-wide configuration and components.
 type App struct {
-	Config    *config.Config
-	DB        *sqlx.DB
-	Store     *sessions.CookieStore
-	Templates map[string]*template.Template
+	Config      *config.Config
+	DB          *sqlx.DB
+	CookieStore *sessions.CookieStore
+	Templates   map[string]*template.Template
 }
 
 // New initializes a new App.

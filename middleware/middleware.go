@@ -41,8 +41,7 @@ func SetThreadIDVar(next http.Handler) http.Handler {
 func MustLogin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		app := context.GetApp(r)
-		usm := session.NewUserSessionManager(app.Store)
+		usm := session.NewUserSessionManager(context.CookieStore(r))
 		if _, ok := usm.SessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
 			return
@@ -53,21 +52,19 @@ func MustLogin(next http.Handler) http.Handler {
 }
 
 func isAdmin(r *http.Request) bool {
-	app := context.GetApp(r)
-	usm := session.NewUserSessionManager(app.Store)
+	usm := session.NewUserSessionManager(context.CookieStore(r))
 	user, _ := usm.SessionUser(r)
 	return user.IsAdmin
 }
 
 func isThreadCreator(r *http.Request) bool {
-	app := context.GetApp(r)
-	tm := models.NewThreadModel(app.DB)
-	threadID := context.GetThreadID(r)
+	tm := models.NewThreadModel(context.DB(r))
+	threadID := context.ThreadID(r)
 	thread, err := tm.GetThreadByID(threadID)
 	if err != nil {
 		return false
 	}
-	usm := session.NewUserSessionManager(app.Store)
+	usm := session.NewUserSessionManager(context.CookieStore(r))
 	user, _ := usm.SessionUser(r)
 	return thread.CreatedByEmail == user.Email
 

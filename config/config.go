@@ -21,6 +21,12 @@ type Config struct {
 	GoogleClientSecret      string // env variable
 }
 
+func makeAbs(base string, path *string) {
+	if !filepath.IsAbs(*path) {
+		*path = filepath.Join(base, *path)
+	}
+}
+
 // Load loads the json formatted file at path into a Config. Panics if it cannot decode the file.
 func Load(path string) *Config {
 	config := &Config{}
@@ -37,9 +43,9 @@ func Load(path string) *Config {
 
 	// make all paths relative to the config file's path
 	configDir := filepath.Dir(path)
-	config.DBPath = filepath.Join(configDir, config.DBPath)
-	config.TemplatesPath = filepath.Join(configDir, config.TemplatesPath)
-	config.StaticFilesPath = filepath.Join(configDir, config.StaticFilesPath)
+	makeAbs(configDir, &config.DBPath)
+	makeAbs(configDir, &config.TemplatesPath)
+	makeAbs(configDir, &config.StaticFilesPath)
 
 	config.GoogleClientID = os.Getenv("UTEACH_GOOGLE_CLIENT_ID")
 	config.GoogleClientSecret = os.Getenv("UTEACH_GOOGLE_CLIENT_SECRET")

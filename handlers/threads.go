@@ -9,24 +9,27 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
+func getThreadModel(r *http.Request) *models.ThreadModel {
+	return models.NewThreadModel(context.DB(r))
+}
+
 // GetThreads renders all threads for the subject.
 func GetThreads(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
 	// TODO: check if subject exists
-	app := context.GetApp(r)
-	tm := models.NewThreadModel(app.DB)
+	tm := getThreadModel(r)
 
 	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
 	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
@@ -38,7 +41,7 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 	if user, ok := getSessionUser(r); ok {
 		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByEmail(user.Email)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			handleError(w, err)
 			return
 		}
 		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
@@ -49,13 +52,12 @@ func GetThreads(w http.ResponseWriter, r *http.Request) {
 
 // GetThread renders a thread.
 func GetThread(w http.ResponseWriter, r *http.Request) {
-	app := context.GetApp(r)
-	tm := models.NewThreadModel(app.DB)
+	tm := models.NewThreadModel(context.DB(r))
 
-	threadID := context.GetThreadID(r)
+	threadID := context.ThreadID(r)
 	thread, err := tm.GetThreadByID(threadID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
@@ -73,26 +75,25 @@ func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	subject := strings.ToLower(vars["subject"])
 
-	app := context.GetApp(r)
 	user, _ := getSessionUser(r)
 
 	title := r.FormValue("title")
 	text := r.FormValue("text")
 
-	tm := models.NewThreadModel(app.DB)
+	tm := models.NewThreadModel(context.DB(r))
 	thread, err := tm.AddThread(title, text, subject, user.Email)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 	http.Redirect(w, r, thread.URL(), 301)
 }
 
 func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) error) {
-	threadID := context.GetThreadID(r)
+	threadID := context.ThreadID(r)
 
 	if err := f(threadID); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

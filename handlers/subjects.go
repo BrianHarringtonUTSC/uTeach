@@ -9,12 +9,10 @@ import (
 
 // GetSubjects renders all subjects.
 func GetSubjects(w http.ResponseWriter, r *http.Request) {
-	app := context.GetApp(r)
-
-	sm := models.NewSubjectModel(app.DB)
+	sm := models.NewSubjectModel(context.DB(r))
 	subjects, err := sm.GetAllSubjects()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
