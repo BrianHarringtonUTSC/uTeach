@@ -1,0 +1,43 @@
+{{define "thread-list"}}
+
+	{{$userIsAdmin := false}}
+	{{if .SessionUser}}
+		{{$userIsAdmin := .SessionUser.IsAdmin}}
+	{{end}}
+
+	{{$base := .Base}}
+
+	<ul>
+	{{range $thread := .Threads}}
+		{{if or $thread.IsVisible $userIsAdmin}}
+			<li>
+				{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
+				<br />
+
+				{{if $base.SessionUser}}
+					{{if index $base.UserUpvotedThreadIDs $thread.ID}}
+						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="DELETE">remove vote</button>
+					{{else}}
+						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="POST">upvote</button>
+					{{end}}
+
+					{{if eq $base.SessionUser.Email $thread.CreatedByEmail}}
+						{{if $thread.IsVisible}}
+							<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</button>
+						{{else}}
+							<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="hide" method="DELETE">unhide</button>
+						{{end}}
+					{{end}}
+				{{end}}
+				{{if $userIsAdmin}}
+					{{if $thread.IsPinned}}
+						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="pin" method="DELETE">unpin</button>
+					{{else}}
+						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="pin" method="POST">pin</button>
+					{{end}}
+				{{end}}
+			</li>
+		{{end}}
+	{{end}}
+	</ul>
+{{end}}
