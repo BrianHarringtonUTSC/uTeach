@@ -2,6 +2,7 @@
 package config
 
 import (
+	"log"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -33,12 +34,12 @@ func Load(path string) *Config {
 
 	file, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	err = json.NewDecoder(file).Decode(config)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// make all paths relative to the config file's path
@@ -51,7 +52,7 @@ func Load(path string) *Config {
 	config.GoogleClientSecret = os.Getenv("UTEACH_GOOGLE_CLIENT_SECRET")
 
 	if config.GoogleClientID == "" || config.GoogleClientSecret == "" {
-		panic("UTEACH_GOOGLE_CLIENT_ID and/or UTEACH_GOOGLE_CLIENT_SECRET not set in environment.")
+		log.Fatal("UTEACH_GOOGLE_CLIENT_ID and/or UTEACH_GOOGLE_CLIENT_SECRET not set in environment.")
 	}
 
 	return config

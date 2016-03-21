@@ -2,6 +2,7 @@
 package libtemplate
 
 import (
+	"log"
 	"errors"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
@@ -50,12 +51,12 @@ func Load(path string) map[string]*template.Template {
 
 	layouts, err := filepath.Glob(filepath.Join(path, "layouts/*.html"))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	includes, err := filepath.Glob(filepath.Join(path, "includes/*.html"))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// Generate our templates map from our layouts/ and includes/ directories
