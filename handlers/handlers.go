@@ -11,6 +11,7 @@ import (
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/middleware"
+	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
 )
 
@@ -79,8 +80,8 @@ func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, 
 	if user, ok := usm.SessionUser(r); ok {
 		data["SessionUser"] = user
 	} else {
-		// make sure user is nil so templates don't render a user
-		data["SessionUser"] = nil
+		// pass in empty user
+		data["SessionUser"] = &models.User{}
 	}
 
 	// TODO: to speed this up use a buffer pool (https://elithrar.github.io/article/using-buffer-pools-with-go/)

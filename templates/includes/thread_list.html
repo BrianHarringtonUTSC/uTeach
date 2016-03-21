@@ -1,20 +1,14 @@
 {{define "thread-list"}}
-
-	{{$userIsAdmin := false}}
-	{{if .SessionUser}}
-		{{$userIsAdmin := .SessionUser.IsAdmin}}
-	{{end}}
-
 	{{$base := .Base}}
 
 	<ul>
 	{{range $thread := .Threads}}
-		{{if or $thread.IsVisible $userIsAdmin}}
+		{{if or $thread.IsVisible $base.SessionUser.IsAdmin}}
 			<li>
 				{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
 				<br />
 
-				{{if $base.SessionUser}}
+				{{if $base.SessionUser.Email}}
 					{{if index $base.UserUpvotedThreadIDs $thread.ID}}
 						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="DELETE">remove vote</button>
 					{{else}}
@@ -29,7 +23,7 @@
 						{{end}}
 					{{end}}
 				{{end}}
-				{{if $userIsAdmin}}
+				{{if $base.SessionUser.IsAdmin}}
 					{{if $thread.IsPinned}}
 						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="pin" method="DELETE">unpin</button>
 					{{else}}

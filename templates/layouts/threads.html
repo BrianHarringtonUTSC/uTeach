@@ -1,15 +1,16 @@
 {{define "content"}}
-	{{if .SessionUser}}
+	{{if .SessionUser.Email}}
 		<input type="submit" value="New Thread" onclick="window.location=window.location+'/submit';" />
 	{{end}}
+
 
 
 	{{$base := .}}
 	<div id="threads">
 		<b>Pinned Threads</b>
-		{{template "thread-list" dict "SessionUser" .SessionUser "Threads" .PinnedThreads}}
+		{{template "thread-list" dict "Base" . "Threads" .PinnedThreads}}
 		<hr>
 
-		{{template "thread-list" dict "SessionUser" .SessionUser "Threads" .UnpinnedThreads}}
+		{{template "thread-list" dict "Base" . "Threads" .UnpinnedThreads}}
 	</div>
 {{end}}
