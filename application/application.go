@@ -28,7 +28,7 @@ func New(configPath string) *App {
 
 	// cookie encryption key must be 32 bytes
 	store := sessions.NewCookieStore([]byte(conf.CookieAuthenticationKey), []byte(conf.CookieEncryptionKey))
-	templates := libtemplate.LoadTemplates(conf.TemplatesPath)
+	templates := libtemplate.Load(conf.TemplatesPath)
 	app := &App{conf, db, store, templates}
 	return app
 }

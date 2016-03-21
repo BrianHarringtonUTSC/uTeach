@@ -2,6 +2,7 @@
 package libtemplate
 
 import (
+	"errors"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 	"html/template"
@@ -20,25 +21,47 @@ func FormatAndLocalizeTime(t time.Time) string {
 	return t.Local().Format("Jan 2 2006 3:04PM")
 }
 
-// LoadTemplates gets all templates at path into a mapping of the template name to its template object.
-// The path should contain a file "base.html" which is the base template.
-// It should also contain a "layouts" subfolder which contains child templates to join with the base.
-func LoadTemplates(path string) map[string]*template.Template {
+func Dict(values ...interface{}) (map[string]interface{}, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("invalid dict call")
+	}
+
+	dict := map[string]interface{}{}
+
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		dict[key] = values[i+1]
+	}
+	return dict, nil
+}
+
+// Load gets all templates at path into a mapping of the template name to its template object.
+// https://elithrar.github.io/article/approximating-html-template-inheritance/
+func Load(path string) map[string]*template.Template {
 	templates := make(map[string]*template.Template)
 
 	funcMap := template.FuncMap{
+		"dict":                  Dict,
 		"markdownToHTML":        MarkdownToHTML,
 		"formatAndLocalizeTime": FormatAndLocalizeTime}
 
-	baseTemplate := template.Must(template.New("base").Funcs(funcMap).ParseFiles(filepath.Join(path, "base.html")))
+	layouts, err := filepath.Glob(filepath.Join(path, "layouts/*.html"))
+	if err != nil {
+		panic(err)
+	}
 
-	layoutFiles, _ := filepath.Glob(filepath.Join(path, "layouts/*.html"))
-	for _, layoutFile := range layoutFiles {
-		baseTemplateCopy, err := baseTemplate.Clone()
-		if err != nil {
-			panic(err)
-		}
-		templates[filepath.Base(layoutFile)] = template.Must(baseTemplateCopy.ParseFiles(layoutFile))
+	includes, err := filepath.Glob(filepath.Join(path, "includes/*.html"))
+	if err != nil {
+		panic(err)
+	}
+
+	// Generate our templates map from our layouts/ and includes/ directories
+	for _, layout := range layouts {
+		files := append(includes, layout)
+		templates[filepath.Base(layout)] = template.Must(template.New(layout).Funcs(funcMap).ParseFiles(files...))
 	}
 
 	return templates

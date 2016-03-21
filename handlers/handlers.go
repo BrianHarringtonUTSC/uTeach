@@ -92,7 +92,3 @@ func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, 
 	buf.WriteTo(w)
 	return nil
 }
-
-func handleError(w http.ResponseWriter, err error) {
-	http.Error(w, err.Error(), http.StatusInternalServerError)
-}
