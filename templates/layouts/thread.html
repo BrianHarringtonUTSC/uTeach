@@ -1,7 +1,7 @@
 {{define "content"}}
 {{.Thread.Title}}
 <br/><br/>
-Posted By: {{.Thread.CreatedByEmail}}
+Posted By: {{.Thread.Creator.Email}}
 <br/>
 Posted At: {{.Thread.TimeCreated | formatAndLocalizeTime}}
 <br/><br/>

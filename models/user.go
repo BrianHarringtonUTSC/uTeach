@@ -23,7 +23,8 @@ type UserModel struct {
 // GetUserByEmail returns record by email.
 func (um *UserModel) GetUserByEmail(email string) (*User, error) {
 	user := &User{}
-	err := um.db.Get(user, "SELECT * FROM users WHERE email=?", email)
+	query := "SELECT email AS user_email, name AS user_name, is_admin FROM users WHERE email=?"
+	err := um.db.Get(user, query, email)
 	return user, err
 }
 

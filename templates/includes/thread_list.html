@@ -5,7 +5,7 @@
 	{{range $thread := .Threads}}
 		{{if or $thread.IsVisible $base.SessionUser.IsAdmin}}
 			<li>
-				{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a>
+				{{$thread.Score}} | <a href="/s/{{$thread.Subject.Name}}/{{$thread.ID}}">{{$thread.Title}}</a>
 				<br />
 
 				{{if $base.SessionUser.Email}}
@@ -15,7 +15,7 @@
 						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="POST">upvote</button>
 					{{end}}
 
-					{{if eq $base.SessionUser.Email $thread.CreatedByEmail}}
+					{{if eq $base.SessionUser.Email $thread.Creator.Email}}
 						{{if $thread.IsVisible}}
 							<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</button>
 						{{else}}

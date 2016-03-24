@@ -60,7 +60,7 @@ func (m *Middleware) isThreadCreator(r *http.Request) bool {
 	}
 	usm := session.NewUserSessionManager(m.App.CookieStore)
 	user, _ := usm.SessionUser(r)
-	return thread.CreatedByEmail == user.Email
+	return thread.Creator.Email == user.Email
 }
 
 func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {

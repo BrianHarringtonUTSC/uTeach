@@ -13,15 +13,15 @@ func NewThreadModel(db *sqlx.DB) *ThreadModel {
 }
 
 type Thread struct {
-	ID             int64
-	Title          string
-	Content        string
-	Score          int
-	SubjectName    string    `db:"subject_name"`
-	CreatedByEmail string    `db:"created_by_email"`
-	TimeCreated    time.Time `db:"time_created"`
-	IsPinned       bool      `db:"is_pinned"`
-	IsVisible      bool      `db:"is_visible"`
+	ID          int64
+	Title       string
+	Content     string
+	TimeCreated time.Time
+	IsPinned    bool
+	IsVisible   bool
+	Score       int
+	Subject     *Subject
+	Creator     *User
 }
 
 type ThreadModel struct {
@@ -30,15 +30,28 @@ type ThreadModel struct {
 
 // URL returns the unique URL for a thread.
 func (t *Thread) URL() string {
-	return fmt.Sprintf("/s/%s/%d", t.SubjectName, t.ID)
+	return fmt.Sprintf("/s/%s/%d", t.Subject.Name, t.ID)
 }
 
 func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 	threads := []*Thread{}
 
 	builder := squirrel.
-		Select("threads.*, count(thread_votes.thread_id) as score").
+		Select(`threads.id AS thread_id,
+			threads.title AS thread_title,
+			threads.content,
+			threads.time_created,
+			threads.is_pinned,
+			threads.is_visible,
+			count(thread_votes.thread_id),
+			subjects.name AS subject_name,
+			subjects.title AS subject_title,
+			users.email,
+			users.name AS user_name,
+			users.is_admin`).
 		From("threads").
+		Join("subjects ON threads.subject_name=subjects.name").
+		Join("users ON threads.created_by_email=users.email").
 		LeftJoin("thread_votes ON threads.id=thread_votes.thread_id").
 		Where(eq).
 		GroupBy("threads.id").
@@ -48,7 +61,30 @@ func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = tm.db.Select(&threads, query, args...)
+
+	rows, err := tm.db.Query(query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		thread := &Thread{}
+		subject := &Subject{}
+		creator := &User{}
+
+		err = rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.TimeCreated, &thread.IsPinned, &thread.IsVisible, &thread.Score,
+			&subject.Name, &subject.Title,
+			&creator.Email, &creator.Name, &creator.IsAdmin)
+		if err != nil {
+			return nil, err
+		}
+
+		thread.Subject = subject
+		thread.Creator = creator
+		threads = append(threads, thread)
+
+	}
 	return threads, err
 }
 
