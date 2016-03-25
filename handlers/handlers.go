@@ -3,11 +3,14 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
+	"log"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/middleware"
@@ -58,9 +61,15 @@ func Router(a *application.App) *mux.Router {
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(h.App, w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch err {
+		case sql.ErrNoRows:
+			http.NotFound(w, r)
+		default:
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			log.Println(err)
+			debug.PrintStack()
+		}
 	}
-
 }
 
 // renderTemplate renders the template at name with data.

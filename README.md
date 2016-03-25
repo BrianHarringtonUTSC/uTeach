@@ -1,6 +1,6 @@
 # uTeach
 
-[![Go Report Card](https:///badge/github.com/UmairIdris/uTeach)](https:///report/github.com/UmairIdris/uTeach)
+[![Go Report Card](https://goreportcard.com/badge/github.com/UmairIdris/uTeach)](https://goreportcard.com/report/github.com/UmairIdris/uTeach)
 
 uTeach is a reddit-like community oriented platform for sharing educational material and resources.
 

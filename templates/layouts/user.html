@@ -2,7 +2,7 @@
 <h4>Threads by {{.Email}}</h3>
 <ul>
 	{{range $thread := .CreatedThreads}}
-		<li>{{$thread.Score}} | <a href="/s/{{$thread.SubjectName}}/{{$thread.ID}}">{{$thread.Title}}</a></li>
+		<li>{{$thread.Score}} | <a href="/s/{{$thread.Subject.Name}}/{{$thread.ID}}">{{$thread.Title}}</a></li>
 	{{end}}
 </ul>
 {{end}}

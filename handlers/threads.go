@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
@@ -14,18 +15,22 @@ import (
 // GetThreads renders all threads for the subject.
 func GetThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	subject := strings.ToLower(vars["subject"])
+	subject_name := strings.ToLower(vars["subject"])
 
-	// TODO: check if subject exists
-	tm := models.NewThreadModel(a.DB)
-
-	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
+	sm := models.NewSubjectModel(a.DB)
+	subject, err := sm.GetSubjectByName(subject_name)
 	if err != nil {
 		return err
 	}
 
+	tm := models.NewThreadModel(a.DB)
+	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
 	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
@@ -36,7 +41,7 @@ func GetThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	//  if there is a user, get the user's upvoted threads
 	usm := session.NewUserSessionManager(a.CookieStore)
 	if user, ok := usm.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByEmail(user.Email)
+		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByUser(user)
 		if err != nil {
 			return err
 		}
@@ -68,7 +73,13 @@ func GetNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 // PostNewThread adds a new thread in the db and redirects to it, if successful.
 func PostNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	subject := strings.ToLower(vars["subject"])
+	subject_name := strings.ToLower(vars["subject"])
+
+	sm := models.NewSubjectModel(a.DB)
+	subject, err := sm.GetSubjectByName(subject_name)
+	if err != nil {
+		return err
+	}
 
 	usm := session.NewUserSessionManager(a.CookieStore)
 	user, _ := usm.SessionUser(r)
@@ -77,7 +88,7 @@ func PostNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	text := r.FormValue("text")
 
 	tm := models.NewThreadModel(a.DB)
-	thread, err := tm.AddThread(title, text, subject, user.Email)
+	thread, err := tm.AddThread(title, text, subject, user)
 	if err != nil {
 		return err
 	}
@@ -103,7 +114,7 @@ func PostThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 	tm := models.NewThreadModel(a.DB)
 
 	f := func(id int64) error {
-		return tm.AddThreadVoteForUser(id, user.Email)
+		return tm.AddThreadVoteForUser(id, user)
 	}
 
 	return handleThreadAction(w, r, f)
@@ -117,7 +128,7 @@ func DeleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request
 	tm := models.NewThreadModel(a.DB)
 
 	f := func(id int64) error {
-		return tm.RemoveTheadVoteForUser(id, user.Email)
+		return tm.RemoveTheadVoteForUser(id, user)
 	}
 
 	return handleThreadAction(w, r, f)

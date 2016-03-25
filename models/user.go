@@ -11,6 +11,7 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 }
 
 type User struct {
+	ID      int64
 	Email   string
 	Name    string
 	IsAdmin bool `db:"is_admin"`
@@ -23,7 +24,7 @@ type UserModel struct {
 // GetUserByEmail returns record by email.
 func (um *UserModel) GetUserByEmail(email string) (*User, error) {
 	user := &User{}
-	query := "SELECT email AS user_email, name AS user_name, is_admin FROM users WHERE email=?"
+	query := "SELECT * FROM users WHERE email=?"
 	err := um.db.Get(user, query, email)
 	return user, err
 }

@@ -120,8 +120,14 @@ func GetUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	email := strings.ToLower(vars["email"])
 
+	um := models.NewUserModel(a.DB)
+	user, err := um.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
 	tm := models.NewThreadModel(a.DB)
-	createdThreads, err := tm.GetThreadsByEmail(email)
+	createdThreads, err := tm.GetThreadsByUser(user)
 	if err != nil {
 		return err
 	}
