@@ -24,5 +24,6 @@ func main() {
 	router := handlers.Router(app)
 	http.Handle("/", router)
 
+	log.Println("Starting server at", app.Config.HTTPAddress)
 	log.Fatal(http.ListenAndServe(app.Config.HTTPAddress, nil))
 }

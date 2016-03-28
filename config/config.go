@@ -21,7 +21,7 @@ type Config struct {
 	GoogleClientSecret      string `mapstructure:"google_client_secret"`
 }
 
-func makeAbs(base string, path string) string {
+func joinIfNotAbs(base string, path string) string {
 	if !filepath.IsAbs(path) {
 		path = filepath.Join(base, path)
 	}
@@ -37,24 +37,21 @@ func loadViper(path string) {
 	}
 }
 
-// Load loads the json formatted file at path into a Config. Panics if it cannot decode the file.
+// Load loads the config file at path and environment variables into a Config.
+// NOTE: all keys must be set (even if given an empty value) in the files, even if set as env variable.
 func Load(path string) *Config {
 	loadViper(path)
 
-	dir := filepath.Dir(path)
-
-	// Note: viper has an unmarshal which will convert to a struct automaticallly
-	// however, it wasn't setting env variables when i unmarshalled, so I'm doing getting each field manually for now
 	c := &Config{}
-	c.HTTPAddress = viper.GetString("http_address")
-	c.DBPath = makeAbs(dir, viper.GetString("db_path"))
-	c.TemplatesPath = makeAbs(dir, viper.GetString("templates_path"))
-	c.StaticFilesPath = makeAbs(dir, viper.GetString("static_files_path"))
-	c.CookieAuthenticationKey = viper.GetString("cookie_authentication_key")
-	c.CookieEncryptionKey = viper.GetString("cookie_encryption_key")
-	c.GoogleRedirectURL = viper.GetString("google_redirect_url")
-	c.GoogleClientID = viper.GetString("google_client_id")
-	c.GoogleClientSecret = viper.GetString("google_client_secret")
+	if err := viper.Unmarshal(c); err != nil {
+		log.Fatal(err)
+	}
+
+	// for file paths, we want the path to be relative to the config's path
+	dir := filepath.Dir(path)
+	c.DBPath = joinIfNotAbs(dir, c.DBPath)
+	c.TemplatesPath = joinIfNotAbs(dir, c.TemplatesPath)
+	c.StaticFilesPath = joinIfNotAbs(dir, c.StaticFilesPath)
 
 	return c
 }
