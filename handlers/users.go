@@ -4,15 +4,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/gorilla/mux"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 const (
@@ -54,12 +54,10 @@ func GetLogin(a *application.App, w http.ResponseWriter, r *http.Request) error 
 func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email, name string) error {
 	u := models.NewUserModel(a.DB)
 	user, err := u.GetUserByEmail(email)
-
-	// sign up if user is logging in for first time
 	if err == sql.ErrNoRows {
+		// sign up if user is logging in for first time
 		user, err = u.Signup(email, name)
-	}
-	if err != nil {
+	} else if err != nil {
 		return err
 	}
 

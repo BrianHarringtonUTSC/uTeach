@@ -2,11 +2,11 @@
 package application
 
 import (
+	"html/template"
+
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
-	"html/template"
-
 	"github.com/umairidris/uTeach/config"
 	"github.com/umairidris/uTeach/libtemplate"
 )

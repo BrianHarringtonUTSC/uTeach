@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"database/sql"
-	"github.com/gorilla/mux"
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"

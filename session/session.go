@@ -3,9 +3,9 @@ package session
 
 import (
 	"encoding/gob"
-	"github.com/gorilla/sessions"
 	"net/http"
 
+	"github.com/gorilla/sessions"
 	"github.com/umairidris/uTeach/models"
 )
 

@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var configPath string
-	flag.StringVar(&configPath, "config", "", "Path to JSON config file.")
+	flag.StringVar(&configPath, "config", "", "Path to config file.")
 	flag.Parse()
 
 	if configPath == "" {

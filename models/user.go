@@ -2,8 +2,9 @@ package models
 
 import (
 	"errors"
-	"github.com/jmoiron/sqlx"
 	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func NewUserModel(db *sqlx.DB) *UserModel {

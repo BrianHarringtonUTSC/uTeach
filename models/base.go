@@ -3,6 +3,7 @@ package models
 
 import (
 	"database/sql/driver"
+
 	"github.com/jmoiron/sqlx"
 )
 

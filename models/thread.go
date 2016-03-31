@@ -3,9 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"time"
 )
 
 func NewThreadModel(db *sqlx.DB) *ThreadModel {

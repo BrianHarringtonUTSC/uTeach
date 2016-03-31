@@ -1,8 +1,9 @@
 package context
 
 import (
-	"github.com/gorilla/context"
 	"net/http"
+
+	"github.com/gorilla/context"
 )
 
 // TODO: replace this with context which will be added in go 1.7

@@ -4,21 +4,35 @@
 
 uTeach is a reddit-like community oriented platform for sharing educational material and resources.
 
+### Features
+- Subjects (equivalent to subreddits on reddit)
+- Threads (equivalent to text post on reddit)
+- Thread voting
+- Users & authentication (with Google accounts)
+- Markdown support for thread content
+- Admin functionality (pin & unhide threads)
+
 ### Requirements
-- Golang 1.4+
+- Golang 1.6+
 - GCC (Sqlite3 dependency)
-- Python 3.0+ (if running the database helper)
+- Python 3.0+ (if using the database helper)
 
 ### Installation Instructions
 Notes:
 - Ensure your GOPATH is correctly setup
 - Export $GOPATH/bin to your PATH for convenience
 - Add .exe in front of executables if on Windows
+- Setup the config: see requirements and examples in config/config.go and sample/
+
 
 #### As a User
 ```
 go get github.com/umairidris/uTeach
-$GOPATH/bin/uTeach --config=$GOPATH/src/github.com/umairidris/uTeach/sample/config.json
+
+# Setup config...
+
+# Run the app
+$GOPATH/bin/uTeach --config=PATH_TO_CONFIG
 ```
 
 #### As a Developer
@@ -34,6 +48,10 @@ go get .
 
 # Install the app and run
 go install
+
+# Setup config ...
+
+# Run the app
 $GOPATH/bin/uTeach --config=sample/config.json
 ```
 
@@ -45,6 +63,7 @@ $GOPATH/bin/uTeach --config=sample/config.json
 - Middleware for logging/recovery (Gorilla, etc)
 - Don't expose sensitive error info through http.Error calls
 - Security (CSRF, etc)
+- Migrate context use to Standard lib context in Go 1.7
 - Front end UI work
 
 ### FAQ

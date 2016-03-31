@@ -2,13 +2,14 @@
 package libtemplate
 
 import (
-	"log"
 	"errors"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
 	"html/template"
+	"log"
 	"path/filepath"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 )
 
 // MarkdownToHTML converts a markdown string into HTML.
