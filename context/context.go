@@ -1,3 +1,4 @@
+// Package context provides convenience setters and getters for request-scoped context values.
 package context
 
 import (
@@ -8,7 +9,6 @@ import (
 
 // TODO: replace this with context which will be added in go 1.7
 const (
-	// handler related keys
 	threadIDKey = "threadID"
 )
 

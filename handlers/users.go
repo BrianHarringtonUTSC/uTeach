@@ -19,7 +19,6 @@ const (
 	googleUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
 )
 
-// getGoogleConfig gets an oauth2 Config for doing authentication with Google.
 func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
 
 	googleConfig := &oauth2.Config{
@@ -37,8 +36,7 @@ func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
 	return googleConfig
 }
 
-// GetLogin makes a request to Google Oauth2 authenticator.
-func GetLogin(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	usm := session.NewUserSessionManager(a.CookieStore)
 	if _, ok := usm.SessionUser(r); ok {
 		return errors.New("Already logged in")
@@ -71,8 +69,7 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 	return nil
 }
 
-// GetOauth2Callback responds to callbacks from Google Oauth2 authenticator.
-func GetOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	googleConfig := getGoogleConfig(a, r)
 
 	// handle the exchange code to initiate a transport
@@ -102,8 +99,7 @@ func GetOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	return loginUser(a, w, r, email, name)
 }
 
-// Logout logs the user out.
-func GetLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	usm := session.NewUserSessionManager(a.CookieStore)
 	if err := usm.Delete(w, r); err != nil {
 		return err
@@ -113,8 +109,7 @@ func GetLogout(a *application.App, w http.ResponseWriter, r *http.Request) error
 	return nil
 }
 
-// GetUser renders user info.
-func GetUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	email := strings.ToLower(vars["email"])
 

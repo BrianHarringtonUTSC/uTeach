@@ -8,7 +8,7 @@ import (
 )
 
 // GetSubjects renders all subjects.
-func GetSubjects(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getSubjects(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	sm := models.NewSubjectModel(a.DB)
 	subjects, err := sm.GetAllSubjects()
 	if err != nil {

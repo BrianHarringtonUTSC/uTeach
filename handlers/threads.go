@@ -12,8 +12,7 @@ import (
 	"github.com/umairidris/uTeach/session"
 )
 
-// GetThreads renders all threads for the subject.
-func GetThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	subject_name := strings.ToLower(vars["subject"])
 
@@ -51,8 +50,7 @@ func GetThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	return renderTemplate(a, w, r, "threads.html", data)
 }
 
-// GetThread renders a thread.
-func GetThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 
 	threadID := context.ThreadID(r)
@@ -65,13 +63,11 @@ func GetThread(a *application.App, w http.ResponseWriter, r *http.Request) error
 	return renderTemplate(a, w, r, "thread.html", data)
 }
 
-// GetNewThread renders the new thread page.
-func GetNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	return renderTemplate(a, w, r, "new_thread.html", nil)
 }
 
-// PostNewThread adds a new thread in the db and redirects to it, if successful.
-func PostNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	subject_name := strings.ToLower(vars["subject"])
 
@@ -106,8 +102,7 @@ func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) er
 	return nil
 }
 
-// DeleteThreadVote removes a vote for the user on a thread.
-func PostThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	usm := session.NewUserSessionManager(a.CookieStore)
 	user, _ := usm.SessionUser(r)
 
@@ -120,8 +115,7 @@ func PostThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 	return handleThreadAction(w, r, f)
 }
 
-// DeleteThreadVote removes a vote for the user on a thread.
-func DeleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func deleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	usm := session.NewUserSessionManager(a.CookieStore)
 	user, _ := usm.SessionUser(r)
 
@@ -134,22 +128,22 @@ func DeleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request
 	return handleThreadAction(w, r, f)
 }
 
-func PostHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 	return handleThreadAction(w, r, tm.HideThread)
 }
 
-func DeleteHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func deleteHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 	return handleThreadAction(w, r, tm.UnhideThread)
 }
 
-func PostPinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postPinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 	return handleThreadAction(w, r, tm.PinThread)
 }
 
-func DeletePinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func deletePinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 	return handleThreadAction(w, r, tm.UnpinThread)
 }

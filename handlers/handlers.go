@@ -37,25 +37,25 @@ func Router(a *application.App) *mux.Router {
 	m := middleware.Middleware{a}
 
 	router := mux.NewRouter()
-	router.Handle("/", h(GetSubjects))
-	router.Handle("/s/{subject}", h(GetThreads))
-	router.Handle("/s/{subject}/submit", h(GetNewThread)).Methods("GET")
-	router.Handle("/s/{subject}/submit", m.MustLogin(h(PostNewThread))).Methods("POST")
-	router.Handle("/user/{email}", h(GetUser))
-	router.Handle("/login", h(GetLogin))
-	router.Handle("/oauth2callback", h(GetOauth2Callback))
-	router.Handle("/logout", h(GetLogout))
+	router.Handle("/", h(getSubjects))
+	router.Handle("/s/{subject}", h(getThreads))
+	router.Handle("/s/{subject}/submit", h(getNewThread)).Methods("GET")
+	router.Handle("/s/{subject}/submit", m.MustLogin(h(postNewThread))).Methods("POST")
+	router.Handle("/user/{email}", h(getUser))
+	router.Handle("/login", h(getLogin))
+	router.Handle("/oauth2callback", h(getOauth2Callback))
+	router.Handle("/logout", h(getLogout))
 
 	// thread specific middleware
 	t := alice.New(m.MustLogin, m.SetThreadIDVar)
 
-	router.Handle("/t/{threadID}", m.SetThreadIDVar(h(GetThread)))
-	router.Handle("/t/{threadID}/upvote", t.Then(h(PostThreadVote))).Methods("POST")
-	router.Handle("/t/{threadID}/upvote", t.Then(h(DeleteThreadVote))).Methods("DELETE")
-	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(PostHideThread)))).Methods("POST")
-	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(DeleteHideThread)))).Methods("DELETE")
-	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(PostPinThread)))).Methods("POST")
-	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(DeletePinThread)))).Methods("DELETE")
+	router.Handle("/t/{threadID}", m.SetThreadIDVar(h(getThread)))
+	router.Handle("/t/{threadID}/upvote", t.Then(h(postThreadVote))).Methods("POST")
+	router.Handle("/t/{threadID}/upvote", t.Then(h(deleteThreadVote))).Methods("DELETE")
+	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(postHideThread)))).Methods("POST")
+	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(deleteHideThread)))).Methods("DELETE")
+	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
+	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

@@ -4,7 +4,6 @@ package libtemplate
 import (
 	"errors"
 	"html/template"
-	"log"
 	"path/filepath"
 	"time"
 
@@ -23,6 +22,7 @@ func FormatAndLocalizeTime(t time.Time) string {
 	return t.Local().Format("Jan 2 2006 3:04PM")
 }
 
+// http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters
 func Dict(values ...interface{}) (map[string]interface{}, error) {
 	if len(values)%2 != 0 {
 		return nil, errors.New("invalid dict call")
@@ -41,30 +41,33 @@ func Dict(values ...interface{}) (map[string]interface{}, error) {
 }
 
 // Load gets all templates at path into a mapping of the template name to its template object.
-// https://elithrar.github.io/article/approximating-html-template-inheritance/
-func Load(path string) map[string]*template.Template {
+// The path should contain a layouts/ subdirectory with all the templates. The path should also contain a includes/
+// subdirectory which contains parent and reusable templates, they will be parsed with each template in the layouts/
+// directory. See: https://elithrar.github.io/article/approximating-html-template-inheritance/ for implementation
+// details.
+func Load(path string) (map[string]*template.Template, error) {
 	templates := make(map[string]*template.Template)
 
 	funcMap := template.FuncMap{
 		"dict":                  Dict,
+		"formatAndLocalizeTime": FormatAndLocalizeTime,
 		"markdownToHTML":        MarkdownToHTML,
-		"formatAndLocalizeTime": FormatAndLocalizeTime}
+	}
 
 	layouts, err := filepath.Glob(filepath.Join(path, "layouts/*.html"))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	includes, err := filepath.Glob(filepath.Join(path, "includes/*.html"))
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	// Generate our templates map from our layouts/ and includes/ directories
 	for _, layout := range layouts {
 		files := append(includes, layout)
 		templates[filepath.Base(layout)] = template.Must(template.New(layout).Funcs(funcMap).ParseFiles(files...))
 	}
 
-	return templates
+	return templates, err
 }

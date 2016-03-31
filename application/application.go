@@ -3,6 +3,7 @@ package application
 
 import (
 	"html/template"
+	"log"
 
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
@@ -21,14 +22,22 @@ type App struct {
 
 // New initializes a new App.
 func New(configPath string) *App {
-	conf := config.Load(configPath)
+	conf, err := config.Load(configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")
 
 	// cookie encryption key must be 32 bytes
 	store := sessions.NewCookieStore([]byte(conf.CookieAuthenticationKey), []byte(conf.CookieEncryptionKey))
-	templates := libtemplate.Load(conf.TemplatesPath)
+
+	templates, err := libtemplate.Load(conf.TemplatesPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	app := &App{conf, db, store, templates}
 	return app
 }

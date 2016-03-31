@@ -1,4 +1,4 @@
-// Package main runs a web app, uTeach, which is a platform for sharing educational material and resources.
+// Package main launches uTeach, a web platform for sharing educational material and resources.
 package main
 
 import (
@@ -16,8 +16,7 @@ func main() {
 	flag.Parse()
 
 	if configPath == "" {
-		log.Fatal("--config arg is missing.",
-			"See https://raw.githubusercontent.com/umairidris/uTeach/master/sample/config.json for an example.")
+		log.Fatal("--config arg is missing.")
 	}
 
 	app := application.New(configPath)

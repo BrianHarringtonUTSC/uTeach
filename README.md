@@ -4,6 +4,8 @@
 
 uTeach is a reddit-like community oriented platform for sharing educational material and resources.
 
+[Documentation](https://godoc.org/github.com/umairidris/uTeach)
+
 ### Features
 - Subjects (equivalent to subreddits on reddit)
 - Threads (equivalent to text post on reddit)
