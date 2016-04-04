@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
@@ -27,7 +26,6 @@ type Handler struct {
 // Router gets the router with routes and their corresponding handlers defined.
 // It also serves static files based on the static files path specified in the app config.
 func Router(a *application.App) *mux.Router {
-
 	// helper function to create Handler struct
 	h := func(handlerFunc func(*application.App, http.ResponseWriter, *http.Request) error) *Handler {
 		return &Handler{a, handlerFunc}
@@ -37,18 +35,21 @@ func Router(a *application.App) *mux.Router {
 	m := middleware.Middleware{a}
 
 	router := mux.NewRouter()
+
+	// subject routes
 	router.Handle("/", h(getSubjects))
-	router.Handle("/s/{subject}", h(getThreads))
-	router.Handle("/s/{subject}/submit", h(getNewThread)).Methods("GET")
-	router.Handle("/s/{subject}/submit", m.MustLogin(h(postNewThread))).Methods("POST")
+
+	// user routes
 	router.Handle("/user/{email}", h(getUser))
 	router.Handle("/login", h(getLogin))
 	router.Handle("/oauth2callback", h(getOauth2Callback))
 	router.Handle("/logout", h(getLogout))
 
-	// thread specific middleware
+	// thread routes
 	t := alice.New(m.MustLogin, m.SetThreadIDVar)
-
+	router.Handle("/s/{subject}", h(getThreads))
+	router.Handle("/s/{subject}/new", h(getNewThread)).Methods("GET")
+	router.Handle("/s/{subject}/new", m.MustLogin(h(postNewThread))).Methods("POST")
 	router.Handle("/t/{threadID}", m.SetThreadIDVar(h(getThread)))
 	router.Handle("/t/{threadID}/upvote", t.Then(h(postThreadVote))).Methods("POST")
 	router.Handle("/t/{threadID}/upvote", t.Then(h(deleteThreadVote))).Methods("DELETE")
@@ -56,6 +57,10 @@ func Router(a *application.App) *mux.Router {
 	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(deleteHideThread)))).Methods("DELETE")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
+
+	// tag routes
+	router.Handle("/s/{subject}/tags", h(getTags))
+	router.Handle("/s/{subject}/tags/{tag}", h(getThreadsByTag))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))
@@ -74,7 +79,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Println(err)
-			debug.PrintStack()
 		}
 	}
 }

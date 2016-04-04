@@ -1,4 +1,4 @@
-// Package models provides models for the uTeach app.
+// Package models contains models to abstract the db.
 package models
 
 import (

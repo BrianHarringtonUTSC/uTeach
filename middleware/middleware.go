@@ -1,4 +1,4 @@
-// Package middleware provides middleware handlers for the uTeach app.
+// Package middleware provides app specific middleware handlers.
 package middleware
 
 import (
@@ -17,7 +17,7 @@ type Middleware struct {
 }
 
 func (m *Middleware) SetThreadIDVar(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
 		if err != nil {
@@ -27,14 +27,14 @@ func (m *Middleware) SetThreadIDVar(next http.Handler) http.Handler {
 
 		context.SetThreadID(r, threadID)
 		next.ServeHTTP(w, r)
-	})
+	}
 
+	return http.HandlerFunc(fn)
 }
 
 // MustLogin ensures that the next handler is only accessible by users that are logged in.
 func (m *Middleware) MustLogin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		usm := session.NewUserSessionManager(m.App.CookieStore)
 		if _, ok := usm.SessionUser(r); !ok {
 			http.Error(w, "You must be logged in to access this link.", http.StatusForbidden)
@@ -42,7 +42,9 @@ func (m *Middleware) MustLogin(next http.Handler) http.Handler {
 		}
 
 		next.ServeHTTP(w, r)
-	})
+	}
+
+	return http.HandlerFunc(fn)
 }
 
 func (m *Middleware) isAdmin(r *http.Request) bool {
@@ -60,29 +62,31 @@ func (m *Middleware) isThreadCreator(r *http.Request) bool {
 	}
 	usm := session.NewUserSessionManager(m.App.CookieStore)
 	user, _ := usm.SessionUser(r)
-	return thread.Creator.Email == user.Email
+	return thread.Creator == user
 }
 
 func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !m.isAdmin(r) {
 			http.Error(w, "You must be an admin to access this link.", http.StatusForbidden)
 			return
 		}
 
 		next.ServeHTTP(w, r)
-	})
+	}
+
+	return http.HandlerFunc(fn)
 }
 
 func (m *Middleware) MustBeAdminOrThreadCreator(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !m.isThreadCreator(r) && !m.isAdmin(r) {
 			http.Error(w, "You must be an admin or creator of the thread to access this link.", http.StatusForbidden)
 			return
 		}
 
 		next.ServeHTTP(w, r)
-	})
+	}
+
+	return http.HandlerFunc(fn)
 }

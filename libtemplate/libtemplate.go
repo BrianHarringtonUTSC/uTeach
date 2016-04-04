@@ -11,7 +11,7 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-// MarkdownToHTML converts a markdown string into HTML.
+// MarkdownToHTML converts and sanitizes a markdown string into HTML.
 func MarkdownToHTML(markdown string) template.HTML {
 	unsafe := blackfriday.MarkdownBasic([]byte(markdown))
 	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)

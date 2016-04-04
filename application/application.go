@@ -1,4 +1,4 @@
-// Package application provides context to bind the uTeach app together.
+// Package application provides context to bind the app together.
 package application
 
 import (

@@ -9,10 +9,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func NewThreadModel(db *sqlx.DB) *ThreadModel {
-	return &ThreadModel{Base{db}}
-}
-
 type Thread struct {
 	ID          int64
 	Title       string
@@ -25,20 +21,21 @@ type Thread struct {
 	Creator     *User
 }
 
+// URL returns the unique URL for a thread.
+func (t *Thread) URL() string {
+	return fmt.Sprintf("/t/%d", t.ID)
+}
+
+func NewThreadModel(db *sqlx.DB) *ThreadModel {
+	return &ThreadModel{Base{db}}
+}
+
 type ThreadModel struct {
 	Base
 }
 
-// URL returns the unique URL for a thread.
-func (t *Thread) URL() string {
-	return fmt.Sprintf("/s/%s/%d", t.Subject.Name, t.ID)
-}
-
-func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
-	threads := []*Thread{}
-
-	query, args, err := squirrel.
-		Select(`threads.id AS thread_id,
+var threadsSqlizer = squirrel.
+	Select(`threads.id AS thread_id,
 			threads.title AS thread_title,
 			threads.content,
 			threads.time_created,
@@ -52,15 +49,17 @@ func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 			users.email,
 			users.name AS user_name,
 			users.is_admin`).
-		From("threads").
-		Join("subjects ON threads.subject_id=subjects.id").
-		Join("users ON threads.creator_user_id=users.id").
-		LeftJoin("thread_votes ON threads.id=thread_votes.thread_id").
-		Where(eq).
-		GroupBy("threads.id").
-		OrderBy("count(thread_votes.thread_id) DESC").
-		ToSql()
+	From("threads").
+	Join("subjects ON subjects.id=threads.subject_id").
+	Join("users ON users.id=threads.creator_user_id").
+	LeftJoin("thread_votes ON thread_votes.thread_id=threads.id").
+	GroupBy("threads.id").
+	OrderBy("count(thread_votes.thread_id) DESC")
 
+func (tm *ThreadModel) getThreads(sqlizer squirrel.Sqlizer) ([]*Thread, error) {
+	threads := []*Thread{}
+
+	query, args, err := sqlizer.ToSql()
 	if err != nil {
 		return threads, err
 	}
@@ -86,13 +85,13 @@ func (tm *ThreadModel) getThreads(eq squirrel.Eq) ([]*Thread, error) {
 		thread.Subject = subject
 		thread.Creator = creator
 		threads = append(threads, thread)
-
 	}
+
 	return threads, err
 }
 
-func (tm *ThreadModel) getOneThread(eq squirrel.Eq) (*Thread, error) {
-	threads, err := tm.getThreads(eq)
+func (tm *ThreadModel) getOneThread(sqlizer squirrel.Sqlizer) (*Thread, error) {
+	threads, err := tm.getThreads(sqlizer)
 	if err != nil {
 		return nil, err
 	}
@@ -103,15 +102,15 @@ func (tm *ThreadModel) getOneThread(eq squirrel.Eq) (*Thread, error) {
 }
 
 func (tm *ThreadModel) GetThreadByID(id int64) (*Thread, error) {
-	return tm.getOneThread(squirrel.Eq{"threads.id": id})
+	return tm.getOneThread(threadsSqlizer.Where(squirrel.Eq{"threads.id": id}))
 }
 
 func (tm *ThreadModel) GetThreadsBySubjectAndIsPinned(subject *Subject, isPinned bool) ([]*Thread, error) {
-	return tm.getThreads(squirrel.Eq{"threads.subject_id": subject.ID, "threads.is_pinned": isPinned})
+	return tm.getThreads(threadsSqlizer.Where(squirrel.Eq{"threads.subject_id": subject.ID, "threads.is_pinned": isPinned}))
 }
 
 func (tm *ThreadModel) GetThreadsByUser(user *User) ([]*Thread, error) {
-	return tm.getThreads(squirrel.Eq{"threads.creator_user_id": user.ID})
+	return tm.getThreads(threadsSqlizer.Where(squirrel.Eq{"threads.creator_user_id": user.ID}))
 }
 
 func (tm *ThreadModel) GetThreadIdsUpvotedByUser(user *User) (map[int64]bool, error) {

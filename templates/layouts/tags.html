@@ -1,0 +1,9 @@
+{{define "content"}}
+	<ul>
+		{{range $tag := .Tags}}
+		<li>
+			<a href="/s/{{$tag.Subject.Name}}/tags/{{$tag.Name}}">{{$tag.Name}}</a>
+		</li>
+		{{end}}
+	</ul>
+{{end}}

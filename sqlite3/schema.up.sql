@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS threads(
 	is_pinned BOOLEAN DEFAULT 0 NOT NULL,
 	is_visible BOOLEAN DEFAULT 1 NOT NULL,
 	FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-	FOREIGN KEY(creator_user_id) REFERENCES users(id) ON DELETE CASCADE
+	FOREIGN KEY(creator_user_id) REFERENCES users(id) ON DELETE CASCADE,
+	UNIQUE(id, subject_id)
 );
 
 CREATE TABLE IF NOT EXISTS thread_votes(
@@ -37,13 +38,15 @@ CREATE TABLE IF NOT EXISTS tags(
 	name TEXT NOT NULL,
 	subject_id INTEGER NOT NULL,
 	UNIQUE(name, subject_id),
+	UNIQUE(id, subject_id)
 	FOREIGN KEY(subject_id) REFERENCES subjects(id)
 );
 
 CREATE TABLE IF NOT EXISTS thread_tags(
 	thread_id INTEGER NOT NULL,
+	subject_id INTEGER NOT NULL,
 	tag_id INTEGER NOT NULL,
 	PRIMARY KEY (thread_id, tag_id),
-	FOREIGN KEY(thread_id) REFERENCES threads(id) ON DELETE CASCADE,
-	FOREIGN KEY(tag_id) REFERENCES tags(id) ON DELETE CASCADE
+	FOREIGN KEY(thread_id, subject_id) REFERENCES threads(id, subject_id) ON DELETE CASCADE,
+	FOREIGN KEY(tag_id, subject_id) REFERENCES tags(id, subject_id) ON DELETE CASCADE
 );

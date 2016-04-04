@@ -14,10 +14,10 @@ import (
 
 func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	subject_name := strings.ToLower(vars["subject"])
+	subjectName := strings.ToLower(vars["subject"])
 
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subject_name)
+	subject, err := sm.GetSubjectByName(subjectName)
 	if err != nil {
 		return err
 	}
