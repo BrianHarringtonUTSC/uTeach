@@ -27,7 +27,7 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 			user, err := um.GetUserByID(nil, userID)
 			if err != nil {
 				us.Delete(w, r)
-				http.Redirect(w, r, "/", http.StatusInternalServerError)
+				http.Redirect(w, r, "/", http.StatusFound)
 			}
 			context.SetSessionUser(r, user)
 		}

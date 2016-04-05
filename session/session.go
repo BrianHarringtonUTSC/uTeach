@@ -2,11 +2,9 @@
 package session
 
 import (
-	"encoding/gob"
 	"net/http"
 
 	"github.com/gorilla/sessions"
-	"github.com/umairidris/uTeach/models"
 )
 
 const (

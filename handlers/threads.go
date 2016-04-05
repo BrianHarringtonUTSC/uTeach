@@ -113,7 +113,7 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		return err
 	}
-	http.Redirect(w, r, thread.URL(), 301)
+	http.Redirect(w, r, thread.URL(), http.StatusOK)
 	return nil
 }
 
