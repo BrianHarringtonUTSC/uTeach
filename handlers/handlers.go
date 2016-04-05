@@ -43,11 +43,11 @@ func Router(a *application.App) *mux.Router {
 	router.Handle("/logout", h(getLogout))
 
 	// thread routes
-	t := alice.New(m.MustLogin, m.SetThreadIDVar)
-	router.Handle("/s/{subject}", h(getThreads))
-	router.Handle("/s/{subject}/new", h(getNewThread)).Methods("GET")
-	router.Handle("/s/{subject}/new", m.MustLogin(h(postNewThread))).Methods("POST")
-	router.Handle("/t/{threadID}", m.SetThreadIDVar(h(getThread)))
+	t := alice.New(m.MustLogin, m.SetThread)
+	router.Handle("/s/{subject}", m.SetSubject(h(getThreads)))
+	router.Handle("/s/{subject}/new", m.SetSubject(h(getNewThread))).Methods("GET")
+	router.Handle("/s/{subject}/new", m.MustLogin(m.SetSubject(h(postNewThread)))).Methods("POST")
+	router.Handle("/t/{threadID}", m.SetThread(h(getThread)))
 	router.Handle("/t/{threadID}/upvote", t.Then(h(postThreadVote))).Methods("POST")
 	router.Handle("/t/{threadID}/upvote", t.Then(h(deleteThreadVote))).Methods("DELETE")
 	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(postHideThread)))).Methods("POST")
@@ -56,8 +56,8 @@ func Router(a *application.App) *mux.Router {
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
 
 	// tag routes
-	router.Handle("/s/{subject}/tags", h(getTags))
-	router.Handle("/s/{subject}/tags/{tag}", h(getThreadsByTag))
+	router.Handle("/s/{subject}/tags", m.SetSubject(h(getTags)))
+	router.Handle("/s/{subject}/tags/{tag}", m.SetSubject(m.SetTag(h(getThreadsByTag))))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

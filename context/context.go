@@ -5,17 +5,36 @@ import (
 	"net/http"
 
 	"github.com/gorilla/context"
+	"github.com/umairidris/uTeach/models"
 )
 
 // TODO: replace this with context which will be added in go 1.7
 const (
-	threadIDKey = "threadID"
+	subjectKey = "subject"
+	threadKey  = "thread"
+	tagKey     = "tag"
 )
 
-func SetThreadID(r *http.Request, threadID int64) {
-	context.Set(r, threadIDKey, threadID)
+func SetSubject(r *http.Request, subject *models.Subject) {
+	context.Set(r, subjectKey, subject)
 }
 
-func ThreadID(r *http.Request) int64 {
-	return context.Get(r, threadIDKey).(int64)
+func Subject(r *http.Request) *models.Subject {
+	return context.Get(r, subjectKey).(*models.Subject)
+}
+
+func SetThread(r *http.Request, thread *models.Thread) {
+	context.Set(r, threadKey, thread)
+}
+
+func Thread(r *http.Request) *models.Thread {
+	return context.Get(r, threadKey).(*models.Thread)
+}
+
+func SetTag(r *http.Request, thread *models.Tag) {
+	context.Set(r, tagKey, thread)
+}
+
+func Tag(r *http.Request) *models.Tag {
+	return context.Get(r, tagKey).(*models.Tag)
 }

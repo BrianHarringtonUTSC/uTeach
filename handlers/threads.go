@@ -14,14 +14,7 @@ import (
 )
 
 func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	subjectName := strings.ToLower(vars["subject"])
-
-	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(nil, subjectName)
-	if err != nil {
-		return err
-	}
+	subject := context.Subject(r)
 
 	tm := models.NewThreadModel(a.DB)
 	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, true)
@@ -60,14 +53,7 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 }
 
 func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	tm := models.NewThreadModel(a.DB)
-
-	threadID := context.ThreadID(r)
-	thread, err := tm.GetThreadByID(nil, threadID)
-	if err != nil {
-		return err
-	}
-
+	thread := context.Thread(r)
 	data := map[string]interface{}{"Thread": thread}
 	return renderTemplate(a, w, r, "thread.html", data)
 }
@@ -92,14 +78,7 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 }
 
 func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	vars := mux.Vars(r)
-	subject_name := strings.ToLower(vars["subject"])
-
-	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(nil, subject_name)
-	if err != nil {
-		return err
-	}
+	subject := context.Subject(r)
 
 	usm := session.NewUserSessionManager(a.CookieStore)
 	user, _ := usm.SessionUser(r)
@@ -142,9 +121,9 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 }
 
 func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, int64) error) error {
-	threadID := context.ThreadID(r)
+	thread := context.Thread(r)
 
-	if err := f(nil, threadID); err != nil {
+	if err := f(nil, thread.ID); err != nil {
 		return err
 	}
 	w.WriteHeader(http.StatusOK)

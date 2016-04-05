@@ -4,6 +4,7 @@ package middleware
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
@@ -17,7 +18,25 @@ type Middleware struct {
 	App *application.App
 }
 
-func (m *Middleware) SetThreadIDVar(next http.Handler) http.Handler {
+func (m *Middleware) SetSubject(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		subjectName := strings.ToLower(vars["subject"])
+		sm := models.NewSubjectModel(m.App.DB)
+		subject, err := sm.GetSubjectByName(nil, subjectName)
+		if err != nil {
+			httperror.HandleError(w, err)
+			return
+		}
+
+		context.SetSubject(r, subject)
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func (m *Middleware) SetThread(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
@@ -26,10 +45,33 @@ func (m *Middleware) SetThreadIDVar(next http.Handler) http.Handler {
 			return
 		}
 
-		context.SetThreadID(r, threadID)
+		tm := models.NewThreadModel(m.App.DB)
+		thread, err := tm.GetThreadByID(nil, threadID)
+		if err != nil {
+			httperror.HandleError(w, err)
+			return
+		}
+		context.SetThread(r, thread)
 		next.ServeHTTP(w, r)
 	}
 
+	return http.HandlerFunc(fn)
+}
+
+func (m *Middleware) SetTag(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		tagName := strings.ToLower(vars["tag"])
+		tm := models.NewTagModel(m.App.DB)
+		tag, err := tm.GetTagByNameAndSubject(nil, tagName, context.Subject(r))
+		if err != nil {
+			httperror.HandleError(w, err)
+			return
+		}
+
+		context.SetTag(r, tag)
+		next.ServeHTTP(w, r)
+	}
 	return http.HandlerFunc(fn)
 }
 
@@ -55,12 +97,7 @@ func (m *Middleware) isAdmin(r *http.Request) bool {
 }
 
 func (m *Middleware) isThreadCreator(r *http.Request) bool {
-	tm := models.NewThreadModel(m.App.DB)
-	threadID := context.ThreadID(r)
-	thread, err := tm.GetThreadByID(nil, threadID)
-	if err != nil {
-		return false
-	}
+	thread := context.Thread(r)
 	usm := session.NewUserSessionManager(m.App.CookieStore)
 	user, _ := usm.SessionUser(r)
 	return thread.Creator == user
