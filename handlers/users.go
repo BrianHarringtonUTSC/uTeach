@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
 	"golang.org/x/oauth2"
@@ -37,8 +38,7 @@ func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
 }
 
 func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	usm := session.NewUserSessionManager(a.CookieStore)
-	if _, ok := usm.SessionUser(r); ok {
+	if _, ok := context.SessionUser(r); ok {
 		return errors.New("Already logged in")
 	}
 
@@ -59,8 +59,8 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 		return err
 	}
 
-	usm := session.NewUserSessionManager(a.CookieStore)
-	err = usm.New(w, r, user)
+	us := session.NewUserSession(a.CookieStore)
+	err = us.SaveSessionUserID(w, r, user.ID)
 	if err != nil {
 		return err
 	}
@@ -100,8 +100,8 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 }
 
 func getLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	usm := session.NewUserSessionManager(a.CookieStore)
-	if err := usm.Delete(w, r); err != nil {
+	us := session.NewUserSession(a.CookieStore)
+	if err := us.Delete(w, r); err != nil {
 		return err
 	}
 

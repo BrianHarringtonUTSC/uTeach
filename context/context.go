@@ -10,9 +10,10 @@ import (
 
 // TODO: replace this with context which will be added in go 1.7
 const (
-	subjectKey = "subject"
-	threadKey  = "thread"
-	tagKey     = "tag"
+	subjectKey     = "subject"
+	threadKey      = "thread"
+	tagKey         = "tag"
+	sessionUserKey = "session-user"
 )
 
 func SetSubject(r *http.Request, subject *models.Subject) {
@@ -37,4 +38,13 @@ func SetTag(r *http.Request, thread *models.Tag) {
 
 func Tag(r *http.Request) *models.Tag {
 	return context.Get(r, tagKey).(*models.Tag)
+}
+
+func SetSessionUser(r *http.Request, thread *models.User) {
+	context.Set(r, sessionUserKey, thread)
+}
+
+func SessionUser(r *http.Request) (*models.User, bool) {
+	user, ok := context.Get(r, sessionUserKey).(*models.User)
+	return user, ok
 }

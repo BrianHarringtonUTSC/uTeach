@@ -22,6 +22,12 @@ type UserModel struct {
 	Base
 }
 
+func (um *UserModel) GetUserByID(tx *sqlx.Tx, id int64) (*User, error) {
+	user := &User{}
+	err := um.Get(tx, user, "SELECT * FROM users WHERE id=?", id)
+	return user, err
+}
+
 // GetUserByEmail returns record by email.
 func (um *UserModel) GetUserByEmail(tx *sqlx.Tx, email string) (*User, error) {
 	user := &User{}

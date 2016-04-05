@@ -18,6 +18,25 @@ type Middleware struct {
 	App *application.App
 }
 
+func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		us := session.NewUserSession(m.App.CookieStore)
+		userID, ok := us.SessionUserID(r)
+		if ok {
+			um := models.NewUserModel(m.App.DB)
+			user, err := um.GetUserByID(nil, userID)
+			if err != nil {
+				us.Delete(w, r)
+				http.Redirect(w, r, "/", http.StatusInternalServerError)
+			}
+			context.SetSessionUser(r, user)
+		}
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
 func (m *Middleware) SetSubject(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -78,8 +97,7 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 // MustLogin ensures that the next handler is only accessible by users that are logged in.
 func (m *Middleware) MustLogin(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		usm := session.NewUserSessionManager(m.App.CookieStore)
-		if _, ok := usm.SessionUser(r); !ok {
+		if _, ok := context.SessionUser(r); !ok {
 			httperror.HandleError(w, httperror.StatusError{http.StatusForbidden, nil})
 			return
 		}
@@ -91,16 +109,14 @@ func (m *Middleware) MustLogin(next http.Handler) http.Handler {
 }
 
 func (m *Middleware) isAdmin(r *http.Request) bool {
-	usm := session.NewUserSessionManager(m.App.CookieStore)
-	user, _ := usm.SessionUser(r)
-	return user.IsAdmin
+	user, ok := context.SessionUser(r)
+	return ok && user.IsAdmin
 }
 
 func (m *Middleware) isThreadCreator(r *http.Request) bool {
 	thread := context.Thread(r)
-	usm := session.NewUserSessionManager(m.App.CookieStore)
-	user, _ := usm.SessionUser(r)
-	return thread.Creator == user
+	user, ok := context.SessionUser(r)
+	return ok && thread.Creator == user
 }
 
 func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {

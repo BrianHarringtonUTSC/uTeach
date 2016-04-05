@@ -10,7 +10,6 @@ import (
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
-	"github.com/umairidris/uTeach/session"
 )
 
 func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -32,8 +31,7 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	data["UnpinnedThreads"] = unpinnedThreads
 
 	//  if there is a user, get the user's upvoted threads
-	usm := session.NewUserSessionManager(a.CookieStore)
-	if user, ok := usm.SessionUser(r); ok {
+	if user, ok := context.SessionUser(r); ok {
 		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByUser(nil, user)
 		if err != nil {
 			return err
@@ -80,8 +78,7 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	subject := context.Subject(r)
 
-	usm := session.NewUserSessionManager(a.CookieStore)
-	user, _ := usm.SessionUser(r)
+	user, _ := context.SessionUser(r)
 
 	title := r.FormValue("title")
 	text := r.FormValue("text")
@@ -131,8 +128,7 @@ func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx,
 }
 
 func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	usm := session.NewUserSessionManager(a.CookieStore)
-	user, _ := usm.SessionUser(r)
+	user, _ := context.SessionUser(r)
 
 	tm := models.NewThreadModel(a.DB)
 
@@ -144,8 +140,7 @@ func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 }
 
 func deleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	usm := session.NewUserSessionManager(a.CookieStore)
-	user, _ := usm.SessionUser(r)
+	user, _ := context.SessionUser(r)
 
 	tm := models.NewThreadModel(a.DB)
 

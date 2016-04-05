@@ -11,19 +11,14 @@ import (
 
 const (
 	userSessionName = "user-session"
-	userKey         = "user"
+	userIDKey       = "user-id"
 )
-
-func init() {
-	// allows user to be encoded so that it can be stored in a session
-	gob.Register(&models.User{})
-}
 
 type UserSession struct {
 	cookieStore *sessions.CookieStore
 }
 
-func NewUserSessionManager(store *sessions.CookieStore) *UserSession {
+func NewUserSession(store *sessions.CookieStore) *UserSession {
 	return &UserSession{store}
 }
 
@@ -33,13 +28,13 @@ func (us *UserSession) get(r *http.Request) (*sessions.Session, error) {
 }
 
 // New creates a new session and stores the User containing the
-func (us *UserSession) New(w http.ResponseWriter, r *http.Request, user *models.User) error {
+func (us *UserSession) SaveSessionUserID(w http.ResponseWriter, r *http.Request, id int64) error {
 	session, err := us.get(r)
 	if err != nil {
 		return err
 	}
 
-	session.Values[userKey] = user
+	session.Values[userIDKey] = id
 	session.Options.HttpOnly = true
 	return session.Save(r, w)
 }
@@ -47,19 +42,19 @@ func (us *UserSession) New(w http.ResponseWriter, r *http.Request, user *models.
 // User gets the user stored in the user session.
 // If there is a User stored in the session and can be retrieved it returns the user and true, else the boolean will be
 // false.
-func (us *UserSession) SessionUser(r *http.Request) (*models.User, bool) {
+func (us *UserSession) SessionUserID(r *http.Request) (int64, bool) {
 	session, err := us.get(r)
 	if err != nil {
-		return nil, false
+		return -1, false
 	}
 
-	u, ok := session.Values[userKey]
+	i, ok := session.Values[userIDKey]
 	if !ok {
-		return nil, false
+		return -1, false
 	}
 
-	user, ok := u.(*models.User)
-	return user, ok
+	id, ok := i.(int64)
+	return id, ok
 }
 
 // Delete deletes the user session.
@@ -68,7 +63,7 @@ func (us *UserSession) Delete(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	delete(session.Values, userKey)
+	delete(session.Values, userIDKey)
 	session.Options.MaxAge = -1
 	return session.Save(r, w)
 }

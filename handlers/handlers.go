@@ -7,11 +7,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
 	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/middleware"
 	"github.com/umairidris/uTeach/models"
-	"github.com/umairidris/uTeach/session"
 )
 
 // http://elithrar.github.io/article/http-handler-error-handling-revisited/
@@ -22,14 +22,17 @@ type Handler struct {
 
 // Router gets the router with routes and their corresponding handlers defined.
 // It also serves static files based on the static files path specified in the app config.
-func Router(a *application.App) *mux.Router {
+func Router(a *application.App) http.Handler {
 	// helper function to create Handler struct
-	h := func(handlerFunc func(*application.App, http.ResponseWriter, *http.Request) error) *Handler {
+	h := func(handlerFunc func(*application.App, http.ResponseWriter, *http.Request) error) http.Handler {
 		return &Handler{a, handlerFunc}
 	}
 
 	// app specific middleware
 	m := middleware.Middleware{a}
+
+	// middleware for all routes
+	standardChain := alice.New(m.SetSessionUser)
 
 	router := mux.NewRouter()
 
@@ -63,7 +66,7 @@ func Router(a *application.App) *mux.Router {
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFileServer))
 
-	return router
+	return standardChain.Then(router)
 }
 
 // ServeHTTP allows Handler to satisfy the http.Handler interface.
@@ -76,8 +79,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // It also adds the session user to the data for templates to access.
 func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) error {
 	// add session user to data
-	usm := session.NewUserSessionManager(a.CookieStore)
-	if user, ok := usm.SessionUser(r); ok {
+	if user, ok := context.SessionUser(r); ok {
 		data["SessionUser"] = user
 	} else {
 		// pass in empty user
