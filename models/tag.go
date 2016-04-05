@@ -26,13 +26,13 @@ var tagsSqlizer = squirrel.
 	From("tags").
 	Join("subjects ON subjects.id=tags.subject_id")
 
-func (tm *TagModel) get(sqlizer squirrel.Sqlizer) ([]*Tag, error) {
+func (tm *TagModel) getAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, error) {
 	query, args, err := sqlizer.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := tm.db.Query(query, args...)
+	rows, err := tm.Query(tx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,8 +52,8 @@ func (tm *TagModel) get(sqlizer squirrel.Sqlizer) ([]*Tag, error) {
 	return tags, err
 }
 
-func (tm *TagModel) getOne(sqlizer squirrel.Sqlizer) (*Tag, error) {
-	tags, err := tm.get(sqlizer)
+func (tm *TagModel) getOne(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) (*Tag, error) {
+	tags, err := tm.getAll(tx, sqlizer)
 	if err != nil {
 		return nil, err
 	}
@@ -65,27 +65,27 @@ func (tm *TagModel) getOne(sqlizer squirrel.Sqlizer) (*Tag, error) {
 	return tags[0], err
 }
 
-func (tm *TagModel) GetTagByID(id int64) (*Tag, error) {
-	return tm.getOne(tagsSqlizer.Where(squirrel.Eq{"tags.id": id}))
+func (tm *TagModel) GetTagByID(tx *sqlx.Tx, id int64) (*Tag, error) {
+	return tm.getOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.id": id}))
 }
 
-func (tm *TagModel) GetTagByNameAndSubject(name string, subject *Subject) (*Tag, error) {
-	return tm.getOne(tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.subject_id": subject.ID}))
+func (tm *TagModel) GetTagByNameAndSubject(tx *sqlx.Tx, name string, subject *Subject) (*Tag, error) {
+	return tm.getOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.subject_id": subject.ID}))
 }
 
-func (tm *TagModel) GetTagsBySubject(subject *Subject) ([]*Tag, error) {
-	return tm.get(tagsSqlizer.Where(squirrel.Eq{"subject_id": subject.ID}))
+func (tm *TagModel) GetTagsBySubject(tx *sqlx.Tx, subject *Subject) ([]*Tag, error) {
+	return tm.getAll(tx, tagsSqlizer.Where(squirrel.Eq{"subject_id": subject.ID}))
 }
 
-func (tm *TagModel) GetThreadsByTag(tag *Tag) ([]*Thread, error) {
+func (tm *TagModel) GetThreadsByTag(tx *sqlx.Tx, tag *Tag) ([]*Thread, error) {
 	threadModel := NewThreadModel(tm.db)
-	threads, err := threadModel.getThreads(nil,
+	threads, err := threadModel.getAll(tx,
 		threadsSqlizer.Join("thread_tags ON thread_tags.thread_id=threads.id").Where(squirrel.Eq{"thread_tags.tag_id": tag.ID}))
 	return threads, err
 }
 
 func (tm *TagModel) AddThreadTag(tx *sqlx.Tx, thread *Thread, tag *Tag) error {
-	_, err := tm.exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, subject_id) VALUES(?, ?, ?)",
+	_, err := tm.Exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, subject_id) VALUES(?, ?, ?)",
 		thread.ID, tag.ID, thread.Subject.ID)
 	return err
 }

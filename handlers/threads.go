@@ -18,18 +18,18 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	subjectName := strings.ToLower(vars["subject"])
 
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subjectName)
+	subject, err := sm.GetSubjectByName(nil, subjectName)
 	if err != nil {
 		return err
 	}
 
 	tm := models.NewThreadModel(a.DB)
-	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
+	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, true)
 	if err != nil {
 		return err
 	}
 
-	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
+	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, false)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	//  if there is a user, get the user's upvoted threads
 	usm := session.NewUserSessionManager(a.CookieStore)
 	if user, ok := usm.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByUser(user)
+		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByUser(nil, user)
 		if err != nil {
 			return err
 		}
@@ -49,7 +49,7 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	}
 
 	tagModel := models.NewTagModel(a.DB)
-	tags, err := tagModel.GetTagsBySubject(subject)
+	tags, err := tagModel.GetTagsBySubject(nil, subject)
 	if err != nil {
 		return err
 	}
@@ -76,13 +76,13 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 	vars := mux.Vars(r)
 	subjectName := strings.ToLower(vars["subject"])
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subjectName)
+	subject, err := sm.GetSubjectByName(nil, subjectName)
 	if err != nil {
 		return err
 	}
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsBySubject(subject)
+	tags, err := tm.GetTagsBySubject(nil, subject)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	subject_name := strings.ToLower(vars["subject"])
 
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subject_name)
+	subject, err := sm.GetSubjectByName(nil, subject_name)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 			return err
 		}
 		tagModel := models.NewTagModel(a.DB)
-		tag, err := tagModel.GetTagByID(tagID)
+		tag, err := tagModel.GetTagByID(nil, tagID)
 		if err != nil {
 			return err
 		}

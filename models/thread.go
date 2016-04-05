@@ -57,7 +57,7 @@ var threadsSqlizer = squirrel.
 	GroupBy("threads.id").
 	OrderBy("count(thread_votes.thread_id) DESC")
 
-func (tm *ThreadModel) getThreads(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thread, error) {
+func (tm *ThreadModel) getAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thread, error) {
 	threads := []*Thread{}
 
 	query, args, err := sqlizer.ToSql()
@@ -65,7 +65,7 @@ func (tm *ThreadModel) getThreads(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thr
 		return threads, err
 	}
 
-	rows, err := tm.query(tx, query, args...)
+	rows, err := tm.Query(tx, query, args...)
 	if err != nil {
 		return threads, err
 	}
@@ -91,8 +91,8 @@ func (tm *ThreadModel) getThreads(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thr
 	return threads, err
 }
 
-func (tm *ThreadModel) getOneThread(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) (*Thread, error) {
-	threads, err := tm.getThreads(tx, sqlizer)
+func (tm *ThreadModel) getOne(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) (*Thread, error) {
+	threads, err := tm.getAll(tx, sqlizer)
 	if err != nil {
 		return nil, err
 	}
@@ -103,23 +103,23 @@ func (tm *ThreadModel) getOneThread(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) (*Thr
 }
 
 func (tm *ThreadModel) GetThreadByID(tx *sqlx.Tx, id int64) (*Thread, error) {
-	return tm.getOneThread(tx, threadsSqlizer.Where(squirrel.Eq{"threads.id": id}))
+	return tm.getOne(tx, threadsSqlizer.Where(squirrel.Eq{"threads.id": id}))
 }
 
-func (tm *ThreadModel) GetThreadsBySubjectAndIsPinned(subject *Subject, isPinned bool) ([]*Thread, error) {
-	threads, err := tm.getThreads(nil, threadsSqlizer.Where(squirrel.Eq{"threads.subject_id": subject.ID, "threads.is_pinned": isPinned}))
+func (tm *ThreadModel) GetThreadsBySubjectAndIsPinned(tx *sqlx.Tx, subject *Subject, isPinned bool) ([]*Thread, error) {
+	threads, err := tm.getAll(tx, threadsSqlizer.Where(squirrel.Eq{"threads.subject_id": subject.ID, "threads.is_pinned": isPinned}))
 	if err == sql.ErrNoRows {
 		return []*Thread{}, nil
 	}
 	return threads, err
 }
 
-func (tm *ThreadModel) GetThreadsByUser(user *User) ([]*Thread, error) {
-	return tm.getThreads(nil, threadsSqlizer.Where(squirrel.Eq{"threads.creator_user_id": user.ID}))
+func (tm *ThreadModel) GetThreadsByUser(tx *sqlx.Tx, user *User) ([]*Thread, error) {
+	return tm.getAll(tx, threadsSqlizer.Where(squirrel.Eq{"threads.creator_user_id": user.ID}))
 }
 
-func (tm *ThreadModel) GetThreadIdsUpvotedByUser(user *User) (map[int64]bool, error) {
-	rows, err := tm.db.Query("SELECT thread_id FROM thread_votes WHERE user_id=?", user.ID)
+func (tm *ThreadModel) GetThreadIdsUpvotedByUser(tx *sqlx.Tx, user *User) (map[int64]bool, error) {
+	rows, err := tm.Query(tx, "SELECT thread_id FROM thread_votes WHERE user_id=?", user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, subject *Su
 	}
 
 	query := "INSERT INTO threads(title, content, subject_id, creator_user_id) VALUES(?, ?, ?, ?)"
-	result, err := tm.exec(tx, query, title, content, subject.ID, creator.ID)
+	result, err := tm.Exec(tx, query, title, content, subject.ID, creator.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -150,31 +150,31 @@ func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, subject *Su
 }
 
 func (tm *ThreadModel) AddThreadVoteForUser(tx *sqlx.Tx, threadID int64, user *User) error {
-	_, err := tm.exec(tx, "INSERT INTO thread_votes(user_id, thread_id) VALUES(?, ?)", user.ID, threadID)
+	_, err := tm.Exec(tx, "INSERT INTO thread_votes(user_id, thread_id) VALUES(?, ?)", user.ID, threadID)
 	return err
 }
 
 func (tm *ThreadModel) RemoveTheadVoteForUser(tx *sqlx.Tx, threadID int64, user *User) error {
-	_, err := tm.exec(tx, "DELETE FROM thread_votes where user_id=? AND thread_id=?", user.ID, threadID)
+	_, err := tm.Exec(tx, "DELETE FROM thread_votes where user_id=? AND thread_id=?", user.ID, threadID)
 	return err
 }
 
 func (tm *ThreadModel) HideThread(tx *sqlx.Tx, id int64) error {
-	_, err := tm.exec(tx, "UPDATE threads SET is_visible=? WHERE id=?", false, id)
+	_, err := tm.Exec(tx, "UPDATE threads SET is_visible=? WHERE id=?", false, id)
 	return err
 }
 
 func (tm *ThreadModel) UnhideThread(tx *sqlx.Tx, id int64) error {
-	_, err := tm.exec(tx, "UPDATE threads SET is_visible=? WHERE id=?", true, id)
+	_, err := tm.Exec(tx, "UPDATE threads SET is_visible=? WHERE id=?", true, id)
 	return err
 }
 
 func (tm *ThreadModel) PinThread(tx *sqlx.Tx, id int64) error {
-	_, err := tm.exec(tx, "UPDATE threads SET is_pinned=? WHERE id=?", true, id)
+	_, err := tm.Exec(tx, "UPDATE threads SET is_pinned=? WHERE id=?", true, id)
 	return err
 }
 
 func (tm *ThreadModel) UnpinThread(tx *sqlx.Tx, id int64) error {
-	_, err := tm.exec(tx, "UPDATE threads SET is_pinned=? WHERE id=?", false, id)
+	_, err := tm.Exec(tx, "UPDATE threads SET is_pinned=? WHERE id=?", false, id)
 	return err
 }

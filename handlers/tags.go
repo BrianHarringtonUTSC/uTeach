@@ -14,13 +14,13 @@ func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	subjectName := strings.ToLower(vars["subject"])
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subjectName)
+	subject, err := sm.GetSubjectByName(nil, subjectName)
 	if err != nil {
 		return err
 	}
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsBySubject(subject)
+	tags, err := tm.GetTagsBySubject(nil, subject)
 	if err != nil {
 		return err
 	}
@@ -34,19 +34,19 @@ func getThreadsByTag(a *application.App, w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	subjectName := strings.ToLower(vars["subject"])
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(subjectName)
+	subject, err := sm.GetSubjectByName(nil, subjectName)
 	if err != nil {
 		return err
 	}
 
 	tagName := strings.ToLower(vars["tag"])
 	tm := models.NewTagModel(a.DB)
-	tag, err := tm.GetTagByNameAndSubject(tagName, subject)
+	tag, err := tm.GetTagByNameAndSubject(nil, tagName, subject)
 	if err != nil {
 		return err
 	}
 
-	threads, err := tm.GetThreadsByTag(tag)
+	threads, err := tm.GetThreadsByTag(nil, tag)
 	if err != nil {
 		return err
 	}

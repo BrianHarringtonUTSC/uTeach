@@ -23,9 +23,9 @@ type UserModel struct {
 }
 
 // GetUserByEmail returns record by email.
-func (um *UserModel) GetUserByEmail(email string) (*User, error) {
+func (um *UserModel) GetUserByEmail(tx *sqlx.Tx, email string) (*User, error) {
 	user := &User{}
-	err := um.db.Get(user, "SELECT * FROM users WHERE email=?", email)
+	err := um.Get(tx, user, "SELECT * FROM users WHERE email=?", email)
 	return user, err
 }
 
@@ -37,10 +37,10 @@ func (um *UserModel) Signup(tx *sqlx.Tx, email, name string) (*User, error) {
 
 	email = strings.ToLower(email)
 	name = strings.Title(name)
-	_, err := um.exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", email, name)
+	_, err := um.Exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", email, name)
 	if err != nil {
 		return nil, err
 	}
 
-	return um.GetUserByEmail(email)
+	return um.GetUserByEmail(tx, email)
 }

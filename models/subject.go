@@ -18,14 +18,14 @@ type SubjectModel struct {
 	Base
 }
 
-func (sm *SubjectModel) GetAllSubjects() ([]*Subject, error) {
+func (sm *SubjectModel) GetAllSubjects(tx *sqlx.Tx) ([]*Subject, error) {
 	subjects := []*Subject{}
-	err := sm.db.Select(&subjects, "SELECT * FROM subjects")
+	err := sm.Select(tx, &subjects, "SELECT * FROM subjects")
 	return subjects, err
 }
 
-func (sm *SubjectModel) GetSubjectByName(name string) (*Subject, error) {
+func (sm *SubjectModel) GetSubjectByName(tx *sqlx.Tx, name string) (*Subject, error) {
 	subject := &Subject{}
-	err := sm.db.Get(subject, "SELECT * FROM subjects WHERE name=?", name)
+	err := sm.Get(tx, subject, "SELECT * FROM subjects WHERE name=?", name)
 	return subject, err
 }

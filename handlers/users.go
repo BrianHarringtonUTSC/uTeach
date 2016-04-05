@@ -51,7 +51,7 @@ func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error 
 
 func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email, name string) error {
 	u := models.NewUserModel(a.DB)
-	user, err := u.GetUserByEmail(email)
+	user, err := u.GetUserByEmail(nil, email)
 	if err == sql.ErrNoRows {
 		// sign up if user is logging in for first time
 		user, err = u.Signup(nil, email, name)
@@ -114,13 +114,13 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	email := strings.ToLower(vars["email"])
 
 	um := models.NewUserModel(a.DB)
-	user, err := um.GetUserByEmail(email)
+	user, err := um.GetUserByEmail(nil, email)
 	if err != nil {
 		return err
 	}
 
 	tm := models.NewThreadModel(a.DB)
-	createdThreads, err := tm.GetThreadsByUser(user)
+	createdThreads, err := tm.GetThreadsByUser(nil, user)
 	if err != nil {
 		return err
 	}
