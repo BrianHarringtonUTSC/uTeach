@@ -1,9 +1,9 @@
 {{define "content"}}
-{{.Thread.Title}}
-<br/><br/>
-Posted By: {{.Thread.Creator.Email}}
-<br/>
-Posted At: {{.Thread.TimeCreated | formatAndLocalizeTime}}
-<br/><br/>
-<div id="thread-content">{{.Thread.Content | markdownToHTML}}</div>
+	{{.Thread.Title}}
+	<br/><br/>
+	Posted By: {{.Thread.Creator.Email}}
+	<br/>
+	Posted At: {{formatAndLocalizeTime .Thread.TimeCreated }}
+	<br/><br/>
+	<div id="thread-content">{{markdownToHTML .Thread.Content}}</div>
 {{end}}

@@ -56,7 +56,7 @@ func (m *Middleware) isAdmin(r *http.Request) bool {
 func (m *Middleware) isThreadCreator(r *http.Request) bool {
 	tm := models.NewThreadModel(m.App.DB)
 	threadID := context.ThreadID(r)
-	thread, err := tm.GetThreadByID(threadID)
+	thread, err := tm.GetThreadByID(nil, threadID)
 	if err != nil {
 		return false
 	}

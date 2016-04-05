@@ -11,12 +11,19 @@ type Base struct {
 	db *sqlx.DB
 }
 
-func (b *Base) exec(query string, params ...interface{}) (driver.Result, error) {
-	stmt, err := b.db.Prepare(query)
-	if err != nil {
-		return nil, err
+func (b *Base) query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows, error) {
+	if tx != nil {
+		return tx.Queryx(query, args...)
 	}
-	defer stmt.Close()
 
-	return stmt.Exec(params...)
+	return b.db.Queryx(query, args...)
+}
+
+func (b *Base) exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {
+
+	if tx != nil {
+		return tx.Exec(query, args...)
+	}
+
+	return b.db.Exec(query, args...)
 }

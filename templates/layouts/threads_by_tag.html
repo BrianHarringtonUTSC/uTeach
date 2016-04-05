@@ -1,7 +1,7 @@
 {{define "content"}}
-<ul>
-	{{range $thread := .Threads}}
-		<li>{{$thread.Score}} | <a href="/t/{{$thread.ID}}">{{$thread.Title}}</a></li>
-	{{end}}
-</ul>
+	<ul>
+		{{range $thread := .Threads}}
+			<li>{{$thread.Score}} | <a href="/t/{{.ID}}">{{$thread.Title}}</a></li>
+		{{end}}
+	</ul>
 {{end}}

@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"database/sql"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/models"
@@ -24,12 +25,12 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 
 	tm := models.NewThreadModel(a.DB)
 	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, true)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return err
 	}
 
 	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(subject, false)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return err
 	}
 
@@ -47,6 +48,14 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
 	}
 
+	tagModel := models.NewTagModel(a.DB)
+	tags, err := tagModel.GetTagsBySubject(subject)
+	if err != nil {
+		return err
+	}
+
+	data["Tags"] = tags
+
 	return renderTemplate(a, w, r, "threads.html", data)
 }
 
@@ -54,7 +63,7 @@ func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error
 	tm := models.NewThreadModel(a.DB)
 
 	threadID := context.ThreadID(r)
-	thread, err := tm.GetThreadByID(threadID)
+	thread, err := tm.GetThreadByID(nil, threadID)
 	if err != nil {
 		return err
 	}
@@ -64,7 +73,22 @@ func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error
 }
 
 func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return renderTemplate(a, w, r, "new_thread.html", nil)
+	vars := mux.Vars(r)
+	subjectName := strings.ToLower(vars["subject"])
+	sm := models.NewSubjectModel(a.DB)
+	subject, err := sm.GetSubjectByName(subjectName)
+	if err != nil {
+		return err
+	}
+
+	tm := models.NewTagModel(a.DB)
+	tags, err := tm.GetTagsBySubject(subject)
+	if err != nil {
+		return err
+	}
+
+	data := map[string]interface{}{"Tags": tags}
+	return renderTemplate(a, w, r, "new_thread.html", data)
 }
 
 func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -83,8 +107,33 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	title := r.FormValue("title")
 	text := r.FormValue("text")
 
+	tx, err := a.DB.Beginx()
+	if err != nil {
+		return err
+	}
 	tm := models.NewThreadModel(a.DB)
-	thread, err := tm.AddThread(title, text, subject, user)
+	thread, err := tm.AddThread(tx, title, text, subject, user)
+	if err != nil {
+		return err
+	}
+
+	tagIDStr := r.FormValue("tag")
+	if tagIDStr != "" {
+		tagID, err := strconv.ParseInt(tagIDStr, 10, 64)
+		if err != nil {
+			return err
+		}
+		tagModel := models.NewTagModel(a.DB)
+		tag, err := tagModel.GetTagByID(tagID)
+		if err != nil {
+			return err
+		}
+		err = tagModel.AddThreadTag(tx, thread, tag)
+		if err != nil {
+			return err
+		}
+	}
+	err = tx.Commit()
 	if err != nil {
 		return err
 	}
@@ -92,10 +141,10 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	return nil
 }
 
-func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(int64) error) error {
+func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, int64) error) error {
 	threadID := context.ThreadID(r)
 
-	if err := f(threadID); err != nil {
+	if err := f(nil, threadID); err != nil {
 		return err
 	}
 	w.WriteHeader(http.StatusOK)
@@ -108,8 +157,8 @@ func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 
 	tm := models.NewThreadModel(a.DB)
 
-	f := func(id int64) error {
-		return tm.AddThreadVoteForUser(id, user)
+	f := func(tx *sqlx.Tx, id int64) error {
+		return tm.AddThreadVoteForUser(tx, id, user)
 	}
 
 	return handleThreadAction(w, r, f)
@@ -121,8 +170,8 @@ func deleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request
 
 	tm := models.NewThreadModel(a.DB)
 
-	f := func(id int64) error {
-		return tm.RemoveTheadVoteForUser(id, user)
+	f := func(tx *sqlx.Tx, id int64) error {
+		return tm.RemoveTheadVoteForUser(tx, id, user)
 	}
 
 	return handleThreadAction(w, r, f)

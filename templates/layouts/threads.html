@@ -1,16 +1,24 @@
 {{define "content"}}
+
 	{{if .SessionUser.Email}}
 		<input type="submit" value="New Thread" onclick="window.location=window.location+'/new';" />
 	{{end}}
 
+	<br><br>
+	<div id="tags">
+		Tags:
+		{{range $i, $tag := .Tags}}
+			<a href="/s/{{$tag.Subject.Name}}/tags/{{$tag.Name}}">{{$tag.Name}}</a> &nbsp;
+		{{end}}
+	</div>
 
 
-	{{$base := .}}
 	<div id="threads">
-		<b>Pinned Threads</b>
-		{{template "thread-list" dict "Base" . "Threads" .PinnedThreads}}
-		<hr>
-
+		{{if len .PinnedThreads}}
+			<b>Pinned Threads</b>
+			{{template "thread-list" dict "Base" . "Threads" .PinnedThreads}}
+			<hr>
+		{{end}}
 		{{template "thread-list" dict "Base" . "Threads" .UnpinnedThreads}}
 	</div>
 {{end}}

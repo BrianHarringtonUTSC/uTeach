@@ -65,6 +65,10 @@ func (tm *TagModel) getOne(sqlizer squirrel.Sqlizer) (*Tag, error) {
 	return tags[0], err
 }
 
+func (tm *TagModel) GetTagByID(id int64) (*Tag, error) {
+	return tm.getOne(tagsSqlizer.Where(squirrel.Eq{"tags.id": id}))
+}
+
 func (tm *TagModel) GetTagByNameAndSubject(name string, subject *Subject) (*Tag, error) {
 	return tm.getOne(tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.subject_id": subject.ID}))
 }
@@ -75,7 +79,13 @@ func (tm *TagModel) GetTagsBySubject(subject *Subject) ([]*Tag, error) {
 
 func (tm *TagModel) GetThreadsByTag(tag *Tag) ([]*Thread, error) {
 	threadModel := NewThreadModel(tm.db)
-	threads, err := threadModel.getThreads(
+	threads, err := threadModel.getThreads(nil,
 		threadsSqlizer.Join("thread_tags ON thread_tags.thread_id=threads.id").Where(squirrel.Eq{"thread_tags.tag_id": tag.ID}))
 	return threads, err
+}
+
+func (tm *TagModel) AddThreadTag(tx *sqlx.Tx, thread *Thread, tag *Tag) error {
+	_, err := tm.exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, subject_id) VALUES(?, ?, ?)",
+		thread.ID, tag.ID, thread.Subject.ID)
+	return err
 }

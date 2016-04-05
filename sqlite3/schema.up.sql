@@ -44,8 +44,8 @@ CREATE TABLE IF NOT EXISTS tags(
 
 CREATE TABLE IF NOT EXISTS thread_tags(
 	thread_id INTEGER NOT NULL,
-	subject_id INTEGER NOT NULL,
 	tag_id INTEGER NOT NULL,
+	subject_id INTEGER NOT NULL,
 	PRIMARY KEY (thread_id, tag_id),
 	FOREIGN KEY(thread_id, subject_id) REFERENCES threads(id, subject_id) ON DELETE CASCADE,
 	FOREIGN KEY(tag_id, subject_id) REFERENCES tags(id, subject_id) ON DELETE CASCADE
