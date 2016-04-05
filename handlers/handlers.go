@@ -2,16 +2,13 @@
 package handlers
 
 import (
-	"bytes"
-	"database/sql"
-	"errors"
-	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/httperror"
+	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/middleware"
 	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
@@ -72,29 +69,12 @@ func Router(a *application.App) *mux.Router {
 // ServeHTTP allows Handler to satisfy the http.Handler interface.
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(h.App, w, r)
-	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			http.NotFound(w, r)
-		default:
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Println(err)
-		}
-	}
+	httperror.HandleError(w, err)
 }
 
 // renderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) error {
-	tmpl, ok := a.Templates[name]
-	if !ok {
-		return errors.New(fmt.Sprintf("The template %s does not exist.", name))
-	}
-
-	if data == nil {
-		data = map[string]interface{}{}
-	}
-
 	// add session user to data
 	usm := session.NewUserSessionManager(a.CookieStore)
 	if user, ok := usm.SessionUser(r); ok {
@@ -104,12 +84,5 @@ func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, 
 		data["SessionUser"] = &models.User{}
 	}
 
-	// TODO: to speed this up use a buffer pool (https://elithrar.github.io/article/using-buffer-pools-with-go/)
-	buf := new(bytes.Buffer)
-	err := tmpl.ExecuteTemplate(buf, "base", data)
-	if err != nil {
-		return err
-	}
-	buf.WriteTo(w)
-	return nil
+	return libtemplate.Render(w, a.Templates, name, data)
 }

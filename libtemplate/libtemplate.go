@@ -2,8 +2,11 @@
 package libtemplate
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
+	"net/http"
 	"path/filepath"
 	"time"
 
@@ -70,4 +73,24 @@ func Load(path string) (map[string]*template.Template, error) {
 	}
 
 	return templates, err
+}
+
+func Render(w http.ResponseWriter, templates map[string]*template.Template, name string, data map[string]interface{}) error {
+	tmpl, ok := templates[name]
+	if !ok {
+		return errors.New(fmt.Sprintf("The template %s does not exist.", name))
+	}
+
+	if data == nil {
+		data = map[string]interface{}{}
+	}
+
+	// TODO: to speed this up use a buffer pool (https://elithrar.github.io/article/using-buffer-pools-with-go/)
+	buf := new(bytes.Buffer)
+	err := tmpl.ExecuteTemplate(buf, "base", data)
+	if err != nil {
+		return err
+	}
+	buf.WriteTo(w)
+	return nil
 }
