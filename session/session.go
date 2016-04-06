@@ -13,16 +13,16 @@ const (
 )
 
 type UserSession struct {
-	cookieStore *sessions.CookieStore
+	store sessions.Store
 }
 
-func NewUserSession(store *sessions.CookieStore) *UserSession {
+func NewUserSession(store sessions.Store) *UserSession {
 	return &UserSession{store}
 }
 
 // getUserSession gets the session containing the user.
 func (us *UserSession) get(r *http.Request) (*sessions.Session, error) {
-	return us.cookieStore.Get(r, userSessionName)
+	return us.store.Get(r, userSessionName)
 }
 
 // New creates a new session and stores the User containing the

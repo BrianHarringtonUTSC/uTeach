@@ -59,7 +59,7 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 		return err
 	}
 
-	us := session.NewUserSession(a.CookieStore)
+	us := session.NewUserSession(a.Store)
 	err = us.SaveSessionUserID(w, r, user.ID)
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 }
 
 func getLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	us := session.NewUserSession(a.CookieStore)
+	us := session.NewUserSession(a.Store)
 	if err := us.Delete(w, r); err != nil {
 		return err
 	}

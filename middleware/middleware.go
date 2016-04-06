@@ -20,7 +20,7 @@ type Middleware struct {
 
 func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		us := session.NewUserSession(m.App.CookieStore)
+		us := session.NewUserSession(m.App.Store)
 		userID, ok := us.SessionUserID(r)
 		if ok {
 			um := models.NewUserModel(m.App.DB)

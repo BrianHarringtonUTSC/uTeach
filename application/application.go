@@ -16,7 +16,7 @@ import (
 type App struct {
 	Config      *config.Config
 	DB          *sqlx.DB
-	CookieStore *sessions.CookieStore
+	Store 		sessions.Store
 	Templates   map[string]*template.Template
 }
 
