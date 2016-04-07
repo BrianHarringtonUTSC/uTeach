@@ -7,7 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// Thread represents a tag in the app.
+// Tag represents a tag in the app.
 type Tag struct {
 	ID      int64
 	Name    string

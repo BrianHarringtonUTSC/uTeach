@@ -14,6 +14,7 @@ import (
 	"github.com/umairidris/uTeach/session"
 )
 
+// Middleware has app specific middleware.
 type Middleware struct {
 	App *application.App
 }
@@ -57,7 +58,7 @@ func (m *Middleware) SetSubject(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// SetSubject sets the thread with the id in the url in the context.
+// SetThread sets the thread with the id in the url in the context.
 func (m *Middleware) SetThread(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -80,7 +81,7 @@ func (m *Middleware) SetThread(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// SetSubject sets the tag with name in the url in the context.
+// SetTag sets the tag with name in the url in the context.
 func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
