@@ -14,7 +14,8 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
-// http://elithrar.github.io/article/http-handler-error-handling-revisited/
+// Handler struct used to pass application context to a handler and get an error for cleaner error handling.
+// See: http://elithrar.github.io/article/http-handler-error-handling-revisited/
 type Handler struct {
 	App *application.App
 	H   func(a *application.App, w http.ResponseWriter, r *http.Request) error

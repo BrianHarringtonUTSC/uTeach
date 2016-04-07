@@ -1,4 +1,4 @@
-// Package models contains models to abstract the db.
+// Package models contains models to manage communicating with the db.
 // All models methods have a tx as the first parameter. This allows handlers that use multiple calls / tables to
 // use a single transaction and then commit that so that all actions are committed or none are.
 // If a handler is using a single action, they can simply pass in nil for the tx.
@@ -14,6 +14,7 @@ type Base struct {
 	db *sqlx.DB
 }
 
+// Exec execs with the tx if not null else with the db.
 func (b *Base) Exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {
 
 	if tx != nil {
@@ -23,6 +24,7 @@ func (b *Base) Exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Resu
 	return b.db.Exec(query, args...)
 }
 
+// Get execs with the tx if not null else with the db.
 func (b *Base) Get(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
 	if tx != nil {
 		return tx.Get(dest, query, args...)
@@ -31,6 +33,7 @@ func (b *Base) Get(tx *sqlx.Tx, dest interface{}, query string, args ...interfac
 	return b.db.Get(dest, query, args...)
 }
 
+// Select execs with the tx if not null else with the db.
 func (b *Base) Select(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
 	if tx != nil {
 		return tx.Select(dest, query, args...)
@@ -39,6 +42,7 @@ func (b *Base) Select(tx *sqlx.Tx, dest interface{}, query string, args ...inter
 	return b.db.Select(dest, query, args...)
 }
 
+// Query execs with the tx if not null else with the db.
 func (b *Base) Query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows, error) {
 	if tx != nil {
 		return tx.Queryx(query, args...)

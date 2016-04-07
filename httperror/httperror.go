@@ -14,7 +14,7 @@ type StatusError struct {
 	Err  error
 }
 
-// Allows StatusError to satisfy the error interface.
+// Error allows StatusError to satisfy the error interface.
 func (se StatusError) Error() string {
 	if se.Err == nil {
 		return fmt.Sprintf("%d %s", se.Code, http.StatusText(se.Code))
@@ -22,6 +22,9 @@ func (se StatusError) Error() string {
 	return fmt.Sprintf("%d %s", se.Code, se.Err.Error())
 }
 
+// HandlerError handles error messaging for the client and server. Internal server errors are logged and not written to
+// client to not expose sensitive information. Only error messages from errors of type StatusError are writen for the
+// client.
 func HandleError(w http.ResponseWriter, err error) {
 	if err == sql.ErrNoRows {
 		err = StatusError{http.StatusNotFound, nil}

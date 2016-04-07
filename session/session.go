@@ -12,10 +12,12 @@ const (
 	userIDKey       = "user-id"
 )
 
+// UserSession handles getting and storing user specific properties in a session.
 type UserSession struct {
 	store sessions.Store
 }
 
+// NewUserSession returns a user session.
 func NewUserSession(store sessions.Store) *UserSession {
 	return &UserSession{store}
 }
@@ -25,7 +27,8 @@ func (us *UserSession) get(r *http.Request) (*sessions.Session, error) {
 	return us.store.Get(r, userSessionName)
 }
 
-// New creates a new session and stores the User containing the
+// SaveSessionUserID saves the user id in the session. Creates a new session if there was non existing, or overwrites
+// if it already exists.
 func (us *UserSession) SaveSessionUserID(w http.ResponseWriter, r *http.Request, id int64) error {
 	session, err := us.get(r)
 	if err != nil {
@@ -37,9 +40,8 @@ func (us *UserSession) SaveSessionUserID(w http.ResponseWriter, r *http.Request,
 	return session.Save(r, w)
 }
 
-// User gets the user stored in the user session.
-// If there is a User stored in the session and can be retrieved it returns the user and true, else the boolean will be
-// false.
+// SessionUserID gets the id of the user stored in the user session.
+// The second return value is a boolean which is true if there is a user id in the session, else false.
 func (us *UserSession) SessionUserID(r *http.Request) (int64, bool) {
 	session, err := us.get(r)
 	if err != nil {

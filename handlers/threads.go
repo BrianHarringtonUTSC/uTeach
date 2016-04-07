@@ -9,6 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
+	"github.com/umairidris/uTeach/httperror"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -76,19 +77,19 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 }
 
 func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	subject := context.Subject(r)
-
-	user, _ := context.SessionUser(r)
-
-	title := r.FormValue("title")
-	text := r.FormValue("text")
-
+	// we want the thread and tags to be created together so use one tx. If one part fails the rest won't be commited.
 	tx, err := a.DB.Beginx()
 	if err != nil {
 		return err
 	}
-	tm := models.NewThreadModel(a.DB)
-	thread, err := tm.AddThread(tx, title, text, subject, user)
+
+	title := r.FormValue("title")
+	text := r.FormValue("text")
+	subject := context.Subject(r)
+	user, _ := context.SessionUser(r)
+
+	threadModel := models.NewThreadModel(a.DB)
+	thread, err := threadModel.AddThread(tx, title, text, subject, user)
 	if err != nil {
 		return err
 	}
@@ -97,30 +98,32 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	if tagIDStr != "" {
 		tagID, err := strconv.ParseInt(tagIDStr, 10, 64)
 		if err != nil {
-			return err
+			return httperror.StatusError{http.StatusBadRequest, err}
 		}
+
 		tagModel := models.NewTagModel(a.DB)
 		tag, err := tagModel.GetTagByID(nil, tagID)
 		if err != nil {
 			return err
 		}
-		err = tagModel.AddThreadTag(tx, thread, tag)
-		if err != nil {
+
+		if err = tagModel.AddThreadTag(tx, thread, tag); err != nil {
 			return err
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
+
+	if err = tx.Commit(); err != nil {
 		return err
 	}
-	http.Redirect(w, r, thread.URL(), http.StatusOK)
+
+	http.Redirect(w, r, thread.URL(), http.StatusFound)
 	return nil
 }
 
-func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, int64) error) error {
+func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, *models.Thread) error) error {
 	thread := context.Thread(r)
 
-	if err := f(nil, thread.ID); err != nil {
+	if err := f(nil, thread); err != nil {
 		return err
 	}
 	w.WriteHeader(http.StatusOK)
@@ -132,8 +135,8 @@ func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 
 	tm := models.NewThreadModel(a.DB)
 
-	f := func(tx *sqlx.Tx, id int64) error {
-		return tm.AddThreadVoteForUser(tx, id, user)
+	f := func(tx *sqlx.Tx, thread *models.Thread) error {
+		return tm.AddThreadVoteForUser(tx, thread, user)
 	}
 
 	return handleThreadAction(w, r, f)
@@ -144,8 +147,8 @@ func deleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request
 
 	tm := models.NewThreadModel(a.DB)
 
-	f := func(tx *sqlx.Tx, id int64) error {
-		return tm.RemoveTheadVoteForUser(tx, id, user)
+	f := func(tx *sqlx.Tx, thread *models.Thread) error {
+		return tm.RemoveTheadVoteForUser(tx, thread, user)
 	}
 
 	return handleThreadAction(w, r, f)
@@ -169,4 +172,16 @@ func postPinThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 func deletePinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewThreadModel(a.DB)
 	return handleThreadAction(w, r, tm.UnpinThread)
+}
+
+func getThreadsByTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tag := context.Tag(r)
+
+	tm := models.NewThreadModel(a.DB)
+	threads, err := tm.GetThreadsByTag(nil, tag)
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{"Threads": threads}
+	return renderTemplate(a, w, r, "threads_by_tag.html", data)
 }

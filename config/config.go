@@ -30,7 +30,6 @@ type Config struct {
 // The keys in the config file should match the key listed in the "mapstructure" struct tag in the Config struct.
 // Keys can also be set as environment variables. Simply attach UTEACH_ to the beginning and capitalize the entire key.
 // All keys must be set (even as an empty string) in the config file, even if the key is set as an env variable.
-// sample/config.json contains an example config.
 func Load(path string) (*Config, error) {
 	if err := loadViper(path); err != nil {
 		return nil, err

@@ -54,7 +54,7 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 	user, err := u.GetUserByEmail(nil, email)
 	if err == sql.ErrNoRows {
 		// sign up if user is logging in for first time
-		user, err = u.Signup(nil, email, name)
+		user, err = u.AddUser(nil, email, name)
 	} else if err != nil {
 		return err
 	}

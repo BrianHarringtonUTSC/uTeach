@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/UmairIdris/uTeach)](https://goreportcard.com/report/github.com/UmairIdris/uTeach)
 
-uTeach is a reddit-like community oriented platform for sharing educational material and resources.
+uTeach is a community oriented platform for sharing educational material and resources. uTeach is similar to reddit and piazza.
 
 [Documentation](https://godoc.org/github.com/umairidris/uTeach)
 
@@ -58,12 +58,10 @@ $GOPATH/bin/uTeach --config=sample/config.json
 ```
 
 ### TODO
-- Add 'tags' to threads
 - DB index
 - HTTPS
 - Admin pages
 - Middleware for logging/recovery (Gorilla, etc)
-- Don't expose sensitive error info through http.Error calls
 - Security (CSRF, etc)
 - Migrate context use to Standard lib context in Go 1.7
 - Front end UI work
@@ -78,10 +76,12 @@ Let's begin with understand the environment that uTeach is being developed in.
 uTeach will be developed by a few students students at a time working for a period of a few months.
 After this, a whole new group of students will take over the project and continue working on it.
 The choice of tools should be resilient to several developers of varied skills and experiences working on it for short period of times.
-Having a statically typed language greatly solves many of these problems. However, we don't want to add too much overhead to decrease developer productivity. In addition, the tools used cannot be complex, it should be easily picked up i.e. developers should become productive in working on the system in 1-2 weeks max.
+Having a statically typed language greatly allevaites many of these problems.
+However, we don't want to add too much overhead to decrease developer productivity.
+In addition, the tools used cannot be complex, it should be easily picked up i.e. developers should become productive in working on the system in 1-2 weeks max.
 It should be familiar (not doing too many new things), cross platform and fast.
 
-Go was a language designed at Google designed by pioneers of the field from the ground up to solve the problems that developers and projects are facing today.
+Go was a language designed at Google designed by pioneers of the field from the ground up to solve the problems that developers and projects are facing today which made it ideal for this project.
 
 
 Below are a few links that highlight why Go is a good choice for this project:
@@ -97,7 +97,7 @@ My guess is that that large parts of uTeach will be rewritten to use a client si
 At the time of writing this, the landscape of the web is rapidly changing.
 Backbone (taught in C09) is on a decline, Angular is being replaced by Angular 2 which is not backwards compatible.
 React is popular now, but might be overshadowed by other libraries once Web Components are standardized (Polymer, etc).
-Picking a library now might be outdated in only a few months.
+Picking a library now might be outdated in a year.
 Thus, until the landscape has settled, it will be easier to develop the app as a pure server side, then convert it to a client side app down the line.
 
 ### Why SQL? Why Sqlite?
@@ -111,6 +111,7 @@ Sqlite made it easy to get going, thus I used it over others. It should be trivi
 - Start by reading everything on [this page](https://golang.org/doc/). It has guides on how to setup and get running with Go.
 - Make sure to do the "Tour of Go" to learn the language quickly (you do not need to do the concurrency sections for this web app).
 - Familiarize yourself with Javascript and CSS.
+- A handy intro to Go by [Washington Post](https://developer.washingtonpost.com/pb/blog/post/2016/04/06/embrace-go/)
 - uTeach is roughly based on the [Go Bootstrap Project](http://go-bootstrap.io/). Some technologies are different, but most of it is the same. More importantly, the structure and layout of the app is closely matched. If you are confused on any part of the project, take a look and see how Go Bootstrap does it for better understanding.
 - Check out [Go for Pythonistas](http://s3.amazonaws.com/golangweekly/go_for_pythonistas.pdf) for a guide on Go for Python programmers (if you have finished A08/A48).
 - [Comprehensive guide on writing Web apps in Go](https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/)

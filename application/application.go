@@ -12,12 +12,12 @@ import (
 	"github.com/umairidris/uTeach/libtemplate"
 )
 
-// App is the application context which contains application-wide configuration and components.
+// App is the context which contains application-wide configuration and components.
 type App struct {
-	Config      *config.Config
-	DB          *sqlx.DB
-	Store 		sessions.Store
-	Templates   map[string]*template.Template
+	Config    *config.Config
+	DB        *sqlx.DB
+	Store     sessions.Store
+	Templates map[string]*template.Template
 }
 
 // New initializes a new App.

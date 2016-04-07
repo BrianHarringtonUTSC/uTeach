@@ -7,7 +7,6 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
-// GetSubjects renders all subjects.
 func getSubjects(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	sm := models.NewSubjectModel(a.DB)
 	subjects, err := sm.GetAllSubjects(nil)

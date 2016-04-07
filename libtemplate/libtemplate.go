@@ -21,11 +21,13 @@ func MarkdownToHTML(markdown string) template.HTML {
 	return template.HTML(safe)
 }
 
+// FormatAndLocalizeTime a time to remove excess information and make it local to the server.
 func FormatAndLocalizeTime(t time.Time) string {
 	return t.Local().Format("Jan 2 2006 3:04PM")
 }
 
-// http://stackoverflow.com/questions/18276173/calling-a-template-with-several-pipeline-parameters
+// Dict creates map given a sequence of values. Each even index must be a string and is mapped to the next value.
+// Useful for calling a template with parameters.
 func Dict(values ...interface{}) (map[string]interface{}, error) {
 	if len(values)%2 != 0 {
 		return nil, errors.New("invalid dict call")
@@ -75,6 +77,7 @@ func Load(path string) (map[string]*template.Template, error) {
 	return templates, err
 }
 
+// Render renders the template at name with data and writes out the result.
 func Render(w http.ResponseWriter, templates map[string]*template.Template, name string, data map[string]interface{}) error {
 	tmpl, ok := templates[name]
 	if !ok {
