@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/umairidris/uTeach/models"
 )
 
 // StatusError represents an error with an associated HTTP status code.
@@ -22,8 +24,8 @@ func (se StatusError) Error() string {
 	return fmt.Sprintf("%d %s", se.Code, se.Err.Error())
 }
 
-// HandlerError handles error messaging for the client and server. Internal server errors are logged and not written to
-// client to not expose sensitive information. Only error messages from errors of type StatusError are writen for the
+// HandleError handles error messaging for the client and server. Internal server errors are logged and not written to
+// client to not expose sensitive information. Only error messages from errors of type StatusError are written for the
 // client.
 func HandleError(w http.ResponseWriter, err error) {
 	if err == sql.ErrNoRows {
@@ -34,6 +36,8 @@ func HandleError(w http.ResponseWriter, err error) {
 		switch e := err.(type) {
 		case StatusError:
 			http.Error(w, e.Error(), e.Code)
+		case models.InputError:
+			http.Error(w, e.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			log.Println(err)

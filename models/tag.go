@@ -19,7 +19,7 @@ type TagModel struct {
 	Base
 }
 
-// NewThreadModel returns a new tag model.
+// NewTagModel returns a new tag model.
 func NewTagModel(db *sqlx.DB) *TagModel {
 	return &TagModel{Base{db}}
 }

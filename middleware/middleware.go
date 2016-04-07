@@ -18,6 +18,7 @@ type Middleware struct {
 	App *application.App
 }
 
+// SetSessionUser sets the session user in the context.
 func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		us := session.NewUserSession(m.App.Store)
@@ -37,6 +38,7 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// SetSubject sets the subject with the name in the url in the context.
 func (m *Middleware) SetSubject(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -55,6 +57,7 @@ func (m *Middleware) SetSubject(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// SetSubject sets the thread with the id in the url in the context.
 func (m *Middleware) SetThread(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -77,6 +80,7 @@ func (m *Middleware) SetThread(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// SetSubject sets the tag with name in the url in the context.
 func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -94,7 +98,7 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// MustLogin ensures that the next handler is only accessible by users that are logged in.
+// MustLogin ensures the next handler is only accessible by users that are logged in.
 func (m *Middleware) MustLogin(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if _, ok := context.SessionUser(r); !ok {
@@ -119,6 +123,7 @@ func (m *Middleware) isThreadCreator(r *http.Request) bool {
 	return ok && thread.Creator == user
 }
 
+// MustBeAdmin ensures the next handler is only accessible by an admin.
 func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !m.isAdmin(r) {
@@ -132,6 +137,7 @@ func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
+// MustBeAdminOrThreadCreator ensures the next handler is only accessible by an admin or the thread creator.
 func (m *Middleware) MustBeAdminOrThreadCreator(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if !m.isThreadCreator(r) && !m.isAdmin(r) {

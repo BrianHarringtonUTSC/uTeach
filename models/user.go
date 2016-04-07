@@ -1,7 +1,6 @@
 package models
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -44,7 +43,7 @@ func (um *UserModel) GetUserByEmail(tx *sqlx.Tx, email string) (*User, error) {
 // AddUser adds a new user.
 func (um *UserModel) AddUser(tx *sqlx.Tx, email, name string) (*User, error) {
 	if email == "" || name == "" {
-		return nil, errors.New(".")
+		return nil, InputError{"email and/or name cannot be empty"}
 	}
 
 	email = strings.ToLower(email)

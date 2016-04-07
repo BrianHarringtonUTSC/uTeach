@@ -77,7 +77,7 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 }
 
 func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	// we want the thread and tags to be created together so use one tx. If one part fails the rest won't be commited.
+	// we want the thread and tags to be created together so use one tx. If one part fails the rest won't be committed.
 	tx, err := a.DB.Beginx()
 	if err != nil {
 		return err

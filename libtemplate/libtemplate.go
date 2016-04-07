@@ -81,7 +81,7 @@ func Load(path string) (map[string]*template.Template, error) {
 func Render(w http.ResponseWriter, templates map[string]*template.Template, name string, data map[string]interface{}) error {
 	tmpl, ok := templates[name]
 	if !ok {
-		return errors.New(fmt.Sprintf("The template %s does not exist.", name))
+		return fmt.Errorf("The template %s does not exist.", name)
 	}
 
 	if data == nil {

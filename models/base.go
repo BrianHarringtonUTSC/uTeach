@@ -10,8 +10,20 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Base is the base model for all other models to embed.
+// It has common helpers and functionality that all models can use.
 type Base struct {
 	db *sqlx.DB
+}
+
+// InputError is an error returned when the user supplied input was not valid.
+type InputError struct {
+	Message string
+}
+
+// Error returns the input error's message.
+func (ie InputError) Error() string {
+	return ie.Message
 }
 
 // Exec execs with the tx if not null else with the db.

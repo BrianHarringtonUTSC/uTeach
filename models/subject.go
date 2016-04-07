@@ -18,7 +18,7 @@ type SubjectModel struct {
 	Base
 }
 
-// NewThreadModel returns a new subject model.
+// NewSubjectModel returns a new subject model.
 func NewSubjectModel(db *sqlx.DB) *SubjectModel {
 	return &SubjectModel{Base{db}}
 }

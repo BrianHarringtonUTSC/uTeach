@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
@@ -146,7 +145,7 @@ func (tm *ThreadModel) GetThreadIdsUpvotedByUser(tx *sqlx.Tx, user *User) (map[i
 // AddThread adds a new thread.
 func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, subject *Subject, creator *User) (*Thread, error) {
 	if title == "" || content == "" {
-		return nil, errors.New("Empty values not allowed.")
+		return nil, InputError{"Empty title or body not allowed"}
 	}
 
 	query := "INSERT INTO threads(title, content, subject_id, creator_user_id) VALUES(?, ?, ?, ?)"
@@ -154,7 +153,11 @@ func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, subject *Su
 	if err != nil {
 		return nil, err
 	}
+
 	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
 
 	return tm.GetThreadByID(tx, id)
 }
