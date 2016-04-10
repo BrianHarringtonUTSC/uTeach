@@ -25,8 +25,7 @@ func (se StatusError) Error() string {
 }
 
 // HandleError handles error messaging for the client and server. Internal server errors are logged and not written to
-// client to not expose sensitive information. Only error messages from errors of type StatusError are written for the
-// client.
+// client to not expose sensitive information.
 func HandleError(w http.ResponseWriter, err error) {
 	if err == sql.ErrNoRows {
 		err = StatusError{http.StatusNotFound, nil}

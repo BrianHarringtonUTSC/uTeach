@@ -1,10 +1,10 @@
 # uTeach
 
+[![GoDoc](https://godoc.org/github.com/umairidris/uTeach?status.svg)](https://godoc.org/github.com/umairidris/uTeach)
 [![Go Report Card](https://goreportcard.com/badge/github.com/UmairIdris/uTeach)](https://goreportcard.com/report/github.com/UmairIdris/uTeach)
 
 uTeach is a community oriented platform for sharing educational material and resources. uTeach is similar to reddit and piazza.
 
-[Documentation](https://godoc.org/github.com/umairidris/uTeach)
 
 ### Features
 - Subjects (equivalent to subreddits on reddit)
@@ -12,6 +12,7 @@ uTeach is a community oriented platform for sharing educational material and res
 - Thread voting
 - Users & authentication (with Google accounts)
 - Markdown support for thread content
+- Tags for threads
 - Admin functionality (pin & unhide threads)
 
 ### Requirements
@@ -24,7 +25,7 @@ Notes:
 - Ensure your GOPATH is correctly setup
 - Export $GOPATH/bin to your PATH for convenience
 - Add .exe in front of executables if on Windows
-- Setup the config: see requirements and examples in config/config.go and sample/
+- Setup the config: see requirements in config/config.go. An example can be found in sample/
 
 
 #### As a User
@@ -54,7 +55,7 @@ go install
 # Setup config ...
 
 # Run the app
-$GOPATH/bin/uTeach --config=sample/config.json
+$GOPATH/bin/uTeach --config=PATH_TO_CONFIG
 ```
 
 ### TODO
@@ -63,7 +64,7 @@ $GOPATH/bin/uTeach --config=sample/config.json
 - Admin pages
 - Middleware for logging/recovery (Gorilla, etc)
 - Security (CSRF, etc)
-- Migrate context use to Standard lib context in Go 1.7
+- Use context in standard lib to be added in Go 1.7
 - Front end UI work
 
 ### FAQ
@@ -111,7 +112,6 @@ Sqlite made it easy to get going, thus I used it over others. It should be trivi
 - Start by reading everything on [this page](https://golang.org/doc/). It has guides on how to setup and get running with Go.
 - Make sure to do the "Tour of Go" to learn the language quickly (you do not need to do the concurrency sections for this web app).
 - Familiarize yourself with Javascript and CSS.
-- A handy intro to Go by [Washington Post](https://developer.washingtonpost.com/pb/blog/post/2016/04/06/embrace-go/)
 - uTeach is roughly based on the [Go Bootstrap Project](http://go-bootstrap.io/). Some technologies are different, but most of it is the same. More importantly, the structure and layout of the app is closely matched. If you are confused on any part of the project, take a look and see how Go Bootstrap does it for better understanding.
 - Check out [Go for Pythonistas](http://s3.amazonaws.com/golangweekly/go_for_pythonistas.pdf) for a guide on Go for Python programmers (if you have finished A08/A48).
 - [Comprehensive guide on writing Web apps in Go](https://astaxie.gitbooks.io/build-web-application-with-golang/content/en/)

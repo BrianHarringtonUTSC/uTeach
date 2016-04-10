@@ -52,10 +52,13 @@ func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error 
 func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email, name string) error {
 	u := models.NewUserModel(a.DB)
 	user, err := u.GetUserByEmail(nil, email)
+
 	if err == sql.ErrNoRows {
-		// sign up if user is logging in for first time
+		// user not found so must be logging in for first time, add the user
 		user, err = u.AddUser(nil, email, name)
-	} else if err != nil {
+	}
+
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 

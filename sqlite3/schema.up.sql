@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS tags(
 	subject_id INTEGER NOT NULL,
 	UNIQUE(name, subject_id),
 	UNIQUE(id, subject_id)
-	FOREIGN KEY(subject_id) REFERENCES subjects(id)
+	FOREIGN KEY(subject_id) REFERENCES subjects(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS thread_tags(

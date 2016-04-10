@@ -32,13 +32,12 @@ func Router(a *application.App) http.Handler {
 	// app specific middleware
 	m := middleware.Middleware{a}
 
-	// middleware for all routes
-	standardChain := alice.New(m.SetSessionUser)
-
 	router := mux.NewRouter()
 
 	// subject routes
 	router.Handle("/", h(getSubjects))
+	router.Handle("/s/new", m.MustBeAdmin(h(getNewSubject))).Methods("GET")
+	router.Handle("/s/new", m.MustBeAdmin(h(postNewSubject))).Methods("POST")
 
 	// user routes
 	router.Handle("/user/{email}", h(getUser))
@@ -58,15 +57,17 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(deleteHideThread)))).Methods("DELETE")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
+	router.Handle("/s/{subject}/tags/{tag}", m.SetSubject(m.SetTag(h(getThreadsByTag))))
 
 	// tag routes
 	router.Handle("/s/{subject}/tags", m.SetSubject(h(getTags)))
-	router.Handle("/s/{subject}/tags/{tag}", m.SetSubject(m.SetTag(h(getThreadsByTag))))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFileServer))
 
+	// middleware for all routes
+	standardChain := alice.New(m.SetSessionUser)
 	return standardChain.Then(router)
 }
 
@@ -79,6 +80,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // renderTemplate renders the template at name with data.
 // It also adds the session user to the data for templates to access.
 func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) error {
+	if data == nil {
+		data = map[string]interface{}{}
+	}
+
 	// add session user to data
 	if user, ok := context.SessionUser(r); ok {
 		data["SessionUser"] = user

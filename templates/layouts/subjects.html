@@ -1,7 +1,11 @@
 {{define "content"}}
+
+{{if .SessionUser.IsAdmin}}
+	<input type="submit" value="New Subject" onclick="window.location='/s/new';" />
+{{end}}
 <ul>
-	{{range .Subjects}}
-	<li><a href="/s/{{.Name}}">{{.Title}}</a></li>
+	{{range $subject := .Subjects}}
+	<li><a href="{{$subject.URL}}">{{$subject.Name}}</a></li>
 	{{end}}
 </ul>
 {{end}}

@@ -5,13 +5,14 @@
 	{{end}}
 
 	<br><br>
-	<div id="tags">
-		Tags: &nbsp;
-		{{range $i, $tag := .Tags}}
-			<a href="/s/{{$tag.Subject.Name}}/tags/{{$tag.Name}}">{{$tag.Name}}</a> &nbsp;
-		{{end}}
-	</div>
-
+	{{if len .Tags}}
+		<div id="tags">
+			Tags: &nbsp;
+			{{range $i, $tag := .Tags}}
+				<a href="{{$tag.URL}}">{{$tag.Name}}</a> &nbsp;
+			{{end}}
+		</div>
+	{{end}}
 
 	<div id="threads">
 		{{if len .PinnedThreads}}

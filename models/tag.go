@@ -14,6 +14,11 @@ type Tag struct {
 	Subject *Subject
 }
 
+// URL returns the unique URL for a subject.
+func (t *Tag) URL() string {
+	return fmt.Sprintf("/s/%s/tags/%s", t.Subject.Name, t.Name)
+}
+
 // TagModel handles getting and creating tags.
 type TagModel struct {
 	Base

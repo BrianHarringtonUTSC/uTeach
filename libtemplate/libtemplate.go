@@ -84,10 +84,6 @@ func Render(w http.ResponseWriter, templates map[string]*template.Template, name
 		return fmt.Errorf("The template %s does not exist.", name)
 	}
 
-	if data == nil {
-		data = map[string]interface{}{}
-	}
-
 	// TODO: to speed this up use a buffer pool (https://elithrar.github.io/article/using-buffer-pools-with-go/)
 	buf := new(bytes.Buffer)
 	err := tmpl.ExecuteTemplate(buf, "base", data)
