@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -24,8 +22,6 @@ func (s *Subject) URL() string {
 type SubjectModel struct {
 	Base
 }
-
-var subjectNameRegex = regexp.MustCompile(`^[[:alnum:]]+(_[[:alnum:]]+)*$`)
 
 // NewSubjectModel returns a new subject model.
 func NewSubjectModel(db *sqlx.DB) *SubjectModel {
@@ -56,9 +52,7 @@ func (sm *SubjectModel) GetSubjectByName(tx *sqlx.Tx, name string) (*Subject, er
 }
 
 func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title string) (*Subject, error) {
-	if title == "" || !subjectNameRegex.MatchString(name) {
-		fmt.Println(name)
-		fmt.Println(title)
+	if title == "" || !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name and/or title."}
 	}
 

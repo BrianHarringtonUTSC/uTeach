@@ -45,6 +45,11 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/oauth2callback", h(getOauth2Callback))
 	router.Handle("/logout", h(getLogout))
 
+	// tag routes
+	router.Handle("/s/{subject}/tags", m.SetSubject(h(getTags)))
+	router.Handle("/s/{subject}/tags/new", m.MustBeAdmin(m.SetSubject(h(getNewTag)))).Methods("GET")
+	router.Handle("/s/{subject}/tags/new", m.MustBeAdmin(m.SetSubject(h(postNewTag)))).Methods("POST")
+
 	// thread routes
 	t := alice.New(m.MustLogin, m.SetThread)
 	router.Handle("/s/{subject}", m.SetSubject(h(getThreads)))
@@ -58,9 +63,6 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
 	router.Handle("/s/{subject}/tags/{tag}", m.SetSubject(m.SetTag(h(getThreadsByTag))))
-
-	// tag routes
-	router.Handle("/s/{subject}/tags", m.SetSubject(h(getTags)))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

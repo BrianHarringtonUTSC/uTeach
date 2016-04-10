@@ -6,9 +6,12 @@ package models
 
 import (
 	"database/sql/driver"
+	"regexp"
 
 	"github.com/jmoiron/sqlx"
 )
+
+var singleWordAlphaNumRegex = regexp.MustCompile(`^[[:alnum:]]+(_[[:alnum:]]+)*$`)
 
 // Base is the base model for all other models to embed.
 // It has common helpers and functionality that all models can use.

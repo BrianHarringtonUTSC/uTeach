@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
@@ -86,6 +87,25 @@ func (tm *TagModel) GetTagByNameAndSubject(tx *sqlx.Tx, name string, subject *Su
 // GetTagsBySubject gets all tags by the subject.
 func (tm *TagModel) GetTagsBySubject(tx *sqlx.Tx, subject *Subject) ([]*Tag, error) {
 	return tm.findAll(tx, tagsSqlizer.Where(squirrel.Eq{"subject_id": subject.ID}))
+}
+
+// AddTag adds a new tag for the subject.
+func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, subject *Subject) (*Tag, error) {
+	if !singleWordAlphaNumRegex.MatchString(name) {
+		return nil, InputError{"Invalid name."}
+	}
+	result, err := tm.Exec(tx, "INSERT INTO tags(name, subject_id) VALUES(?, ?)", name, subject.ID)
+	if err != nil {
+
+	}
+	name = strings.ToLower(name)
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return tm.GetTagByID(tx, id)
 }
 
 // AddThreadTag adds a tag for the thread.
