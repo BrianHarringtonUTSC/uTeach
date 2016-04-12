@@ -1,7 +1,14 @@
 {{define "content"}}
 
 	{{if .SessionUser.Email}}
-		<input type="submit" value="New Thread" onclick="window.location=window.location+'/new';" />
+		<div class="bottom-right">
+			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location=window.location+'/new';">
+			 	<i class="material-icons">add</i>
+			</button>
+		</div>
+	{{end}}
+	{{if .SessionUser.IsAdmin}}
+		<input type="submit" value="New Tag" onclick="window.location=window.location+'/tags/new';" />
 	{{end}}
 
 	<br><br>
@@ -16,8 +23,7 @@
 
 	<div id="threads">
 		{{if len .PinnedThreads}}
-			<b>Pinned Threads</b>
-			{{template "thread-list" dict "Base" . "Threads" .PinnedThreads}}
+			{{template "thread-list" dict "Base" . "ThreadsTitle" "Pinned Threads" "Threads" .PinnedThreads}}
 			<hr>
 		{{end}}
 		{{template "thread-list" dict "Base" . "Threads" .UnpinnedThreads}}

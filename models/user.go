@@ -14,6 +14,11 @@ type User struct {
 	IsAdmin bool `db:"is_admin"`
 }
 
+// URL returns the unique URL for a user.
+func (u *User) URL() string {
+	return "/user/" + u.Email
+}
+
 // UserModel handles getting and creating users.
 type UserModel struct {
 	Base
@@ -26,7 +31,7 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 
 // GetUserByID gets a user by the id.
 func (um *UserModel) GetUserByID(tx *sqlx.Tx, id int64) (*User, error) {
-	user := &User{}
+	user := new(User)
 	err := um.Get(tx, user, "SELECT * FROM users WHERE id=?", id)
 	return user, err
 }
@@ -35,7 +40,7 @@ func (um *UserModel) GetUserByID(tx *sqlx.Tx, id int64) (*User, error) {
 func (um *UserModel) GetUserByEmail(tx *sqlx.Tx, email string) (*User, error) {
 	email = strings.ToLower(email)
 
-	user := &User{}
+	user := new(User)
 	err := um.Get(tx, user, "SELECT * FROM users WHERE email=?", email)
 	return user, err
 }

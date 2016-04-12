@@ -51,6 +51,7 @@ func (sm *SubjectModel) GetSubjectByName(tx *sqlx.Tx, name string) (*Subject, er
 	return subject, err
 }
 
+// AddSubject adds a new subject.
 func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title string) (*Subject, error) {
 	if title == "" || !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name and/or title."}

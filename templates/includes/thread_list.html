@@ -1,35 +1,47 @@
 {{define "thread-list"}}
 	{{$base := .Base}}
 
-	<ul>
+	<ul class="mdl-list">
+	{{if .ThreadsTitle}}
+		<h4 id="pinned-threads-title" class="mdl-color-text--grey-800">{{.ThreadsTitle}}</h4>
+	{{end}}
 	{{range $thread := .Threads}}
 		{{if or $thread.IsVisible $base.SessionUser.IsAdmin}}
-			<li>
-				{{$thread.Score}} | <a href="{{$thread.URL}}">{{$thread.Title}}</a>
-				<br />
-
+			<li class="mdl-list__item mdl-list__item--two-line">
+				<span class="mdl-list__item-primary-content">
 				{{if $base.SessionUser.Email}}
 					{{if index $base.UserUpvotedThreadIDs $thread.ID}}
-						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="DELETE">remove vote</button>
+						 <i class="material-icons thread-action upvote-button clickable" value="{{$thread.ID}}" endpoint="upvote" method="DELETE">expand_more</i>
+						 <span class="orange"> {{$thread.Score}}</span>
 					{{else}}
-						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="upvote" method="POST">upvote</button>
+						<i class="material-icons thread-action upvote-button orange clickable" value="{{$thread.ID}}" endpoint="upvote" method="POST">expand_less</i>
+						<span>{{$thread.Score}}</span>
 					{{end}}
+					|
+				{{end}}
+
+				<span><a class="no-decoration" href="{{$thread.URL}}">{{$thread.Title}}</a></span>
+				<span class="mdl-list__item-sub-title">
+					by <a href="{{$thread.Creator.URL}}" class="no-decoration"> {{$thread.Creator.Name}} ({{$thread.Creator.Email}})</a>
 
 					{{if eq $base.SessionUser.Email $thread.Creator.Email}}
+						|
 						{{if $thread.IsVisible}}
-							<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</button>
+							<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</span>
 						{{else}}
-							<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="hide" method="DELETE">unhide</button>
+							<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="DELETE">unhide</span>
 						{{end}}
 					{{end}}
-				{{end}}
-				{{if $base.SessionUser.IsAdmin}}
-					{{if $thread.IsPinned}}
-						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="pin" method="DELETE">unpin</button>
-					{{else}}
-						<button class="thread_action" type="button" value="{{$thread.ID}}" endpoint="pin" method="POST">pin</button>
+
+					{{if $base.SessionUser.IsAdmin}}
+						|
+						{{if $thread.IsPinned}}
+							<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="pin" method="DELETE">unpin</span>
+						{{else}}
+							<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="pin" method="POST">pin</span>
+						{{end}}
 					{{end}}
-				{{end}}
+				</span>
 			</li>
 		{{end}}
 	{{end}}

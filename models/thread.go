@@ -74,9 +74,9 @@ func (tm *ThreadModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thread
 	defer rows.Close()
 
 	for rows.Next() {
-		thread := &Thread{}
-		subject := &Subject{}
-		creator := &User{}
+		thread := new(Thread)
+		subject := new(Subject)
+		creator := new(User)
 
 		err = rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.TimeCreated, &thread.IsPinned, &thread.IsVisible, &thread.Score,
 			&subject.ID, &subject.Name, &subject.Title,

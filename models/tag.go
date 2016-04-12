@@ -47,10 +47,10 @@ func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, erro
 	}
 	defer rows.Close()
 
-	tags := []*Tag{}
+	tags := make([]*Tag, 0)
 	for rows.Next() {
-		tag := &Tag{}
-		subject := &Subject{}
+		tag := new(Tag)
+		subject := new(Subject)
 		err := rows.Scan(&tag.ID, &tag.Name, &subject.ID, &subject.Name, &subject.Title)
 		if err != nil {
 			return nil, err
@@ -94,11 +94,12 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, subject *Subject) (*Tag, er
 	if !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name."}
 	}
+
+	name = strings.ToLower(name)
 	result, err := tm.Exec(tx, "INSERT INTO tags(name, subject_id) VALUES(?, ?)", name, subject.ID)
 	if err != nil {
-
+		return nil, err
 	}
-	name = strings.ToLower(name)
 
 	id, err := result.LastInsertId()
 	if err != nil {

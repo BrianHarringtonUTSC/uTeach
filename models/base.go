@@ -1,5 +1,5 @@
-// Package models contains models to manage communicating with the db.
-// All models methods have a tx as the first parameter. This allows handlers that use multiple calls / tables to
+// Package models contains models to manage communications with the db.
+// All models methods should have a tx as the first parameter. This allows handlers that use multiple calls / tables to
 // use a single transaction and then commit that so that all actions are committed or none are.
 // If a handler is using a single action, they can simply pass in nil for the tx.
 package models

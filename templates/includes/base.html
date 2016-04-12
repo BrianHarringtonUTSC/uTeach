@@ -4,26 +4,50 @@
   <head>
     <meta charset="utf-8">
     <title>uTeach</title>
-    <link rel="stylesheet" href="/static/css/base.css" />
+
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.1.3/material.blue_grey-red.min.css" />
+    <script defer src="https://code.getmdl.io/1.1.3/material.min.js"></script>
   </head>
 
   <body>
-  	<header>
-  		<div id="main-title">
-  			<h2><a id="main-title-link" href="/">uTeach</a></h3>
-  		</div>
-	  	<div id="signin-status">
-  		{{if .SessionUser.Email}}
-  			<a href="/user/{{.SessionUser.Email}}">{{.SessionUser.Email}}</a> | <a href="/logout">Logout</a>
-  		{{else}}
-  			<a href="/login">Sign in with Google</a>
-  		{{end}}
-	  	</div>
-  	</header>
-  	<hr>
+   <div class="layout mdl-layout mdl-layout--fixed-header mdl-js-layout mdl-color--grey-100">
+      <header class="header mdl-layout__header mdl-layout__header--scroll mdl-color--grey-100 mdl-color-text--grey-800">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout-title"><a id="main-title-link" class="no-decoration" href="/">uTeach</a></span>
+          <div class="mdl-layout-spacer"></div>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+           <div id="signin-status">
+            {{if .SessionUser.Email}}
+              <a class="no-decoration" href="/user/{{.SessionUser.Email}}">{{.SessionUser.Name}}</a> | <a class="no-decoration" href="/logout no-decoration">Logout</a>
+            {{else}}
+              <a href="/login">Sign in with Google</a>
+            {{end}}
+          </div>
+        </div>
+      </header>
+      <div class="ribbon"></div>
+    	</header>
+        <main class="main mdl-layout__content">
+        <div class="container mdl-grid">
+          <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+          <div class="content mdl-color--white mdl-shadow--4dp content mdl-color-text--grey-800 mdl-cell mdl-cell--8-col">
+             {{template "content" .}}
+          </div>
+        </div>
+        <footer class="footer mdl-mini-footer">
+            Copyright Brian Harrington 2016
+          </div>
+          <div class="mdl-mini-footer--left-section">
+        </footer>
+      </main>
+    </div>
 
     <main>
-   		<div id="content">{{template "content" .}}</div>
+      <div id="content">
+
+      </div>
   	</main>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>

@@ -74,7 +74,7 @@ func Router(a *application.App) http.Handler {
 }
 
 // ServeHTTP allows Handler to satisfy the http.Handler interface.
-func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(h.App, w, r)
 	httperror.HandleError(w, err)
 }

@@ -1,4 +1,4 @@
-// Package config provides functionality to store user specific info for the uTeach app to function.
+// Package config provides functionality to create app specific configuration.
 package config
 
 import (
@@ -35,7 +35,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 
-	c := &Config{}
+	c := new(Config)
 	if err := viper.Unmarshal(c); err != nil {
 		return nil, err
 	}
