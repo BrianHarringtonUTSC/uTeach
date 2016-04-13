@@ -25,17 +25,17 @@ func addUserUpvotedThreadIDsToData(r *http.Request, threadModel *models.ThreadMo
 }
 
 func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	subject := context.Subject(r)
+	topic := context.Topic(r)
 	data := map[string]interface{}{}
-	data["Subject"] = subject
+	data["Topic"] = topic
 
 	tm := models.NewThreadModel(a.DB)
-	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, true)
+	pinnedThreads, err := tm.GetThreadsByTopicAndIsPinned(nil, topic, true)
 	if err != nil {
 		return err
 	}
 
-	unpinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, false)
+	unpinnedThreads, err := tm.GetThreadsByTopicAndIsPinned(nil, topic, false)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	}
 
 	tagModel := models.NewTagModel(a.DB)
-	tags, err := tagModel.GetTagsBySubject(nil, subject)
+	tags, err := tagModel.GetTagsByTopic(nil, topic)
 	if err != nil {
 		return err
 	}
@@ -66,15 +66,15 @@ func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error
 
 func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
-	subjectName := strings.ToLower(vars["subject"])
-	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.GetSubjectByName(nil, subjectName)
+	topicName := strings.ToLower(vars["topic"])
+	sm := models.NewTopicModel(a.DB)
+	topic, err := sm.GetTopicByName(nil, topicName)
 	if err != nil {
 		return err
 	}
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsBySubject(nil, subject)
+	tags, err := tm.GetTagsByTopic(nil, topic)
 	if err != nil {
 		return err
 	}
@@ -92,11 +92,11 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 
 	title := r.FormValue("title")
 	text := r.FormValue("text")
-	subject := context.Subject(r)
+	topic := context.Topic(r)
 	user, _ := context.SessionUser(r)
 
 	threadModel := models.NewThreadModel(a.DB)
-	thread, err := threadModel.AddThread(tx, title, text, subject, user)
+	thread, err := threadModel.AddThread(tx, title, text, topic, user)
 	if err != nil {
 		return err
 	}

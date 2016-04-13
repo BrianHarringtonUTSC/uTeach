@@ -34,10 +34,10 @@ func Router(a *application.App) http.Handler {
 
 	router := mux.NewRouter()
 
-	// subject routes
-	router.Handle("/", h(getSubjects))
-	router.Handle("/s/new", m.MustBeAdmin(h(getNewSubject))).Methods("GET")
-	router.Handle("/s/new", m.MustBeAdmin(h(postNewSubject))).Methods("POST")
+	// topic routes
+	router.Handle("/", h(getTopics))
+	router.Handle("/s/new", m.MustBeAdmin(h(getNewTopic))).Methods("GET")
+	router.Handle("/s/new", m.MustBeAdmin(h(postNewTopic))).Methods("POST")
 
 	// user routes
 	router.Handle("/user/{email}", h(getUser))
@@ -46,15 +46,15 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/logout", h(getLogout))
 
 	// tag routes
-	router.Handle("/s/{subject}/tags", m.SetSubject(h(getTags)))
-	router.Handle("/s/{subject}/tags/new", m.MustBeAdmin(m.SetSubject(h(getNewTag)))).Methods("GET")
-	router.Handle("/s/{subject}/tags/new", m.MustBeAdmin(m.SetSubject(h(postNewTag)))).Methods("POST")
+	router.Handle("/s/{topic}/tags", m.SetTopic(h(getTags)))
+	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(getNewTag)))).Methods("GET")
+	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(postNewTag)))).Methods("POST")
 
 	// thread routes
 	t := alice.New(m.MustLogin, m.SetThread)
-	router.Handle("/s/{subject}", m.SetSubject(h(getThreads)))
-	router.Handle("/s/{subject}/new", m.SetSubject(h(getNewThread))).Methods("GET")
-	router.Handle("/s/{subject}/new", m.MustLogin(m.SetSubject(h(postNewThread)))).Methods("POST")
+	router.Handle("/s/{topic}", m.SetTopic(h(getThreads)))
+	router.Handle("/s/{topic}/new", m.SetTopic(h(getNewThread))).Methods("GET")
+	router.Handle("/s/{topic}/new", m.MustLogin(m.SetTopic(h(postNewThread)))).Methods("POST")
 	router.Handle("/t/{threadID}", m.SetThread(h(getThread)))
 	router.Handle("/t/{threadID}/upvote", t.Then(h(postThreadVote))).Methods("POST")
 	router.Handle("/t/{threadID}/upvote", t.Then(h(deleteThreadVote))).Methods("DELETE")
@@ -62,7 +62,7 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(deleteHideThread)))).Methods("DELETE")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
 	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
-	router.Handle("/s/{subject}/tags/{tag}", m.SetSubject(m.SetTag(h(getThreadsByTag))))
+	router.Handle("/s/{topic}/tags/{tag}", m.SetTopic(m.SetTag(h(getThreadsByTag))))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

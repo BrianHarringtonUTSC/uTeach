@@ -7,76 +7,76 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// Subject represents a subject in the app.
-type Subject struct {
+// Topic represents a topic in the app.
+type Topic struct {
 	ID          int64
 	Name        string
 	Title       string
 	Description string
 }
 
-// URL returns the unique URL for a subject.
-func (s *Subject) URL() string {
+// URL returns the unique URL for a topic.
+func (s *Topic) URL() string {
 	return "/s/" + s.Name
 }
 
-// NewThreadURL returns the URL of the page to create a new thread under the subject.
-func (s *Subject) NewThreadURL() string {
+// NewThreadURL returns the URL of the page to create a new thread under the topic.
+func (s *Topic) NewThreadURL() string {
 	return filepath.Join(s.URL(), "/new")
 }
 
-// TagsURL returns the URL of the page listing the tags under the subject.
-func (s *Subject) TagsURL() string {
+// TagsURL returns the URL of the page listing the tags under the topic.
+func (s *Topic) TagsURL() string {
 	return filepath.Join(s.URL(), "/tags")
 }
 
-// NewTagURL returns the URL of the page to create a new tag under the subject.
-func (s *Subject) NewTagURL() string {
+// NewTagURL returns the URL of the page to create a new tag under the topic.
+func (s *Topic) NewTagURL() string {
 	return filepath.Join(s.TagsURL(), "/new")
 }
 
-// SubjectModel handles getting and creating subjects.
-type SubjectModel struct {
+// TopicModel handles getting and creating topics.
+type TopicModel struct {
 	Base
 }
 
-// NewSubjectModel returns a new subject model.
-func NewSubjectModel(db *sqlx.DB) *SubjectModel {
-	return &SubjectModel{Base{db}}
+// NewTopicModel returns a new topic model.
+func NewTopicModel(db *sqlx.DB) *TopicModel {
+	return &TopicModel{Base{db}}
 }
 
-// GetAllSubjects gets all subjects.
-func (sm *SubjectModel) GetAllSubjects(tx *sqlx.Tx) ([]*Subject, error) {
-	subjects := []*Subject{}
-	err := sm.Select(tx, &subjects, "SELECT * FROM subjects")
-	return subjects, err
+// GetAllTopics gets all topics.
+func (sm *TopicModel) GetAllTopics(tx *sqlx.Tx) ([]*Topic, error) {
+	topics := []*Topic{}
+	err := sm.Select(tx, &topics, "SELECT * FROM topics")
+	return topics, err
 }
 
-// GetSubjectByID gets a subject by id.
-func (sm *SubjectModel) GetSubjectByID(tx *sqlx.Tx, id int64) (*Subject, error) {
-	subject := new(Subject)
-	err := sm.Get(tx, subject, "SELECT * FROM subjects WHERE id=?", id)
-	return subject, err
+// GetTopicByID gets a topic by id.
+func (sm *TopicModel) GetTopicByID(tx *sqlx.Tx, id int64) (*Topic, error) {
+	topic := new(Topic)
+	err := sm.Get(tx, topic, "SELECT * FROM topics WHERE id=?", id)
+	return topic, err
 }
 
-// GetSubjectByName gets a subject by name.
-func (sm *SubjectModel) GetSubjectByName(tx *sqlx.Tx, name string) (*Subject, error) {
+// GetTopicByName gets a topic by name.
+func (sm *TopicModel) GetTopicByName(tx *sqlx.Tx, name string) (*Topic, error) {
 	name = strings.ToLower(name)
 
-	subject := new(Subject)
-	err := sm.Get(tx, subject, "SELECT * FROM subjects WHERE name=?", name)
-	return subject, err
+	topic := new(Topic)
+	err := sm.Get(tx, topic, "SELECT * FROM topics WHERE name=?", name)
+	return topic, err
 }
 
-// AddSubject adds a new subject.
-func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title, description string) (*Subject, error) {
+// AddTopic adds a new topic.
+func (sm *TopicModel) AddTopic(tx *sqlx.Tx, name, title, description string) (*Topic, error) {
 	if title == "" || description == "" || !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name and/or title."}
 	}
 
 	name = strings.ToLower(name)
 
-	query := "INSERT INTO subjects(name, title, description) VALUES(?, ?, ?)"
+	query := "INSERT INTO topics(name, title, description) VALUES(?, ?, ?)"
 	result, err := sm.Exec(tx, query, name, title, description)
 	if err != nil {
 		return nil, err
@@ -87,5 +87,5 @@ func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title, description string)
 		return nil, err
 	}
 
-	return sm.GetSubjectByID(tx, id)
+	return sm.GetTopicByID(tx, id)
 }

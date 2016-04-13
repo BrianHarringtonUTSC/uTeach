@@ -10,14 +10,14 @@ import (
 
 // Tag represents a tag in the app.
 type Tag struct {
-	ID      int64
-	Name    string
-	Subject *Subject
+	ID    int64
+	Name  string
+	Topic *Topic
 }
 
-// URL returns the unique URL for a subject.
+// URL returns the unique URL for a topic.
 func (t *Tag) URL() string {
-	return fmt.Sprintf("/s/%s/tags/%s", t.Subject.Name, t.Name)
+	return fmt.Sprintf("/s/%s/tags/%s", t.Topic.Name, t.Name)
 }
 
 // TagModel handles getting and creating tags.
@@ -31,9 +31,9 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 }
 
 var tagsSqlizer = squirrel.
-	Select("tags.id, tags.name, subjects.id AS subject_id, subjects.name AS subject_name, subjects.title").
+	Select("tags.id, tags.name, topics.id AS topic_id, topics.name AS topic_name, topics.title").
 	From("tags").
-	Join("subjects ON subjects.id=tags.subject_id")
+	Join("topics ON topics.id=tags.topic_id")
 
 func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, error) {
 	query, args, err := sqlizer.ToSql()
@@ -50,12 +50,12 @@ func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, erro
 	var tags []*Tag
 	for rows.Next() {
 		tag := new(Tag)
-		subject := new(Subject)
-		err := rows.Scan(&tag.ID, &tag.Name, &subject.ID, &subject.Name, &subject.Title)
+		topic := new(Topic)
+		err := rows.Scan(&tag.ID, &tag.Name, &topic.ID, &topic.Name, &topic.Title)
 		if err != nil {
 			return nil, err
 		}
-		tag.Subject = subject
+		tag.Topic = topic
 		tags = append(tags, tag)
 	}
 	return tags, err
@@ -79,24 +79,24 @@ func (tm *TagModel) GetTagByID(tx *sqlx.Tx, id int64) (*Tag, error) {
 	return tm.findOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.id": id}))
 }
 
-// GetTagByNameAndSubject gets a tag by the name and subject.
-func (tm *TagModel) GetTagByNameAndSubject(tx *sqlx.Tx, name string, subject *Subject) (*Tag, error) {
-	return tm.findOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.subject_id": subject.ID}))
+// GetTagByNameAndTopic gets a tag by the name and topic.
+func (tm *TagModel) GetTagByNameAndTopic(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error) {
+	return tm.findOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.topic_id": topic.ID}))
 }
 
-// GetTagsBySubject gets all tags by the subject.
-func (tm *TagModel) GetTagsBySubject(tx *sqlx.Tx, subject *Subject) ([]*Tag, error) {
-	return tm.findAll(tx, tagsSqlizer.Where(squirrel.Eq{"subject_id": subject.ID}))
+// GetTagsByTopic gets all tags by the topic.
+func (tm *TagModel) GetTagsByTopic(tx *sqlx.Tx, topic *Topic) ([]*Tag, error) {
+	return tm.findAll(tx, tagsSqlizer.Where(squirrel.Eq{"topic_id": topic.ID}))
 }
 
-// AddTag adds a new tag for the subject.
-func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, subject *Subject) (*Tag, error) {
+// AddTag adds a new tag for the topic.
+func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error) {
 	if !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name."}
 	}
 
 	name = strings.ToLower(name)
-	result, err := tm.Exec(tx, "INSERT INTO tags(name, subject_id) VALUES(?, ?)", name, subject.ID)
+	result, err := tm.Exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", name, topic.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, subject *Subject) (*Tag, er
 
 // AddThreadTag adds a tag for the thread.
 func (tm *TagModel) AddThreadTag(tx *sqlx.Tx, thread *Thread, tag *Tag) error {
-	_, err := tm.Exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, subject_id) VALUES(?, ?, ?)",
-		thread.ID, tag.ID, thread.Subject.ID)
+	_, err := tm.Exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, topic_id) VALUES(?, ?, ?)",
+		thread.ID, tag.ID, thread.Topic.ID)
 	return err
 }

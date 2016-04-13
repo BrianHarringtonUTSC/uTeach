@@ -9,15 +9,15 @@ import (
 )
 
 func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	subject := context.Subject(r)
+	topic := context.Topic(r)
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsBySubject(nil, subject)
+	tags, err := tm.GetTagsByTopic(nil, topic)
 	if err != nil {
 		return err
 	}
 
-	data := map[string]interface{}{"Tags": tags, "Subject": subject}
+	data := map[string]interface{}{"Tags": tags, "Topic": topic}
 
 	return renderTemplate(a, w, r, "tags.html", data)
 }
@@ -27,16 +27,16 @@ func getNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error
 }
 
 func postNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	subject := context.Subject(r)
+	topic := context.Topic(r)
 
 	name := r.FormValue("name")
 
 	tm := models.NewTagModel(a.DB)
-	tag, err := tm.AddTag(nil, name, subject)
+	tag, err := tm.AddTag(nil, name, topic)
 	if err != nil {
 		return err
 	}
 
-	http.Redirect(w, r, tag.Subject.URL(), http.StatusFound)
+	http.Redirect(w, r, tag.Topic.URL(), http.StatusFound)
 	return nil
 }

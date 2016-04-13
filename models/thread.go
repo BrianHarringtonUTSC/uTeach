@@ -18,7 +18,7 @@ type Thread struct {
 	IsPinned  bool
 	IsVisible bool
 	Score     int
-	Subject   *Subject
+	Topic     *Topic
 	Creator   *User
 }
 
@@ -45,16 +45,16 @@ var threadsSqlizer = squirrel.
 			threads.is_pinned,
 			threads.is_visible,
 			count(thread_votes.thread_id),
-			subjects.id AS subject_id,
-			subjects.name AS subject_name,
-			subjects.title AS subject_title,
-			subjects.description,
+			topics.id AS topic_id,
+			topics.name AS topic_name,
+			topics.title AS topic_title,
+			topics.description,
 			users.id AS user_id,
 			users.email,
 			users.name AS user_name,
 			users.is_admin`).
 	From("threads").
-	Join("subjects ON subjects.id=threads.subject_id").
+	Join("topics ON topics.id=threads.topic_id").
 	Join("users ON users.id=threads.creator_user_id").
 	LeftJoin("thread_votes ON thread_votes.thread_id=threads.id").
 	GroupBy("threads.id").
@@ -76,17 +76,17 @@ func (tm *ThreadModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thread
 
 	for rows.Next() {
 		thread := new(Thread)
-		subject := new(Subject)
+		topic := new(Topic)
 		creator := new(User)
 
 		err = rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.CreatedAt, &thread.IsPinned, &thread.IsVisible, &thread.Score,
-			&subject.ID, &subject.Name, &subject.Title, &subject.Description,
+			&topic.ID, &topic.Name, &topic.Title, &topic.Description,
 			&creator.ID, &creator.Email, &creator.Name, &creator.IsAdmin)
 		if err != nil {
 			return threads, err
 		}
 
-		thread.Subject = subject
+		thread.Topic = topic
 		thread.Creator = creator
 		threads = append(threads, thread)
 	}
@@ -110,9 +110,9 @@ func (tm *ThreadModel) GetThreadByID(tx *sqlx.Tx, id int64) (*Thread, error) {
 	return tm.findOne(tx, threadsSqlizer.Where(squirrel.Eq{"threads.id": id}))
 }
 
-// GetThreadsBySubjectAndIsPinned gets all threads by subject and whether they are pinned or not pinned.
-func (tm *ThreadModel) GetThreadsBySubjectAndIsPinned(tx *sqlx.Tx, subject *Subject, isPinned bool) ([]*Thread, error) {
-	threads, err := tm.findAll(tx, threadsSqlizer.Where(squirrel.Eq{"threads.subject_id": subject.ID, "threads.is_pinned": isPinned}))
+// GetThreadsByTopicAndIsPinned gets all threads by topic and whether they are pinned or not pinned.
+func (tm *ThreadModel) GetThreadsByTopicAndIsPinned(tx *sqlx.Tx, topic *Topic, isPinned bool) ([]*Thread, error) {
+	threads, err := tm.findAll(tx, threadsSqlizer.Where(squirrel.Eq{"threads.topic_id": topic.ID, "threads.is_pinned": isPinned}))
 	if err == sql.ErrNoRows {
 		return []*Thread{}, nil
 	}
@@ -126,7 +126,7 @@ func (tm *ThreadModel) GetThreadsByUser(tx *sqlx.Tx, user *User) ([]*Thread, err
 
 // GetThreadIdsUpvotedByUser gets the ids of all threads upvoted by the user. It returns a map which can be used to
 // check if a thread was upvoted by a user in constant time.
-// TODO: this method may need to be made more precise. For example, finding all upvoted threads for a subject, etc.
+// TODO: this method may need to be made more precise. For example, finding all upvoted threads for a topic, etc.
 func (tm *ThreadModel) GetThreadIdsUpvotedByUser(tx *sqlx.Tx, user *User) (map[int64]bool, error) {
 	rows, err := tm.Query(tx, "SELECT thread_id FROM thread_votes WHERE user_id=?", user.ID)
 	if err != nil {
@@ -144,13 +144,13 @@ func (tm *ThreadModel) GetThreadIdsUpvotedByUser(tx *sqlx.Tx, user *User) (map[i
 }
 
 // AddThread adds a new thread.
-func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, subject *Subject, creator *User) (*Thread, error) {
+func (tm *ThreadModel) AddThread(tx *sqlx.Tx, title, content string, topic *Topic, creator *User) (*Thread, error) {
 	if title == "" || content == "" {
 		return nil, InputError{"Empty title or body not allowed"}
 	}
 
-	query := "INSERT INTO threads(title, content, subject_id, creator_user_id) VALUES(?, ?, ?, ?)"
-	result, err := tm.Exec(tx, query, title, content, subject.ID, creator.ID)
+	query := "INSERT INTO threads(title, content, topic_id, creator_user_id) VALUES(?, ?, ?, ?)"
+	result, err := tm.Exec(tx, query, title, content, topic.ID, creator.ID)
 	if err != nil {
 		return nil, err
 	}

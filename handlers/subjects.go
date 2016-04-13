@@ -7,32 +7,32 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
-func getSubjects(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	sm := models.NewSubjectModel(a.DB)
-	subjects, err := sm.GetAllSubjects(nil)
+func getTopics(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	sm := models.NewTopicModel(a.DB)
+	topics, err := sm.GetAllTopics(nil)
 	if err != nil {
 		return err
 	}
 
-	data := map[string]interface{}{"Subjects": subjects}
-	return renderTemplate(a, w, r, "subjects.html", data)
+	data := map[string]interface{}{"Topics": topics}
+	return renderTemplate(a, w, r, "topics.html", data)
 }
 
-func getNewSubject(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return renderTemplate(a, w, r, "new_subject.html", nil)
+func getNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	return renderTemplate(a, w, r, "new_topic.html", nil)
 }
 
-func postNewSubject(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	name := r.FormValue("name")
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 
-	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.AddSubject(nil, name, title, description)
+	sm := models.NewTopicModel(a.DB)
+	topic, err := sm.AddTopic(nil, name, title, description)
 	if err != nil {
 		return err
 	}
 
-	http.Redirect(w, r, subject.URL(), http.StatusFound)
+	http.Redirect(w, r, topic.URL(), http.StatusFound)
 	return nil
 }

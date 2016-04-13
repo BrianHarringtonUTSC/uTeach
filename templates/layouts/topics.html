@@ -1,11 +1,11 @@
 {{define "content"}}
 	<ul class="mdl-list">
-		{{range $subject := .Subjects}}
+		{{range $topic := .Topics}}
 		<li class="mdl-list__item mdl-list__item--two-line">
 			<span class="mdl-list__item-primary-content">
-				<a class="no-decoration" href="{{$subject.URL}}">{{$subject.Title}}</a>
+				<a class="no-decoration" href="{{$topic.URL}}">{{$topic.Title}}</a>
 				<span class="mdl-list__item-sub-title">
-				{{$subject.Description}}
+				{{$topic.Description}}
 				</span>
 			</span>
 		</li>

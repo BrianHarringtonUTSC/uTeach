@@ -39,19 +39,19 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// SetSubject sets the subject with the name in the url in the context.
-func (m *Middleware) SetSubject(next http.Handler) http.Handler {
+// SetTopic sets the topic with the name in the url in the context.
+func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		subjectName := strings.ToLower(vars["subject"])
-		sm := models.NewSubjectModel(m.App.DB)
-		subject, err := sm.GetSubjectByName(nil, subjectName)
+		topicName := strings.ToLower(vars["topic"])
+		sm := models.NewTopicModel(m.App.DB)
+		topic, err := sm.GetTopicByName(nil, topicName)
 		if err != nil {
 			httperror.HandleError(w, err)
 			return
 		}
 
-		context.SetSubject(r, subject)
+		context.SetTopic(r, topic)
 		next.ServeHTTP(w, r)
 	}
 
@@ -87,7 +87,7 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 		vars := mux.Vars(r)
 		tagName := strings.ToLower(vars["tag"])
 		tm := models.NewTagModel(m.App.DB)
-		tag, err := tm.GetTagByNameAndSubject(nil, tagName, context.Subject(r))
+		tag, err := tm.GetTagByNameAndTopic(nil, tagName, context.Topic(r))
 		if err != nil {
 			httperror.HandleError(w, err)
 			return

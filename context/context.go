@@ -11,20 +11,20 @@ import (
 // TODO: Use context in standard lib which will be added in go 1.7
 
 const (
-	subjectKey     = "subject"
+	topicKey       = "topic"
 	threadKey      = "thread"
 	tagKey         = "tag"
 	sessionUserKey = "session-user"
 )
 
-// SetSubject sets the subject in the context.
-func SetSubject(r *http.Request, subject *models.Subject) {
-	context.Set(r, subjectKey, subject)
+// SetTopic sets the topic in the context.
+func SetTopic(r *http.Request, topic *models.Topic) {
+	context.Set(r, topicKey, topic)
 }
 
-// Subject gets the subject from the context.
-func Subject(r *http.Request) *models.Subject {
-	return context.Get(r, subjectKey).(*models.Subject)
+// Topic gets the topic from the context.
+func Topic(r *http.Request) *models.Topic {
+	return context.Get(r, topicKey).(*models.Topic)
 }
 
 // SetThread sets the thread in the context.
