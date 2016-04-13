@@ -67,6 +67,7 @@ $GOPATH/bin/uTeach --config=PATH_TO_CONFIG
 - Use context in standard lib to be added in Go 1.7
 - Front end UI work and overall polish
 - Testing
+- Caching
 
 ### FAQ
 
