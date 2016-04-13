@@ -5,6 +5,7 @@ package application
 import (
 	"html/template"
 	"log"
+	
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
