@@ -10,6 +10,7 @@ uTeach is a community oriented platform for sharing educational material and res
 - Subjects (equivalent to subreddits on reddit)
 - Threads (equivalent to text post on reddit)
 - Tags for threads (equivalent to tags on piazza posts)
+- Pinned Threads
 - Thread voting
 - Users & authentication (only Google accounts currently supported)
 - Markdown support for thread content

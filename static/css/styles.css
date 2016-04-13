@@ -47,7 +47,7 @@
 }
 
 /* App specific */
-.upvote-button {
+.vertical-align-middle {
   vertical-align: middle;
 }
 
@@ -62,8 +62,8 @@
 
 .bottom-right {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 40px;
+  right: 40px;
 }
 
 #main-title {

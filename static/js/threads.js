@@ -1,5 +1,5 @@
 $(function() {
-  $('#threads').on('click', '.thread-action', handleThreadActionButtonClick);
+  $('#threads-list').on('click', '.thread-action', handleThreadActionButtonClick);
 });
 
 

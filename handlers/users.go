@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
+	"github.com/umairidris/uTeach/httperror"
 	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
 	"golang.org/x/oauth2"
@@ -79,7 +80,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	authcode := r.FormValue("code")
 	tok, err := googleConfig.Exchange(oauth2.NoContext, authcode)
 	if err != nil {
-		return err
+		return httperror.StatusError{http.StatusUnauthorized, errors.New("Permission not given by user.")}
 	}
 
 	// make get request to get user info using token
@@ -128,6 +129,9 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := map[string]interface{}{"Email": email, "CreatedThreads": createdThreads}
+	data := map[string]interface{}{"User": user, "CreatedThreads": createdThreads}
+	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+		return err
+	}
 	return renderTemplate(a, w, r, "user.html", data)
 }

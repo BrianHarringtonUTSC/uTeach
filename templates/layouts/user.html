@@ -1,8 +1,5 @@
 {{define "content"}}
-<h4>Threads by {{.Email}}</h3>
-<ul>
-	{{range $thread := .CreatedThreads}}
-		<li>{{$thread.Score}} | <a href="/t/{{$thread.ID}}">{{$thread.Title}}</a></li>
-	{{end}}
-</ul>
+	{{$title := print "Threads by " .User.Name }}
+	{{template "thread-list" dict "Base" . "ThreadsTitle" $title "Threads" .CreatedThreads}}
+
 {{end}}

@@ -1,11 +1,21 @@
 {{define "content"}}
-
-{{if .SessionUser.IsAdmin}}
-	<input type="submit" value="New Subject" onclick="window.location='/s/new';" />
-{{end}}
-<ul>
-	{{range $subject := .Subjects}}
-	<li><a href="{{$subject.URL}}">{{$subject.Name}}</a></li>
+	<ul class="mdl-list">
+		{{range $subject := .Subjects}}
+		<li class="mdl-list__item mdl-list__item--two-line">
+			<span class="mdl-list__item-primary-content">
+				<a class="no-decoration" href="{{$subject.URL}}">{{$subject.Title}}</a>
+				<span class="mdl-list__item-sub-title">
+				{{$subject.Description}}
+				</span>
+			</span>
+		</li>
+		{{end}}
+	</ul>
+	{{if .SessionUser.IsAdmin}}
+		<div class="bottom-right">
+			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location='/s/new';">
+			 	<i class="material-icons">add</i>
+			</button>
+		</div>
 	{{end}}
-</ul>
 {{end}}

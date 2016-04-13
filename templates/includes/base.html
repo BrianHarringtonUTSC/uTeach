@@ -17,14 +17,20 @@
         <div class="mdl-layout__header-row">
           <span class="mdl-layout-title"><a id="main-title-link" class="no-decoration" href="/">uTeach</a></span>
           <div class="mdl-layout-spacer"></div>
-          <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+
            <div id="signin-status">
             {{if .SessionUser.Email}}
-              <a class="no-decoration" href="/user/{{.SessionUser.Email}}">{{.SessionUser.Name}}</a> | <a class="no-decoration" href="/logout no-decoration">Logout</a>
+              <a class="no-decoration vertical-align-middle" href="/user/{{.SessionUser.Email}}">{{.SessionUser.Name}}</a>
+              <button class="mdl-button mdl-js-button mdl-button--accent vertical-align-middle" onclick="window.location='/logout'">
+                Logout
+              </button>
             {{else}}
-              <a href="/login">Sign in with Google</a>
+              <button class="mdl-button mdl-js-button mdl-button--accent vertical-align-middle" onclick="window.location='/login'">
+                Sign in with Google
+              </button>
+              <!-- <a class="no-decoration" href="/login"></a> -->
             {{end}}
-          </div>
+
         </div>
       </header>
       <div class="ribbon"></div>
@@ -37,7 +43,7 @@
           </div>
         </div>
         <footer class="footer mdl-mini-footer">
-            Copyright Brian Harrington 2016
+            Copyright © Brian Harrington 2016
           </div>
           <div class="mdl-mini-footer--left-section">
         </footer>

@@ -1,7 +1,3 @@
 {{define "content"}}
-	<ul>
-		{{range $thread := .Threads}}
-			<li>{{$thread.Score}} | <a href="/t/{{.ID}}">{{$thread.Title}}</a></li>
-		{{end}}
-	</ul>
+	{{template "thread-list" dict "Base" . "Threads" .Threads}}
 {{end}}

@@ -11,15 +11,15 @@ import (
 
 // Thread represents a thread in the app.
 type Thread struct {
-	ID          int64
-	Title       string
-	Content     string
-	TimeCreated time.Time
-	IsPinned    bool
-	IsVisible   bool
-	Score       int
-	Subject     *Subject
-	Creator     *User
+	ID        int64
+	Title     string
+	Content   string
+	CreatedAt time.Time
+	IsPinned  bool
+	IsVisible bool
+	Score     int
+	Subject   *Subject
+	Creator   *User
 }
 
 // URL returns the unique URL for a thread.
@@ -41,13 +41,14 @@ var threadsSqlizer = squirrel.
 	Select(`threads.id AS thread_id,
 			threads.title AS thread_title,
 			threads.content,
-			threads.time_created,
+			threads.created_at,
 			threads.is_pinned,
 			threads.is_visible,
 			count(thread_votes.thread_id),
 			subjects.id AS subject_id,
 			subjects.name AS subject_name,
 			subjects.title AS subject_title,
+			subjects.description,
 			users.id AS user_id,
 			users.email,
 			users.name AS user_name,
@@ -78,8 +79,8 @@ func (tm *ThreadModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Thread
 		subject := new(Subject)
 		creator := new(User)
 
-		err = rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.TimeCreated, &thread.IsPinned, &thread.IsVisible, &thread.Score,
-			&subject.ID, &subject.Name, &subject.Title,
+		err = rows.Scan(&thread.ID, &thread.Title, &thread.Content, &thread.CreatedAt, &thread.IsPinned, &thread.IsVisible, &thread.Score,
+			&subject.ID, &subject.Name, &subject.Title, &subject.Description,
 			&creator.ID, &creator.Email, &creator.Name, &creator.IsAdmin)
 		if err != nil {
 			return threads, err

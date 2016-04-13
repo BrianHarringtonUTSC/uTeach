@@ -47,7 +47,7 @@ func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, erro
 	}
 	defer rows.Close()
 
-	tags := make([]*Tag, 0)
+	var tags []*Tag
 	for rows.Next() {
 		tag := new(Tag)
 		subject := new(Subject)

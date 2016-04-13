@@ -8,9 +8,10 @@ import (
 
 // Subject represents a subject in the app.
 type Subject struct {
-	ID    int64
-	Name  string
-	Title string
+	ID          int64
+	Name        string
+	Title       string
+	Description string
 }
 
 // URL returns the unique URL for a subject.
@@ -52,15 +53,15 @@ func (sm *SubjectModel) GetSubjectByName(tx *sqlx.Tx, name string) (*Subject, er
 }
 
 // AddSubject adds a new subject.
-func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title string) (*Subject, error) {
-	if title == "" || !singleWordAlphaNumRegex.MatchString(name) {
+func (sm *SubjectModel) AddSubject(tx *sqlx.Tx, name, title, description string) (*Subject, error) {
+	if title == "" || description == "" || !singleWordAlphaNumRegex.MatchString(name) {
 		return nil, InputError{"Invalid name and/or title."}
 	}
 
 	name = strings.ToLower(name)
 
-	query := "INSERT INTO subjects(name, title) VALUES(?, ?)"
-	result, err := sm.Exec(tx, query, name, title)
+	query := "INSERT INTO subjects(name, title, description) VALUES(?, ?, ?)"
+	result, err := sm.Exec(tx, query, name, title, description)
 	if err != nil {
 		return nil, err
 	}

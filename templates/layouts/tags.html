@@ -1,9 +1,16 @@
 {{define "content"}}
-	<ul>
+	<ul class="mdl-list">
 		{{range $tag := .Tags}}
-		<li>
-			<a href="/s/{{$tag.Subject.Name}}/tags/{{$tag.Name}}">{{$tag.Name}}</a>
+		<li class="mdl-list__item">
+			<a class="no-decoration" href="{{$tag.URL}}">{{$tag.Name}}</a>
 		</li>
 		{{end}}
 	</ul>
+	{{if .SessionUser.IsAdmin}}
+		<div class="bottom-right">
+			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location=window.location+'/new';">
+			 	<i class="material-icons">add</i>
+			</button>
+		</div>
+	{{end}}
 {{end}}

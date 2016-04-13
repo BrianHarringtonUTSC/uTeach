@@ -25,9 +25,10 @@ func getNewSubject(a *application.App, w http.ResponseWriter, r *http.Request) e
 func postNewSubject(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	name := r.FormValue("name")
 	title := r.FormValue("title")
+	description := r.FormValue("description")
 
 	sm := models.NewSubjectModel(a.DB)
-	subject, err := sm.AddSubject(nil, name, title)
+	subject, err := sm.AddSubject(nil, name, title, description)
 	if err != nil {
 		return err
 	}

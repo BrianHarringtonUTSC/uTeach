@@ -13,8 +13,21 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
+func addUserUpvotedThreadIDsToData(r *http.Request, threadModel *models.ThreadModel, data map[string]interface{}) error {
+	if user, ok := context.SessionUser(r); ok {
+		userUpvotedThreadIDs, err := threadModel.GetThreadIdsUpvotedByUser(nil, user)
+		if err != nil {
+			return err
+		}
+		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
+	}
+	return nil
+}
+
 func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	subject := context.Subject(r)
+	data := map[string]interface{}{}
+	data["Subject"] = subject
 
 	tm := models.NewThreadModel(a.DB)
 	pinnedThreads, err := tm.GetThreadsBySubjectAndIsPinned(nil, subject, true)
@@ -27,17 +40,11 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	data := map[string]interface{}{}
 	data["PinnedThreads"] = pinnedThreads
 	data["UnpinnedThreads"] = unpinnedThreads
 
-	//  if there is a user, get the user's upvoted threads
-	if user, ok := context.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := tm.GetThreadIdsUpvotedByUser(nil, user)
-		if err != nil {
-			return err
-		}
-		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
+	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+		return err
 	}
 
 	tagModel := models.NewTagModel(a.DB)
@@ -183,5 +190,8 @@ func getThreadsByTag(a *application.App, w http.ResponseWriter, r *http.Request)
 		return err
 	}
 	data := map[string]interface{}{"Threads": threads}
+	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+		return err
+	}
 	return renderTemplate(a, w, r, "threads_by_tag.html", data)
 }
