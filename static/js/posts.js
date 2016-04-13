@@ -1,5 +1,5 @@
 $(function() {
-  $('#posts-list').on('click', '.post-action', handlePostActionButtonClick);
+  $('.post-action').on('click', handlePostActionButtonClick);
 });
 
 
