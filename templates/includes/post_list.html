@@ -11,10 +11,10 @@
 					<span class="mdl-list__item-primary-content">
 						{{if $base.SessionUser.Email}}
 							{{if index $base.UserUpvotedPostIDs $post.ID}}
-								 <i class="material-icons post-action clickable vertical-align-middle" value="{{$post.ID}}" endpoint="upvote" method="DELETE">keyboard_arrow_down</i>
+								 <i class="material-icons post-action clickable vertical-align-middle" url="{{$post.URL}}/vote" method="DELETE">keyboard_arrow_down</i>
 								 <span class="orange"> {{$post.Score}}</span>
 							{{else}}
-								<i class="material-icons post-action orange clickable vertical-align-middle" value="{{$post.ID}}" endpoint="upvote" method="POST">keyboard_arrow_up</i>
+								<i class="material-icons post-action orange clickable vertical-align-middle" url="{{$post.URL}}/vote" method="POST">keyboard_arrow_up</i>
 								<span>{{$post.Score}}</span>
 							{{end}}
 							|
@@ -26,18 +26,18 @@
 
 							|
 							{{if $post.IsVisible}}
-								<span class="post-action clickable" value="{{$post.ID}}" endpoint="hide" method="POST">hide</span>
+								<span class="post-action clickable" url="{{$post.URL}}/hide" method="POST">hide</span>
 							{{else}}
-								<span class="post-action clickable" value="{{$post.ID}}" endpoint="hide" method="DELETE">unhide</span>
+								<span class="post-action clickable" url="{{$post.URL}}/hide" method="DELETE">unhide</span>
 							{{end}}
 
 
 							{{if $base.SessionUser.IsAdmin}}
 								|
 								{{if $post.IsPinned}}
-									<span class="post-action clickable" value="{{$post.ID}}" endpoint="pin" method="DELETE">unpin</span>
+									<span class="post-action clickable" url="{{$post.URL}}/pin" method="DELETE">unpin</span>
 								{{else}}
-									<span class="post-action clickable" value="{{$post.ID}}" endpoint="pin" method="POST">pin</span>
+									<span class="post-action clickable" url="{{$post.URL}}/pin" method="POST">pin</span>
 								{{end}}
 							{{end}}
 						</span>

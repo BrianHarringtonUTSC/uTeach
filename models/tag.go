@@ -17,7 +17,7 @@ type Tag struct {
 
 // URL returns the unique URL for a topic.
 func (t *Tag) URL() string {
-	return fmt.Sprintf("/s/%s/tags/%s", t.Topic.Name, t.Name)
+	return t.Topic.TagsURL() + "/" + t.Name
 }
 
 // TagModel handles getting and creating tags.

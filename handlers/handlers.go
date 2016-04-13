@@ -36,33 +36,37 @@ func Router(a *application.App) http.Handler {
 
 	// topic routes
 	router.Handle("/", h(getTopics))
-	router.Handle("/s/new", m.MustBeAdmin(h(getNewTopic))).Methods("GET")
-	router.Handle("/s/new", m.MustBeAdmin(h(postNewTopic))).Methods("POST")
+	router.Handle("/topics/new", m.MustBeAdmin(h(getNewTopic))).Methods("GET")
+	router.Handle("/topics/new", m.MustBeAdmin(h(postNewTopic))).Methods("POST")
 
 	// user routes
-	router.Handle("/user/{email}", h(getUser))
+	router.Handle("/users/{email}", h(getUser))
 	router.Handle("/login", h(getLogin))
 	router.Handle("/oauth2callback", h(getOauth2Callback))
 	router.Handle("/logout", h(getLogout))
 
 	// tag routes
-	router.Handle("/s/{topic}/tags", m.SetTopic(h(getTags)))
-	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(getNewTag)))).Methods("GET")
-	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(postNewTag)))).Methods("POST")
+	router.Handle("/topics/{topicName}/tags", m.SetTopic(h(getTags)))
+	router.Handle("/topics/{topicName}/tags/new", m.MustBeAdmin(m.SetTopic(h(getNewTag)))).Methods("GET")
+	router.Handle("/topics/{topicName}/tags/new", m.MustBeAdmin(m.SetTopic(h(postNewTag)))).Methods("POST")
+	router.Handle("/topics/{topicName}/tags/{tagName}", m.SetTopic(m.SetTag(h(getPostsByTag))))
 
 	// post routes
-	t := alice.New(m.MustLogin, m.SetPost)
-	router.Handle("/s/{topic}", m.SetTopic(h(getPosts)))
-	router.Handle("/s/{topic}/new", m.SetTopic(h(getNewPost))).Methods("GET")
-	router.Handle("/s/{topic}/new", m.MustLogin(m.SetTopic(h(postNewPost)))).Methods("POST")
-	router.Handle("/t/{postID}", m.SetPost(h(getPost)))
-	router.Handle("/t/{postID}/upvote", t.Then(h(postPostVote))).Methods("POST")
-	router.Handle("/t/{postID}/upvote", t.Then(h(deletePostVote))).Methods("DELETE")
-	router.Handle("/t/{postID}/hide", t.Then(m.MustBeAdminOrPostCreator(h(postHidePost)))).Methods("POST")
-	router.Handle("/t/{postID}/hide", t.Then(m.MustBeAdminOrPostCreator(h(deleteHidePost)))).Methods("DELETE")
-	router.Handle("/t/{postID}/pin", t.Then(m.MustBeAdmin(h(postPinPost)))).Methods("POST")
-	router.Handle("/t/{postID}/pin", t.Then(m.MustBeAdmin(h(deletePinPost)))).Methods("DELETE")
-	router.Handle("/s/{topic}/tags/{tag}", m.SetTopic(m.SetTag(h(getPostsByTag))))
+	p := alice.New(m.SetTopic)
+	router.Handle("/topics/{topicName}", p.Then(h(getPosts)))
+
+	p = p.Append(m.MustLogin)
+	router.Handle("/topics/{topicName}/new", p.Then(h(getNewPost))).Methods("GET")
+	router.Handle("/topics/{topicName}/new", p.Then(m.SetTopic(h(postNewPost)))).Methods("POST")
+
+	p = p.Append(m.SetPost)
+	router.Handle("/topics/{topicName}/posts/{postID}", m.SetTopic(m.SetPost(h(getPost))))
+	router.Handle("/topics/{topicName}/posts/{postID}/vote", p.Then(h(postPostVote))).Methods("POST")
+	router.Handle("/topics/{topicName}/posts/{postID}/vote", p.Then(h(deletePostVote))).Methods("DELETE")
+	router.Handle("/topics/{topicName}/posts/{postID}/hide", p.Then(m.MustBeAdminOrPostCreator(h(postHidePost)))).Methods("POST")
+	router.Handle("/topics/{topicName}/posts/{postID}/hide", p.Then(m.MustBeAdminOrPostCreator(h(deleteHidePost)))).Methods("DELETE")
+	router.Handle("/topics/{topicName}/posts/{postID}/pin", p.Then(m.MustBeAdmin(h(postPinPost)))).Methods("POST")
+	router.Handle("/topics/{topicName}/posts/{postID}/pin", p.Then(m.MustBeAdmin(h(deletePinPost)))).Methods("DELETE")
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

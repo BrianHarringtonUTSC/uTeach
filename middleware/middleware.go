@@ -43,9 +43,9 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		topicName := strings.ToLower(vars["topic"])
-		sm := models.NewTopicModel(m.App.DB)
-		topic, err := sm.GetTopicByName(nil, topicName)
+		topicName := strings.ToLower(vars["topicName"])
+		tm := models.NewTopicModel(m.App.DB)
+		topic, err := tm.GetTopicByName(nil, topicName)
 		if err != nil {
 			httperror.HandleError(w, err)
 			return
@@ -68,8 +68,9 @@ func (m *Middleware) SetPost(next http.Handler) http.Handler {
 			return
 		}
 
-		tm := models.NewPostModel(m.App.DB)
-		post, err := tm.GetPostByID(nil, postID)
+		pm := models.NewPostModel(m.App.DB)
+		topic := context.Topic(r)
+		post, err := pm.GetPostByIDAndTopic(nil, postID, topic)
 		if err != nil {
 			httperror.HandleError(w, err)
 			return
@@ -85,7 +86,7 @@ func (m *Middleware) SetPost(next http.Handler) http.Handler {
 func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tagName := strings.ToLower(vars["tag"])
+		tagName := strings.ToLower(vars["tagName"])
 		tm := models.NewTagModel(m.App.DB)
 		tag, err := tm.GetTagByNameAndTopic(nil, tagName, context.Topic(r))
 		if err != nil {

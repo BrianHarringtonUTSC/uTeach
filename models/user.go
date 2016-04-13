@@ -16,7 +16,7 @@ type User struct {
 
 // URL returns the unique URL for a user.
 func (u *User) URL() string {
-	return "/user/" + u.Email
+	return "/users/" + u.Email
 }
 
 // UserModel handles getting and creating users.

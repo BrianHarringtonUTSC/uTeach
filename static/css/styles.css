@@ -66,6 +66,10 @@
   right: 40px;
 }
 
+li.mdl-list__item {
+  padding-left: 0px;
+}
+
 #main-title {
   display: inline-block;
 }
