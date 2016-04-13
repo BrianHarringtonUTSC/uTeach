@@ -6,7 +6,7 @@
 			<h4 id="pinned-threads-title" class="mdl-color-text--grey-800">{{.ThreadsTitle}}</h4>
 		{{end}}
 		{{range $thread := .Threads}}
-			{{if or $thread.IsVisible $base.SessionUser.IsAdmin}}
+			{{if or $thread.IsVisible $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $thread.Creator.Email)}}
 				<li class="mdl-list__item mdl-list__item--two-line">
 					<span class="mdl-list__item-primary-content">
 						{{if $base.SessionUser.Email}}
@@ -23,14 +23,14 @@
 						<span class="mdl-list__item-sub-title">
 							by <a href="{{$thread.Creator.URL}}" class="no-decoration"> {{$thread.Creator.Name}} ({{$thread.Creator.Email}})</a>
 
-							{{if eq $base.SessionUser.Email $thread.Creator.Email}}
-								|
-								{{if $thread.IsVisible}}
-									<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</span>
-								{{else}}
-									<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="DELETE">unhide</span>
-								{{end}}
+
+							|
+							{{if $thread.IsVisible}}
+								<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="POST">hide</span>
+							{{else}}
+								<span class="thread-action clickable" value="{{$thread.ID}}" endpoint="hide" method="DELETE">unhide</span>
 							{{end}}
+
 
 							{{if $base.SessionUser.IsAdmin}}
 								|

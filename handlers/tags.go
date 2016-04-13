@@ -17,7 +17,7 @@ func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := map[string]interface{}{"Tags": tags}
+	data := map[string]interface{}{"Tags": tags, "Subject": subject}
 
 	return renderTemplate(a, w, r, "tags.html", data)
 }

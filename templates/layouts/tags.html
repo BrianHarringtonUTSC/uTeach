@@ -8,7 +8,7 @@
 	</ul>
 	{{if .SessionUser.IsAdmin}}
 		<div class="bottom-right">
-			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location=window.location+'/new';">
+			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location={{.Subject.NewTagURL}}">
 			 	<i class="material-icons">add</i>
 			</button>
 		</div>

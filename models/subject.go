@@ -1,6 +1,7 @@
 package models
 
 import (
+	"path/filepath"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -17,6 +18,21 @@ type Subject struct {
 // URL returns the unique URL for a subject.
 func (s *Subject) URL() string {
 	return "/s/" + s.Name
+}
+
+// NewThreadURL returns the URL of the page to create a new thread under the subject.
+func (s *Subject) NewThreadURL() string {
+	return filepath.Join(s.URL(), "/new")
+}
+
+// TagsURL returns the URL of the page listing the tags under the subject.
+func (s *Subject) TagsURL() string {
+	return filepath.Join(s.URL(), "/tags")
+}
+
+// NewTagURL returns the URL of the page to create a new tag under the subject.
+func (s *Subject) NewTagURL() string {
+	return filepath.Join(s.TagsURL(), "/new")
 }
 
 // SubjectModel handles getting and creating subjects.

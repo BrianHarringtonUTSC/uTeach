@@ -1,8 +1,10 @@
 {{define "content"}}
-	<h3 id="pinned-threads-title" class="mdl-color-text--grey-800">{{.Subject.Title}}</h3>
+	<h3 id="pinned-threads-title" class="mdl-color-text--grey-800">
+		<a href="{{.Subject.URL}}" class="no-decoration">{{.Subject.Title}}</a>
+	</h3>
 	{{if .SessionUser.Email}}
 		<div class="bottom-right">
-			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location=window.location+'/new';">
+			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location={{.Subject.NewThreadURL}};">
 			 	<i class="material-icons">add</i>
 			</button>
 		</div>
@@ -10,14 +12,14 @@
 	<hr/>
 	{{if len .Tags}}
 		<div id="tags">
-			<h4 class="mdl-color-text--grey-800 clickable"  onclick="window.location=window.location+'/tags';">Tags</h4>
+			<h4 class="mdl-color-text--grey-800 clickable"  onclick="window.location={{.Subject.TagsURL}};">Tags</h4>
 			<i class="material-icons vertical-align-middle">keyboard_arrow_right</i>
 			{{range $i, $tag := .Tags}}
 				<a class="no-decoration vertical-align-middle" href="{{$tag.URL}}" style="font-size: 18px">{{$tag.Name}}</a>&nbsp;&nbsp;
 			{{end}}
 		</div>
 	{{else if .SessionUser.IsAdmin}}
-		<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onclick="window.location=window.location+'/tags/new'">
+		<button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" onclick="window.location={{.Subject.NewTagURL}}">
 		  New Tag
 		</button>
 	{{end}}
