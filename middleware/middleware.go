@@ -30,6 +30,7 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 			if err != nil {
 				us.Delete(w, r)
 				http.Redirect(w, r, "/", http.StatusFound)
+				return
 			}
 			context.SetSessionUser(r, user)
 		}
@@ -122,7 +123,7 @@ func (m *Middleware) isAdmin(r *http.Request) bool {
 func (m *Middleware) isPostCreator(r *http.Request) bool {
 	post := context.Post(r)
 	user, ok := context.SessionUser(r)
-	return ok && post.Creator == user
+	return ok && *post.Creator == *user
 }
 
 // MustBeAdmin ensures the next handler is only accessible by an admin.

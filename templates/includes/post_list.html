@@ -24,11 +24,13 @@
 							by <a href="{{$post.Creator.URL}}" class="no-decoration"> {{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
 
 
-							|
-							{{if $post.IsVisible}}
-								<span class="post-action clickable" url="{{$post.URL}}/hide" method="POST">hide</span>
-							{{else}}
-								<span class="post-action clickable" url="{{$post.URL}}/hide" method="DELETE">unhide</span>
+							{{if or $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $post.Creator.Email) }}
+								|
+								{{if $post.IsVisible}}
+									<span class="post-action clickable" url="{{$post.URL}}/hide" method="POST">hide</span>
+								{{else}}
+									<span class="post-action clickable" url="{{$post.URL}}/hide" method="DELETE">unhide</span>
+								{{end}}
 							{{end}}
 
 
