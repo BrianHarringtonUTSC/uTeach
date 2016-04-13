@@ -13,37 +13,37 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
-func addUserUpvotedThreadIDsToData(r *http.Request, threadModel *models.ThreadModel, data map[string]interface{}) error {
+func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, data map[string]interface{}) error {
 	if user, ok := context.SessionUser(r); ok {
-		userUpvotedThreadIDs, err := threadModel.GetThreadIdsUpvotedByUser(nil, user)
+		userUpvotedPostIDs, err := postModel.GetPostIdsUpvotedByUser(nil, user)
 		if err != nil {
 			return err
 		}
-		data["UserUpvotedThreadIDs"] = userUpvotedThreadIDs
+		data["UserUpvotedPostIDs"] = userUpvotedPostIDs
 	}
 	return nil
 }
 
-func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	topic := context.Topic(r)
 	data := map[string]interface{}{}
 	data["Topic"] = topic
 
-	tm := models.NewThreadModel(a.DB)
-	pinnedThreads, err := tm.GetThreadsByTopicAndIsPinned(nil, topic, true)
+	tm := models.NewPostModel(a.DB)
+	pinnedPosts, err := tm.GetPostsByTopicAndIsPinned(nil, topic, true)
 	if err != nil {
 		return err
 	}
 
-	unpinnedThreads, err := tm.GetThreadsByTopicAndIsPinned(nil, topic, false)
+	unpinnedPosts, err := tm.GetPostsByTopicAndIsPinned(nil, topic, false)
 	if err != nil {
 		return err
 	}
 
-	data["PinnedThreads"] = pinnedThreads
-	data["UnpinnedThreads"] = unpinnedThreads
+	data["PinnedPosts"] = pinnedPosts
+	data["UnpinnedPosts"] = unpinnedPosts
 
-	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+	if err = addUserUpvotedPostIDsToData(r, tm, data); err != nil {
 		return err
 	}
 
@@ -55,16 +55,16 @@ func getThreads(a *application.App, w http.ResponseWriter, r *http.Request) erro
 
 	data["Tags"] = tags
 
-	return renderTemplate(a, w, r, "threads.html", data)
+	return renderTemplate(a, w, r, "posts.html", data)
 }
 
-func getThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	thread := context.Thread(r)
-	data := map[string]interface{}{"Thread": thread}
-	return renderTemplate(a, w, r, "thread.html", data)
+func getPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	post := context.Post(r)
+	data := map[string]interface{}{"Post": post}
+	return renderTemplate(a, w, r, "post.html", data)
 }
 
-func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	vars := mux.Vars(r)
 	topicName := strings.ToLower(vars["topic"])
 	sm := models.NewTopicModel(a.DB)
@@ -80,11 +80,11 @@ func getNewThread(a *application.App, w http.ResponseWriter, r *http.Request) er
 	}
 
 	data := map[string]interface{}{"Tags": tags}
-	return renderTemplate(a, w, r, "new_thread.html", data)
+	return renderTemplate(a, w, r, "new_post.html", data)
 }
 
-func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	// we want the thread and tags to be created together so use one tx. If one part fails the rest won't be committed.
+func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	// we want the post and tags to be created together so use one tx. If one part fails the rest won't be committed.
 	tx, err := a.DB.Beginx()
 	if err != nil {
 		return err
@@ -95,8 +95,8 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 	topic := context.Topic(r)
 	user, _ := context.SessionUser(r)
 
-	threadModel := models.NewThreadModel(a.DB)
-	thread, err := threadModel.AddThread(tx, title, text, topic, user)
+	postModel := models.NewPostModel(a.DB)
+	post, err := postModel.AddPost(tx, title, text, topic, user)
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 			return err
 		}
 
-		if err = tagModel.AddThreadTag(tx, thread, tag); err != nil {
+		if err = tagModel.AddPostTag(tx, post, tag); err != nil {
 			return err
 		}
 	}
@@ -123,75 +123,75 @@ func postNewThread(a *application.App, w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	http.Redirect(w, r, thread.URL(), http.StatusFound)
+	http.Redirect(w, r, post.URL(), http.StatusFound)
 	return nil
 }
 
-func handleThreadAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, *models.Thread) error) error {
-	thread := context.Thread(r)
+func handlePostAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, *models.Post) error) error {
+	post := context.Post(r)
 
-	if err := f(nil, thread); err != nil {
+	if err := f(nil, post); err != nil {
 		return err
 	}
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
-func postThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postPostVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	user, _ := context.SessionUser(r)
 
-	tm := models.NewThreadModel(a.DB)
+	tm := models.NewPostModel(a.DB)
 
-	f := func(tx *sqlx.Tx, thread *models.Thread) error {
-		return tm.AddThreadVoteForUser(tx, thread, user)
+	f := func(tx *sqlx.Tx, post *models.Post) error {
+		return tm.AddPostVoteForUser(tx, post, user)
 	}
 
-	return handleThreadAction(w, r, f)
+	return handlePostAction(w, r, f)
 }
 
-func deleteThreadVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func deletePostVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	user, _ := context.SessionUser(r)
 
-	tm := models.NewThreadModel(a.DB)
+	tm := models.NewPostModel(a.DB)
 
-	f := func(tx *sqlx.Tx, thread *models.Thread) error {
-		return tm.RemoveTheadVoteForUser(tx, thread, user)
+	f := func(tx *sqlx.Tx, post *models.Post) error {
+		return tm.RemoveTheadVoteForUser(tx, post, user)
 	}
 
-	return handleThreadAction(w, r, f)
+	return handlePostAction(w, r, f)
 }
 
-func postHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	tm := models.NewThreadModel(a.DB)
-	return handleThreadAction(w, r, tm.HideThread)
+func postHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewPostModel(a.DB)
+	return handlePostAction(w, r, tm.HidePost)
 }
 
-func deleteHideThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	tm := models.NewThreadModel(a.DB)
-	return handleThreadAction(w, r, tm.UnhideThread)
+func deleteHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewPostModel(a.DB)
+	return handlePostAction(w, r, tm.UnhidePost)
 }
 
-func postPinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	tm := models.NewThreadModel(a.DB)
-	return handleThreadAction(w, r, tm.PinThread)
+func postPinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewPostModel(a.DB)
+	return handlePostAction(w, r, tm.PinPost)
 }
 
-func deletePinThread(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	tm := models.NewThreadModel(a.DB)
-	return handleThreadAction(w, r, tm.UnpinThread)
+func deletePinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	tm := models.NewPostModel(a.DB)
+	return handlePostAction(w, r, tm.UnpinPost)
 }
 
-func getThreadsByTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tag := context.Tag(r)
 
-	tm := models.NewThreadModel(a.DB)
-	threads, err := tm.GetThreadsByTag(nil, tag)
+	tm := models.NewPostModel(a.DB)
+	posts, err := tm.GetPostsByTag(nil, tag)
 	if err != nil {
 		return err
 	}
-	data := map[string]interface{}{"Threads": threads}
-	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+	data := map[string]interface{}{"Posts": posts}
+	if err = addUserUpvotedPostIDsToData(r, tm, data); err != nil {
 		return err
 	}
-	return renderTemplate(a, w, r, "threads_by_tag.html", data)
+	return renderTemplate(a, w, r, "posts_by_tag.html", data)
 }

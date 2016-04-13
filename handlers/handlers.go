@@ -50,19 +50,19 @@ func Router(a *application.App) http.Handler {
 	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(getNewTag)))).Methods("GET")
 	router.Handle("/s/{topic}/tags/new", m.MustBeAdmin(m.SetTopic(h(postNewTag)))).Methods("POST")
 
-	// thread routes
-	t := alice.New(m.MustLogin, m.SetThread)
-	router.Handle("/s/{topic}", m.SetTopic(h(getThreads)))
-	router.Handle("/s/{topic}/new", m.SetTopic(h(getNewThread))).Methods("GET")
-	router.Handle("/s/{topic}/new", m.MustLogin(m.SetTopic(h(postNewThread)))).Methods("POST")
-	router.Handle("/t/{threadID}", m.SetThread(h(getThread)))
-	router.Handle("/t/{threadID}/upvote", t.Then(h(postThreadVote))).Methods("POST")
-	router.Handle("/t/{threadID}/upvote", t.Then(h(deleteThreadVote))).Methods("DELETE")
-	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(postHideThread)))).Methods("POST")
-	router.Handle("/t/{threadID}/hide", t.Then(m.MustBeAdminOrThreadCreator(h(deleteHideThread)))).Methods("DELETE")
-	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(postPinThread)))).Methods("POST")
-	router.Handle("/t/{threadID}/pin", t.Then(m.MustBeAdmin(h(deletePinThread)))).Methods("DELETE")
-	router.Handle("/s/{topic}/tags/{tag}", m.SetTopic(m.SetTag(h(getThreadsByTag))))
+	// post routes
+	t := alice.New(m.MustLogin, m.SetPost)
+	router.Handle("/s/{topic}", m.SetTopic(h(getPosts)))
+	router.Handle("/s/{topic}/new", m.SetTopic(h(getNewPost))).Methods("GET")
+	router.Handle("/s/{topic}/new", m.MustLogin(m.SetTopic(h(postNewPost)))).Methods("POST")
+	router.Handle("/t/{postID}", m.SetPost(h(getPost)))
+	router.Handle("/t/{postID}/upvote", t.Then(h(postPostVote))).Methods("POST")
+	router.Handle("/t/{postID}/upvote", t.Then(h(deletePostVote))).Methods("DELETE")
+	router.Handle("/t/{postID}/hide", t.Then(m.MustBeAdminOrPostCreator(h(postHidePost)))).Methods("POST")
+	router.Handle("/t/{postID}/hide", t.Then(m.MustBeAdminOrPostCreator(h(deleteHidePost)))).Methods("DELETE")
+	router.Handle("/t/{postID}/pin", t.Then(m.MustBeAdmin(h(postPinPost)))).Methods("POST")
+	router.Handle("/t/{postID}/pin", t.Then(m.MustBeAdmin(h(deletePinPost)))).Methods("DELETE")
+	router.Handle("/s/{topic}/tags/{tag}", m.SetTopic(m.SetTag(h(getPostsByTag))))
 
 	// serve static files -- should be the last route
 	staticFileServer := http.FileServer(http.Dir(a.Config.StaticFilesPath))

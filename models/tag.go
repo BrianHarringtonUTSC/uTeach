@@ -109,9 +109,9 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error)
 	return tm.GetTagByID(tx, id)
 }
 
-// AddThreadTag adds a tag for the thread.
-func (tm *TagModel) AddThreadTag(tx *sqlx.Tx, thread *Thread, tag *Tag) error {
-	_, err := tm.Exec(tx, "INSERT INTO thread_tags(thread_id, tag_id, topic_id) VALUES(?, ?, ?)",
-		thread.ID, tag.ID, thread.Topic.ID)
+// AddPostTag adds a tag for the post.
+func (tm *TagModel) AddPostTag(tx *sqlx.Tx, post *Post, tag *Tag) error {
+	_, err := tm.Exec(tx, "INSERT INTO post_tags(post_id, tag_id, topic_id) VALUES(?, ?, ?)",
+		post.ID, tag.ID, post.Topic.ID)
 	return err
 }

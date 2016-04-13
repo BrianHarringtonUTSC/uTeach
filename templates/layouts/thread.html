@@ -1,8 +1,0 @@
-{{define "content"}}
-	<h4 id="pinned-threads-title" class="mdl-color-text--grey-800">{{.Thread.Title}}</h4>
-	<div class="mdl-color-text--grey-600">
-		by <a href="{{.Thread.Creator.URL}}" class="no-decoration"> {{.Thread.Creator.Name}} ({{.Thread.Creator.Email}})</a> on {{formatAndLocalizeTime .Thread.CreatedAt}}
-	</div>
-	<hr/>
-	<div id="thread-content">{{markdownToHTML .Thread.Content}}</div>
-{{end}}

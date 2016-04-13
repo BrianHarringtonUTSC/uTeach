@@ -12,7 +12,7 @@ import (
 
 const (
 	topicKey       = "topic"
-	threadKey      = "thread"
+	postKey        = "post"
 	tagKey         = "tag"
 	sessionUserKey = "session-user"
 )
@@ -27,19 +27,19 @@ func Topic(r *http.Request) *models.Topic {
 	return context.Get(r, topicKey).(*models.Topic)
 }
 
-// SetThread sets the thread in the context.
-func SetThread(r *http.Request, thread *models.Thread) {
-	context.Set(r, threadKey, thread)
+// SetPost sets the post in the context.
+func SetPost(r *http.Request, post *models.Post) {
+	context.Set(r, postKey, post)
 }
 
-// Thread gets the thread from the context.
-func Thread(r *http.Request) *models.Thread {
-	return context.Get(r, threadKey).(*models.Thread)
+// Post gets the post from the context.
+func Post(r *http.Request) *models.Post {
+	return context.Get(r, postKey).(*models.Post)
 }
 
 // SetTag sets the tag in the context.
-func SetTag(r *http.Request, thread *models.Tag) {
-	context.Set(r, tagKey, thread)
+func SetTag(r *http.Request, post *models.Tag) {
+	context.Set(r, tagKey, post)
 }
 
 // Tag sets the tag in the context.
@@ -48,8 +48,8 @@ func Tag(r *http.Request) *models.Tag {
 }
 
 // SetSessionUser sets the session user in the context.
-func SetSessionUser(r *http.Request, thread *models.User) {
-	context.Set(r, sessionUserKey, thread)
+func SetSessionUser(r *http.Request, post *models.User) {
+	context.Set(r, sessionUserKey, post)
 }
 
 // SessionUser gets the session user from the context.

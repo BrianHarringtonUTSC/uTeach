@@ -58,23 +58,23 @@ func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// SetThread sets the thread with the id in the url in the context.
-func (m *Middleware) SetThread(next http.Handler) http.Handler {
+// SetPost sets the post with the id in the url in the context.
+func (m *Middleware) SetPost(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		threadID, err := strconv.ParseInt(vars["threadID"], 10, 64)
+		postID, err := strconv.ParseInt(vars["postID"], 10, 64)
 		if err != nil {
 			httperror.HandleError(w, httperror.StatusError{http.StatusBadRequest, err})
 			return
 		}
 
-		tm := models.NewThreadModel(m.App.DB)
-		thread, err := tm.GetThreadByID(nil, threadID)
+		tm := models.NewPostModel(m.App.DB)
+		post, err := tm.GetPostByID(nil, postID)
 		if err != nil {
 			httperror.HandleError(w, err)
 			return
 		}
-		context.SetThread(r, thread)
+		context.SetPost(r, post)
 		next.ServeHTTP(w, r)
 	}
 
@@ -118,10 +118,10 @@ func (m *Middleware) isAdmin(r *http.Request) bool {
 	return ok && user.IsAdmin
 }
 
-func (m *Middleware) isThreadCreator(r *http.Request) bool {
-	thread := context.Thread(r)
+func (m *Middleware) isPostCreator(r *http.Request) bool {
+	post := context.Post(r)
 	user, ok := context.SessionUser(r)
-	return ok && thread.Creator == user
+	return ok && post.Creator == user
 }
 
 // MustBeAdmin ensures the next handler is only accessible by an admin.
@@ -138,10 +138,10 @@ func (m *Middleware) MustBeAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-// MustBeAdminOrThreadCreator ensures the next handler is only accessible by an admin or the thread creator.
-func (m *Middleware) MustBeAdminOrThreadCreator(next http.Handler) http.Handler {
+// MustBeAdminOrPostCreator ensures the next handler is only accessible by an admin or the post creator.
+func (m *Middleware) MustBeAdminOrPostCreator(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		if !m.isThreadCreator(r) && !m.isAdmin(r) {
+		if !m.isPostCreator(r) && !m.isAdmin(r) {
 			httperror.HandleError(w, httperror.StatusError{http.StatusForbidden, nil})
 			return
 		}

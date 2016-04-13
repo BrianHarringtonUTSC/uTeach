@@ -123,14 +123,14 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	tm := models.NewThreadModel(a.DB)
-	createdThreads, err := tm.GetThreadsByUser(nil, user)
+	tm := models.NewPostModel(a.DB)
+	createdPosts, err := tm.GetPostsByUser(nil, user)
 	if err != nil {
 		return err
 	}
 
-	data := map[string]interface{}{"User": user, "CreatedThreads": createdThreads}
-	if err = addUserUpvotedThreadIDsToData(r, tm, data); err != nil {
+	data := map[string]interface{}{"User": user, "CreatedPosts": createdPosts}
+	if err = addUserUpvotedPostIDsToData(r, tm, data); err != nil {
 		return err
 	}
 	return renderTemplate(a, w, r, "user.html", data)

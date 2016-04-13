@@ -1,5 +1,5 @@
 {{define "content"}}
-	{{$title := print "Threads by " .User.Name }}
-	{{template "thread-list" dict "Base" . "ThreadsTitle" $title "Threads" .CreatedThreads}}
+	{{$title := print "Posts by " .User.Name }}
+	{{template "post-list" dict "Base" . "PostsTitle" $title "Posts" .CreatedPosts}}
 
 {{end}}

@@ -1,0 +1,49 @@
+{{define "post-list"}}
+	{{$base := .Base}}
+
+	<ul id="posts-list" class="mdl-list">
+		{{if .PostsTitle}}
+			<h4 id="pinned-posts-title" class="mdl-color-text--grey-800">{{.PostsTitle}}</h4>
+		{{end}}
+		{{range $post := .Posts}}
+			{{if or $post.IsVisible $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $post.Creator.Email)}}
+				<li class="mdl-list__item mdl-list__item--two-line">
+					<span class="mdl-list__item-primary-content">
+						{{if $base.SessionUser.Email}}
+							{{if index $base.UserUpvotedPostIDs $post.ID}}
+								 <i class="material-icons post-action clickable vertical-align-middle" value="{{$post.ID}}" endpoint="upvote" method="DELETE">keyboard_arrow_down</i>
+								 <span class="orange"> {{$post.Score}}</span>
+							{{else}}
+								<i class="material-icons post-action orange clickable vertical-align-middle" value="{{$post.ID}}" endpoint="upvote" method="POST">keyboard_arrow_up</i>
+								<span>{{$post.Score}}</span>
+							{{end}}
+							|
+						{{end}}
+						<span><a class="no-decoration" href="{{$post.URL}}">{{$post.Title}}</a></span>
+						<span class="mdl-list__item-sub-title">
+							by <a href="{{$post.Creator.URL}}" class="no-decoration"> {{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
+
+
+							|
+							{{if $post.IsVisible}}
+								<span class="post-action clickable" value="{{$post.ID}}" endpoint="hide" method="POST">hide</span>
+							{{else}}
+								<span class="post-action clickable" value="{{$post.ID}}" endpoint="hide" method="DELETE">unhide</span>
+							{{end}}
+
+
+							{{if $base.SessionUser.IsAdmin}}
+								|
+								{{if $post.IsPinned}}
+									<span class="post-action clickable" value="{{$post.ID}}" endpoint="pin" method="DELETE">unpin</span>
+								{{else}}
+									<span class="post-action clickable" value="{{$post.ID}}" endpoint="pin" method="POST">pin</span>
+								{{end}}
+							{{end}}
+						</span>
+					</span>
+				</li>
+			{{end}}
+		{{end}}
+	</ul>
+{{end}}

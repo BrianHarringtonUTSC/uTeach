@@ -1,0 +1,8 @@
+{{define "content"}}
+	<h4 id="pinned-posts-title" class="mdl-color-text--grey-800">{{.Post.Title}}</h4>
+	<div class="mdl-color-text--grey-600">
+		by <a href="{{.Post.Creator.URL}}" class="no-decoration"> {{.Post.Creator.Name}} ({{.Post.Creator.Email}})</a> on {{formatAndLocalizeTime .Post.CreatedAt}}
+	</div>
+	<hr/>
+	<div id="post-content">{{markdownToHTML .Post.Content}}</div>
+{{end}}

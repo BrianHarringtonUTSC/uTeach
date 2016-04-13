@@ -8,13 +8,13 @@ uTeach is a community oriented platform for sharing educational material and res
 
 ### Features
 - Topics (equivalent to subreddits on reddit)
-- Threads (equivalent to text post on reddit)
-- Tags for threads (equivalent to tags on piazza posts)
-- Pinned Threads
-- Thread voting
+- Posts (equivalent to text post on reddit)
+- Tags for posts (equivalent to tags on piazza posts)
+- Pinned Posts
+- Post voting
 - Users & authentication (only Google accounts currently supported)
-- Markdown support for thread content
-- Admin functionality (pin & unhide threads)
+- Markdown support for post content
+- Admin functionality (pin & unhide posts)
 
 ### Requirements
 - Golang 1.6+

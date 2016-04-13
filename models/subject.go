@@ -20,8 +20,8 @@ func (s *Topic) URL() string {
 	return "/s/" + s.Name
 }
 
-// NewThreadURL returns the URL of the page to create a new thread under the topic.
-func (s *Topic) NewThreadURL() string {
+// NewPostURL returns the URL of the page to create a new post under the topic.
+func (s *Topic) NewPostURL() string {
 	return filepath.Join(s.URL(), "/new")
 }
 

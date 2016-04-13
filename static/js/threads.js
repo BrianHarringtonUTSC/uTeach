@@ -1,10 +1,10 @@
 $(function() {
-  $('#threads-list').on('click', '.thread-action', handleThreadActionButtonClick);
+  $('#posts-list').on('click', '.post-action', handlePostActionButtonClick);
 });
 
 
 // TODO: dynamically update vote count instead of reloading the page
-function handleThreadActionButtonClick(e) {
+function handlePostActionButtonClick(e) {
   console.log(1);
   var target = $(e.target);
   target.prop('disabled', true); // stop multiple clicks
