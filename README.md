@@ -103,7 +103,7 @@ React is popular now, but might be overshadowed by other libraries once Web Comp
 Picking a library now might be outdated in a year.
 Thus, until the landscape has settled, it will be easier to develop the app as a pure server side, then convert it to a client side app down the line.
 
-### Why SQL over NoSql? Why Sqlite?
+#### Why SQL over NoSql? Why Sqlite?
 SQL is a proven and time tested technology.
 It also makes defining relationships between multiple tables clear and efficient which is beneficial for uTeach as it is a very clearly structured app.
 MongoDB is also an option, however its slow when depending on foreign keys and is more effective for simpler document models.
@@ -115,7 +115,6 @@ I won't go into a debate on [whether or not to use an ORM](https://www.google.ca
 I am no database expert and there are some promising ORMs ([go-pg - postgres specific](https://github.com/go-pg/pg), [gorm](https://github.com/jinzhu/gorm)) which could be good options for the future.
 
 #### What do I need to become productive for this project?
-
 - Start by reading everything on [this page](https://golang.org/doc/). It has guides on how to setup and get running with Go.
 - Make sure to do the "Tour of Go" to learn the language quickly (you do not need to do the concurrency sections for this web app).
 - Familiarize yourself with Javascript and CSS.
@@ -125,5 +124,5 @@ I am no database expert and there are some promising ORMs ([go-pg - postgres spe
 
 ### Contributing Code
 
-- Make sure you run [gofmt](https://golang.org/cmd/gofmt/). Most plugins will automatically run it for you as you code.
+- Make sure you run [gofmt](https://golang.org/cmd/gofmt/). Most IDEs/plugins will automatically run it for you as you code.
 - Refresh [Go Report Card](https://goreportcard.com/report/github.com/umairidris/uTeach). Try to keep it at 100%.

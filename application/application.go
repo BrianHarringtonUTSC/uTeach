@@ -1,11 +1,10 @@
 // Package application provides context to bind the app together.
 package application
 
-// Import packages that corresponds to the location inside a workspace or a remote repo
 import (
 	"html/template"
 	"log"
-	
+
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
@@ -22,11 +21,7 @@ type App struct {
 }
 
 // New initializes a new App.
-func New(configPath string) *App {
-	conf, err := config.Load(configPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+func New(conf config.Config) *App {
 
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")
@@ -39,6 +34,5 @@ func New(configPath string) *App {
 		log.Fatal(err)
 	}
 
-	app := &App{conf, db, store, templates}
-	return app
+	return &App{&conf, db, store, templates}
 }

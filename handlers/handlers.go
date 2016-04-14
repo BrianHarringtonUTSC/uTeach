@@ -1,4 +1,4 @@
-// Package handlers provides route handlers for the uTeach app.
+// Package handlers provides a router with routes attached.
 package handlers
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/umairidris/uTeach/models"
 )
 
-// Handler struct used to pass application context to a handler and get an error for cleaner error handling.
+// Handler allows passing an application context to a handler and handling errors.
 // See: http://elithrar.github.io/article/http-handler-error-handling-revisited/
 type Handler struct {
 	App *application.App

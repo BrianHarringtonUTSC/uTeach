@@ -17,8 +17,10 @@
 								<i class="material-icons post-action orange clickable vertical-align-middle" url="{{$post.URL}}/vote" method="POST">keyboard_arrow_up</i>
 								<span>{{$post.Score}}</span>
 							{{end}}
-							|
+						{{else}}
+							<span>{{$post.Score}}</span>
 						{{end}}
+						|
 						<span><a class="no-decoration" href="{{$post.URL}}">{{$post.Title}}</a></span>
 						<span class="mdl-list__item-sub-title">
 							by <a href="{{$post.Creator.URL}}" class="no-decoration"> {{$post.Creator.Name}} ({{$post.Creator.Email}})</a>

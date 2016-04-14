@@ -56,6 +56,7 @@ var postsSqlizer = squirrel.
 	From("posts").
 	Join("topics ON topics.id=posts.topic_id").
 	Join("users ON users.id=posts.creator_user_id").
+	LeftJoin("post_tags ON post_tags.post_id=posts.id").
 	LeftJoin("post_votes ON post_votes.post_id=posts.id").
 	GroupBy("posts.id").
 	OrderBy("count(post_votes.post_id) DESC")
@@ -206,7 +207,6 @@ func (tm *PostModel) UnpinPost(tx *sqlx.Tx, post *Post) error {
 
 // GetPostsByTag gets all posts with tag.
 func (tm *PostModel) GetPostsByTag(tx *sqlx.Tx, tag *Tag) ([]*Post, error) {
-	posts, err := tm.findAll(tx,
-		postsSqlizer.Join("post_tags ON post_tags.post_id=posts.id").Where(squirrel.Eq{"post_tags.tag_id": tag.ID}))
+	posts, err := tm.findAll(tx, postsSqlizer.Where(squirrel.Eq{"post_tags.tag_id": tag.ID}))
 	return posts, err
 }

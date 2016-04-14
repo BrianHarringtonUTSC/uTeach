@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/config"
 	"github.com/umairidris/uTeach/handlers"
 )
 
@@ -19,7 +20,11 @@ func main() {
 		log.Fatal("--config arg is missing.")
 	}
 
-	app := application.New(configPath)
+	conf, err := config.Load(configPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	app := application.New(*conf)
 	router := handlers.Router(app)
 	http.Handle("/", router)
 
