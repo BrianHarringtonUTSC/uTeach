@@ -20,13 +20,14 @@ type App struct {
 	Templates map[string]*template.Template
 }
 
-// New initializes a new App.
+// New Initialization of the App
 func New(conf config.Config) *App {
-
+	
+	// C
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")
 
-	// cookie encryption key must be 32 bytes
+	// Contstrainting the size of cookie encryption key to be 32 bytes
 	store := sessions.NewCookieStore([]byte(conf.CookieAuthenticationKey), []byte(conf.CookieEncryptionKey))
 
 	templates, err := libtemplate.Load(conf.TemplatesPath)
