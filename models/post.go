@@ -111,7 +111,7 @@ func (tm *PostModel) GetPostByID(tx *sqlx.Tx, id int64) (*Post, error) {
 	return tm.findOne(tx, postsSqlizer.Where(squirrel.Eq{"posts.id": id}))
 }
 
-// GetPostByID gets a post by the id and topic.
+// GetPostByIDAndTopic gets a post by the id and topic.
 func (tm *PostModel) GetPostByIDAndTopic(tx *sqlx.Tx, id int64, topic *Topic) (*Post, error) {
 	return tm.findOne(tx, postsSqlizer.Where(squirrel.Eq{"posts.id": id, "topics.id": topic.ID}))
 }
