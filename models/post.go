@@ -38,27 +38,17 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 }
 
 var postsSqlizer = squirrel.
-	Select(`posts.id AS post_id,
-			posts.title AS post_title,
-			posts.content,
-			posts.created_at,
-			posts.is_pinned,
-			posts.is_visible,
+	Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
 			count(post_votes.post_id),
-			topics.id AS topic_id,
-			topics.name AS topic_name,
-			topics.title AS topic_title,
-			topics.description,
-			users.id AS user_id,
-			users.email,
-			users.name AS user_name,
-			users.is_admin`).
+			topics.id, topics.name, topics.title, topics.description,
+			users.id, users.email, users.name, users.is_admin`).
+	Distinct().
 	From("posts").
 	Join("topics ON topics.id=posts.topic_id").
 	Join("users ON users.id=posts.creator_user_id").
-	LeftJoin("post_tags ON post_tags.post_id=posts.id").
 	LeftJoin("post_votes ON post_votes.post_id=posts.id").
-	GroupBy("posts.id").
+	LeftJoin("post_tags ON post_tags.post_id=posts.id").
+	GroupBy("posts.id, post_tags.tag_id").
 	OrderBy("count(post_votes.post_id) DESC")
 
 func (tm *PostModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Post, error) {
