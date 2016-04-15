@@ -23,7 +23,7 @@ type App struct {
 // New Initialization of the App
 func New(conf config.Config) *App {
 	
-	// C
+	// Path where mongodb instance stores its data
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")
 
