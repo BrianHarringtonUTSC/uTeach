@@ -1,6 +1,7 @@
 // Package main launches uTeach, a web platform for sharing educational material and resources.
 package main
 
+// Import necessary packages
 import (
 	"flag"
 	"log"
