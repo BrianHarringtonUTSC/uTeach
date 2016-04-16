@@ -8,6 +8,7 @@ import (
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
+	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -24,9 +25,6 @@ func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, d
 
 func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	topic := context.Topic(r)
-	data := map[string]interface{}{}
-	data["Topic"] = topic
-
 	pm := models.NewPostModel(a.DB)
 	pinnedPosts, err := pm.GetPostsByTopicAndIsPinned(nil, topic, true)
 	if err != nil {
@@ -37,29 +35,26 @@ func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		return err
 	}
-
-	data["PinnedPosts"] = pinnedPosts
-	data["UnpinnedPosts"] = unpinnedPosts
-
-	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
-		return err
-	}
-
 	tagModel := models.NewTagModel(a.DB)
 	tags, err := tagModel.GetTagsByTopic(nil, topic)
 	if err != nil {
 		return err
 	}
 
+	data := context.TemplateData(r)
+	data["PinnedPosts"] = pinnedPosts
+	data["UnpinnedPosts"] = unpinnedPosts
 	data["Tags"] = tags
 
-	return renderTemplate(a, w, r, "posts.html", data)
+	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
+		return err
+	}
+
+	return libtemplate.Render(w, a.Templates, "posts.html", data)
 }
 
 func getPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	post := context.Post(r)
-	data := map[string]interface{}{"Post": post}
-	return renderTemplate(a, w, r, "post.html", data)
+	return libtemplate.Render(w, a.Templates, "post.html", context.TemplateData(r))
 }
 
 func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -71,8 +66,9 @@ func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	data := map[string]interface{}{"Tags": tags}
-	return renderTemplate(a, w, r, "new_post.html", data)
+	data := context.TemplateData(r)
+	data["Tags"] = tags
+	return libtemplate.Render(w, a.Templates, "new_post.html", data)
 }
 
 func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -181,9 +177,11 @@ func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		return err
 	}
-	data := map[string]interface{}{"Posts": posts}
+
+	data := context.TemplateData(r)
+	data["Posts"] = posts
 	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
 		return err
 	}
-	return renderTemplate(a, w, r, "posts_by_tag.html", data)
+	return libtemplate.Render(w, a.Templates, "posts_by_tag.html", data)
 }

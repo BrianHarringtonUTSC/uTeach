@@ -19,28 +19,44 @@ type Middleware struct {
 	App *application.App
 }
 
-// SetSessionUser sets the session user in the context.
-func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
+// SetTemplateData sets the map that contain's template data in the context.
+func (m *Middleware) SetTemplateData(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		us := session.NewUserSession(m.App.Store)
-		userID, ok := us.SessionUserID(r)
-		if ok {
-			um := models.NewUserModel(m.App.DB)
-			user, err := um.GetUserByID(nil, userID)
-			if err != nil {
-				us.Delete(w, r)
-				http.Redirect(w, r, "/", http.StatusFound)
-				return
-			}
-			context.SetSessionUser(r, user)
-		}
+		context.SetTemplateData(r, make(map[string]interface{}))
 		next.ServeHTTP(w, r)
 	}
 
 	return http.HandlerFunc(fn)
 }
 
-// SetTopic sets the topic with the name in the url in the context.
+// SetSessionUser sets the session user in the context and template data.
+func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		templateData := context.TemplateData(r)
+
+		us := session.NewUserSession(m.App.Store)
+		userID, ok := us.SessionUserID(r)
+		if !ok {
+			templateData["SessionUser"] = &models.User{}
+			next.ServeHTTP(w, r)
+		}
+
+		um := models.NewUserModel(m.App.DB)
+		user, err := um.GetUserByID(nil, userID)
+		if err != nil {
+			us.Delete(w, r)
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
+		context.SetSessionUser(r, user)
+		templateData["SessionUser"] = user
+		next.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+// SetTopic sets the topic with the name in the url in the context and template data.
 func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -53,13 +69,16 @@ func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 		}
 
 		context.SetTopic(r, topic)
+
+		templateData := context.TemplateData(r)
+		templateData["Topic"] = topic
 		next.ServeHTTP(w, r)
 	}
 
 	return http.HandlerFunc(fn)
 }
 
-// SetPost sets the post with the id in the url in the context.
+// SetPost sets the post with the id in the url in the context and template data.
 func (m *Middleware) SetPost(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -77,13 +96,17 @@ func (m *Middleware) SetPost(next http.Handler) http.Handler {
 			return
 		}
 		context.SetPost(r, post)
+
+		templateData := context.TemplateData(r)
+		templateData["Post"] = post
+
 		next.ServeHTTP(w, r)
 	}
 
 	return http.HandlerFunc(fn)
 }
 
-// SetTag sets the tag with name in the url in the context.
+// SetTag sets the tag with name in the url in the context and template data.
 func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -96,6 +119,9 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 		}
 
 		context.SetTag(r, tag)
+
+		templateData := context.TemplateData(r)
+		templateData["Tag"] = tag
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)

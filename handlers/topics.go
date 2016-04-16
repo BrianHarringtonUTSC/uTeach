@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/umairidris/uTeach/application"
+	"github.com/umairidris/uTeach/context"
+	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -14,12 +16,13 @@ func getTopics(a *application.App, w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	data := map[string]interface{}{"Topics": topics}
-	return renderTemplate(a, w, r, "topics.html", data)
+	data := context.TemplateData(r)
+	data["Topics"] = topics
+	return libtemplate.Render(w, a.Templates, "topics.html", data)
 }
 
 func getNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return renderTemplate(a, w, r, "new_topic.html", nil)
+	return libtemplate.Render(w, a.Templates, "new_topic.html", context.TemplateData(r))
 }
 
 func postNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {

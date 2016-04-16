@@ -5,6 +5,7 @@ import (
 
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
+	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -17,13 +18,15 @@ func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := map[string]interface{}{"Tags": tags, "Topic": topic}
+	data := context.TemplateData(r)
+	data["Tags"] = tags
+	data["Topic"] = topic
 
-	return renderTemplate(a, w, r, "tags.html", data)
+	return libtemplate.Render(w, a.Templates, "tags.html", data)
 }
 
 func getNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return renderTemplate(a, w, r, "new_tag.html", nil)
+	return libtemplate.Render(w, a.Templates, "new_tag.html", context.TemplateData(r))
 }
 
 func postNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {

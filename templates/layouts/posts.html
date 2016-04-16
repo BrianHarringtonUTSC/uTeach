@@ -24,10 +24,14 @@
 		</button>
 	{{end}}
 	<div id="posts">
-		{{if len .PinnedPosts}}
-			{{template "post-list" dict "Base" . "PostsTitle" "Pinned Posts" "Posts" .PinnedPosts}}
-			<hr>
+		{{if or (len .PinnedPosts) (len .UnpinnedPosts)}}
+			{{if len .PinnedPosts}}
+				{{template "post-list" dict "Base" . "PostsTitle" "Pinned Posts" "Posts" .PinnedPosts}}
+				<hr>
+			{{end}}
+			{{template "post-list" dict "Base" . "Posts" .UnpinnedPosts}}
+		{{else}}
+			<h4 class="mdl-color-text--grey-800">There are currently no posts.</h4>
 		{{end}}
-		{{template "post-list" dict "Base" . "Posts" .UnpinnedPosts}}
 	</div>
 {{end}}

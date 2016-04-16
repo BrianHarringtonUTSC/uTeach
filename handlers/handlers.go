@@ -7,11 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
-	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/middleware"
-	"github.com/umairidris/uTeach/models"
 )
 
 // Handler allows passing an application context to a handler and handling errors.
@@ -73,7 +70,7 @@ func Router(a *application.App) http.Handler {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticFileServer))
 
 	// middleware for all routes
-	standardChain := alice.New(m.SetSessionUser)
+	standardChain := alice.New(m.SetTemplateData, m.SetSessionUser)
 	return standardChain.Then(router)
 }
 
@@ -81,22 +78,4 @@ func Router(a *application.App) http.Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := h.H(h.App, w, r)
 	httperror.HandleError(w, err)
-}
-
-// renderTemplate renders the template at name with data.
-// It also adds the session user to the data for templates to access.
-func renderTemplate(a *application.App, w http.ResponseWriter, r *http.Request, name string, data map[string]interface{}) error {
-	if data == nil {
-		data = map[string]interface{}{}
-	}
-
-	// add session user to data
-	if user, ok := context.SessionUser(r); ok {
-		data["SessionUser"] = user
-	} else {
-		// pass in empty user
-		data["SessionUser"] = &models.User{}
-	}
-
-	return libtemplate.Render(w, a.Templates, name, data)
 }

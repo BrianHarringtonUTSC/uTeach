@@ -11,11 +11,22 @@ import (
 // TODO: Use context in standard lib which will be added in go 1.7
 
 const (
-	topicKey       = "topic"
-	postKey        = "post"
-	tagKey         = "tag"
-	sessionUserKey = "session-user"
+	templateDataKey = "template-data"
+	topicKey        = "topic"
+	postKey         = "post"
+	tagKey          = "tag"
+	sessionUserKey  = "session-user"
 )
+
+// SetTemplateData sets the template data map in the context.
+func SetTemplateData(r *http.Request, data map[string]interface{}) {
+	context.Set(r, templateDataKey, data)
+}
+
+// TemplateData gets the template data map from the context.
+func TemplateData(r *http.Request) map[string]interface{} {
+	return context.Get(r, templateDataKey).(map[string]interface{})
+}
 
 // SetTopic sets the topic in the context.
 func SetTopic(r *http.Request, topic *models.Topic) {

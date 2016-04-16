@@ -1,16 +1,20 @@
 {{define "content"}}
-	<ul class="mdl-list">
-		{{range $topic := .Topics}}
-		<li class="mdl-list__item mdl-list__item--two-line">
-			<span class="mdl-list__item-primary-content">
-				<a class="no-decoration" href="{{$topic.URL}}">{{$topic.Title}}</a>
-				<span class="mdl-list__item-sub-title">
-				{{$topic.Description}}
+	{{ if len .Topics}}
+		<ul class="mdl-list">
+			{{range $topic := .Topics}}
+			<li class="mdl-list__item mdl-list__item--two-line">
+				<span class="mdl-list__item-primary-content">
+					<a class="no-decoration" href="{{$topic.URL}}">{{$topic.Title}}</a>
+					<span class="mdl-list__item-sub-title">
+					{{$topic.Description}}
+					</span>
 				</span>
-			</span>
-		</li>
-		{{end}}
-	</ul>
+			</li>
+			{{end}}
+		</ul>
+	{{else}}
+		<h4 class="mdl-color-text--grey-800">There are currently no topics.</h4>
+	{{end}}
 	{{if .SessionUser.IsAdmin}}
 		<div class="bottom-right">
 			<button class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" onclick="window.location='/topics/new';">

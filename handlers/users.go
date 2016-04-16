@@ -11,6 +11,7 @@ import (
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
+	"github.com/umairidris/uTeach/libtemplate"
 	"github.com/umairidris/uTeach/models"
 	"github.com/umairidris/uTeach/session"
 	"golang.org/x/oauth2"
@@ -129,9 +130,11 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	data := map[string]interface{}{"User": user, "CreatedPosts": createdPosts}
+	data := context.TemplateData(r)
+	data["User"] = user
+	data["CreatedPosts"] = createdPosts
 	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
 		return err
 	}
-	return renderTemplate(a, w, r, "user.html", data)
+	return libtemplate.Render(w, a.Templates, "user.html", data)
 }
