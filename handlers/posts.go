@@ -72,20 +72,21 @@ func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) erro
 }
 
 func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	title := r.FormValue("title")
+	text := r.FormValue("text")
+	topic := context.Topic(r)
+	user, _ := context.SessionUser(r)
+
 	// we want the post and tags to be created together so use one tx. If one part fails the rest won't be committed.
 	tx, err := a.DB.Beginx()
 	if err != nil {
 		return err
 	}
 
-	title := r.FormValue("title")
-	text := r.FormValue("text")
-	topic := context.Topic(r)
-	user, _ := context.SessionUser(r)
-
 	postModel := models.NewPostModel(a.DB)
 	post, err := postModel.AddPost(tx, title, text, topic, user)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -93,21 +94,25 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 	if tagIDStr != "" {
 		tagID, err := strconv.ParseInt(tagIDStr, 10, 64)
 		if err != nil {
+			tx.Rollback()
 			return httperror.StatusError{http.StatusBadRequest, err}
 		}
 
 		tagModel := models.NewTagModel(a.DB)
 		tag, err := tagModel.GetTagByID(nil, tagID)
 		if err != nil {
+			tx.Rollback()
 			return err
 		}
 
 		if err = tagModel.AddPostTag(tx, post, tag); err != nil {
+			tx.Rollback()
 			return err
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
+		tx.Rollback()
 		return err
 	}
 
