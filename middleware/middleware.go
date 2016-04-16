@@ -39,6 +39,7 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 		if !ok {
 			templateData["SessionUser"] = &models.User{}
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		um := models.NewUserModel(m.App.DB)

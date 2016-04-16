@@ -2,6 +2,7 @@
 package application
 
 import (
+	"encoding/base64"
 	"html/template"
 	"log"
 
@@ -25,8 +26,17 @@ func New(conf config.Config) *App {
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")
 
-	// Contstrainting the size of cookie encryption key to be 32 bytes
-	store := sessions.NewCookieStore([]byte(conf.CookieAuthenticationKey), []byte(conf.CookieEncryptionKey))
+	cookieAuthKey, err := base64.StdEncoding.DecodeString(conf.CookieAuthenticationKeyBase64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cookieEncKey, err := base64.StdEncoding.DecodeString(conf.CookieEncryptionKeyBase64)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	store := sessions.NewCookieStore(cookieAuthKey, cookieEncKey)
 
 	templates, err := libtemplate.Load(conf.TemplatesPath)
 	if err != nil {

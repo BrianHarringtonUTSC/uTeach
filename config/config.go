@@ -14,15 +14,15 @@ const (
 // Config stores user specific information required to run the app.
 // Google credentials should be obtained from the Google Developer Console (https://console.developers.google.com).
 type Config struct {
-	HTTPAddress             string `mapstructure:"http_address"`
-	DBPath                  string `mapstructure:"db_path"`
-	TemplatesPath           string `mapstructure:"templates_path"`
-	StaticFilesPath         string `mapstructure:"static_files_path"`
-	CookieAuthenticationKey string `mapstructure:"cookie_authentication_key"`
-	CookieEncryptionKey     string `mapstructure:"cookie_encryption_key"`
-	GoogleRedirectURL       string `mapstructure:"google_redirect_url"`
-	GoogleClientID          string `mapstructure:"google_client_id"`
-	GoogleClientSecret      string `mapstructure:"google_client_secret"`
+	HTTPAddress                   string `mapstructure:"http_address"`
+	DBPath                        string `mapstructure:"db_path"`
+	TemplatesPath                 string `mapstructure:"templates_path"`
+	StaticFilesPath               string `mapstructure:"static_files_path"`
+	CookieAuthenticationKeyBase64 string `mapstructure:"cookie_authentication_key_base64"` // must be a base 64 encoded string of a 64 byte array
+	CookieEncryptionKeyBase64     string `mapstructure:"cookie_encryption_key_base64"`     // must be a base 64 encoded string of a 32 byte array
+	GoogleRedirectURL             string `mapstructure:"google_redirect_url"`
+	GoogleClientID                string `mapstructure:"google_client_id"`
+	GoogleClientSecret            string `mapstructure:"google_client_secret"`
 }
 
 // Load loads the config file at path and environment variables into a Config.
