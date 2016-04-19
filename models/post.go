@@ -49,7 +49,7 @@ var postsSqlizer = squirrel.
 	LeftJoin("post_votes ON post_votes.post_id=posts.id").
 	LeftJoin("post_tags ON post_tags.post_id=posts.id").
 	GroupBy("posts.id, post_tags.tag_id").
-	OrderBy("count(post_votes.post_id) DESC")
+	OrderBy("count(post_votes.post_id) DESC, posts.created_at DESC")
 
 func (tm *PostModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Post, error) {
 	posts := []*Post{}

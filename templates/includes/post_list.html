@@ -23,7 +23,8 @@
 						|
 						<span><a class="no-decoration" href="{{$post.URL}}">{{$post.Title}}</a></span>
 						<span class="mdl-list__item-sub-title">
-							by <a href="{{$post.Creator.URL}}" class="no-decoration"> {{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
+							by <a href="{{$post.Creator.URL}}" class="no-decoration">{{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
+							in <a href="{{$post.Topic.URL}}" class="no-decoration">{{$post.Topic.Name}}</a>
 
 
 							{{if or $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $post.Creator.Email) }}

@@ -15,6 +15,7 @@ uTeach is a community oriented platform for sharing educational material and res
 - Users & authentication (only Google accounts currently supported)
 - Markdown support for post content
 - Admin functionality (pin & unhide posts)
+- Clean and intuitive Material Design user interface
 
 ### Requirements
 - Golang 1.6+
@@ -24,19 +25,20 @@ uTeach is a community oriented platform for sharing educational material and res
 ### Installation Instructions
 Notes:
 - Ensure your GOPATH is correctly setup
+- Setup config: see requirements in [config/config.go](config/config.go). An example can be found in [sample/](sample/)
 - Export $GOPATH/bin to your PATH for convenience
 - Add .exe in front of executables if on Windows
-- Setup config: see requirements in [config/config.go](config/config.go). An example can be found in [sample/](sample/)
 
 
 #### As a User
 ```
 go get github.com/umairidris/uTeach
+cd $GOPATH/src/github.com/umairidris
 
 # Setup config...
 
 # Run the app
-$GOPATH/bin/uTeach --config=PATH_TO_CONFIG
+$GOPATH/bin/uTeach --config=sample/config.json  # Or replace with your own config
 ```
 
 #### As a Developer
@@ -55,19 +57,11 @@ go get .
 # Install the app
 go install
 
-# Setup config ...
+# Setup config...
 
 # Run the app
-$GOPATH/bin/uTeach --config=PATH_TO_CONFIG
+$GOPATH/bin/uTeach --config=sample/config.json  # Or replace with your own config
 ```
-
-### TODO
-- HTTPS
-- Security (CSRF, etc)
-- Use context in standard lib to be added in Go 1.7
-- Front end UI work and overall polish
-- Testing
-- Caching
 
 ### FAQ
 

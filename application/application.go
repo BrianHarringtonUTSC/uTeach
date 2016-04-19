@@ -21,7 +21,7 @@ type App struct {
 	Templates map[string]*template.Template
 }
 
-// New Initialization of the App
+// New creates a new App based on the config. Exits if an error is encountered.
 func New(conf config.Config) *App {
 	db := sqlx.MustOpen("sqlite3", conf.DBPath)
 	db.MustExec("PRAGMA foreign_keys=ON;")

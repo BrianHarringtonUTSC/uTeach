@@ -33,7 +33,8 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 var tagsSqlizer = squirrel.
 	Select("tags.id, tags.name, topics.id AS topic_id, topics.name AS topic_name, topics.title").
 	From("tags").
-	Join("topics ON topics.id=tags.topic_id")
+	Join("topics ON topics.id=tags.topic_id").
+	OrderBy("tags.name")
 
 func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, error) {
 	query, args, err := sqlizer.ToSql()

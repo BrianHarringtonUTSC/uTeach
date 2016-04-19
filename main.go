@@ -25,6 +25,8 @@ func main() {
 		log.Fatal(err)
 	}
 	app := application.New(*conf)
+	defer app.DB.Close()
+
 	router := handlers.Router(app)
 	http.Handle("/", router)
 
