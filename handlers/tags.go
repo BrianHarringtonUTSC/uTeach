@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/libtemplate"
@@ -13,7 +14,7 @@ func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	topic := context.Topic(r)
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsByTopic(nil, topic)
+	tags, err := tm.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
 		return err
 	}

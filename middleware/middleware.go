@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
@@ -112,8 +113,10 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		tagName := strings.ToLower(vars["tagName"])
+		topic := context.Topic(r)
+
 		tm := models.NewTagModel(m.App.DB)
-		tag, err := tm.GetTagByNameAndTopic(nil, tagName, context.Topic(r))
+		tag, err := tm.FindOne(nil, squirrel.Eq{"tags.name": tagName, "tags.topic_id": topic.ID})
 		if err != nil {
 			httperror.HandleError(w, err)
 			return

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -36,13 +37,8 @@ var tagsSqlizer = squirrel.
 	Join("topics ON topics.id=tags.topic_id").
 	OrderBy("tags.name")
 
-func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, error) {
-	query, args, err := sqlizer.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := tm.Query(tx, query, args...)
+func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error) {
+	rows, err := tm.queryWhere(tx, tagsSqlizer, wheres...)
 	if err != nil {
 		return nil, err
 	}
@@ -62,32 +58,20 @@ func (tm *TagModel) findAll(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) ([]*Tag, erro
 	return tags, err
 }
 
-func (tm *TagModel) findOne(tx *sqlx.Tx, sqlizer squirrel.Sqlizer) (*Tag, error) {
-	tags, err := tm.findAll(tx, sqlizer)
+func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, error) {
+	tags, err := tm.Find(tx, wheres...)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(tags) != 1 {
+	switch len(tags) {
+	case 0:
+		return nil, sql.ErrNoRows
+	case 1:
+		return tags[0], err
+	default:
 		return nil, fmt.Errorf("Expected: 1, got: %d.", len(tags))
 	}
-
-	return tags[0], err
-}
-
-// GetTagByID gets a tag by the id.
-func (tm *TagModel) GetTagByID(tx *sqlx.Tx, id int64) (*Tag, error) {
-	return tm.findOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.id": id}))
-}
-
-// GetTagByNameAndTopic gets a tag by the name and topic.
-func (tm *TagModel) GetTagByNameAndTopic(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error) {
-	return tm.findOne(tx, tagsSqlizer.Where(squirrel.Eq{"tags.name": name, "tags.topic_id": topic.ID}))
-}
-
-// GetTagsByTopic gets all tags by the topic.
-func (tm *TagModel) GetTagsByTopic(tx *sqlx.Tx, topic *Topic) ([]*Tag, error) {
-	return tm.findAll(tx, tagsSqlizer.Where(squirrel.Eq{"topic_id": topic.ID}))
 }
 
 // AddTag adds a new tag for the topic.
@@ -107,7 +91,7 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error)
 		return nil, err
 	}
 
-	return tm.GetTagByID(tx, id)
+	return tm.FindOne(tx, squirrel.Eq{"tags.id": id})
 }
 
 // AddPostTag adds a tag for the post.

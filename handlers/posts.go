@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
@@ -36,7 +37,7 @@ func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error 
 		return err
 	}
 	tagModel := models.NewTagModel(a.DB)
-	tags, err := tagModel.GetTagsByTopic(nil, topic)
+	tags, err := tagModel.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
 		return err
 	}
@@ -61,7 +62,7 @@ func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	topic := context.Topic(r)
 
 	tm := models.NewTagModel(a.DB)
-	tags, err := tm.GetTagsByTopic(nil, topic)
+	tags, err := tm.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 		}
 
 		tagModel := models.NewTagModel(a.DB)
-		tag, err := tagModel.GetTagByID(nil, tagID)
+		tag, err := tagModel.FindOne(nil, squirrel.Eq{"tags.id": tagID})
 		if err != nil {
 			tx.Rollback()
 			return err

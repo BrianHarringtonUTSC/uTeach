@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"regexp"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -64,4 +65,17 @@ func (b *Base) Query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows
 	}
 
 	return b.db.Queryx(query, args...)
+}
+
+func (b *Base) queryWhere(tx *sqlx.Tx, selectBuilder squirrel.SelectBuilder, wheres ...squirrel.Sqlizer) (*sqlx.Rows, error) {
+	for _, where := range wheres {
+		selectBuilder = selectBuilder.Where(where)
+	}
+
+	query, args, err := selectBuilder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	return b.Query(tx, query, args...)
 }
