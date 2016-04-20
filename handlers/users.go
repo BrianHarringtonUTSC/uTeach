@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/gorilla/mux"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
@@ -125,7 +126,7 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	pm := models.NewPostModel(a.DB)
-	createdPosts, err := pm.GetPostsByUser(nil, user)
+	createdPosts, err := pm.Find(nil, squirrel.Eq{"posts.creator_user_id": user.ID})
 	if err != nil {
 		return err
 	}

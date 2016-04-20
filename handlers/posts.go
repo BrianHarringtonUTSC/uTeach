@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -15,7 +16,7 @@ import (
 
 func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, data map[string]interface{}) error {
 	if user, ok := context.SessionUser(r); ok {
-		userUpvotedPostIDs, err := postModel.GetPostIdsUpvotedByUser(nil, user)
+		userUpvotedPostIDs, err := postModel.GetVotedPostIds(nil, squirrel.Eq{"post_votes.user_id": user.ID})
 		if err != nil {
 			return err
 		}
@@ -26,16 +27,27 @@ func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, d
 
 func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	topic := context.Topic(r)
+
+	whereEq := squirrel.Eq{"posts.topic_id": topic.ID, "posts.is_pinned": true}
+
 	pm := models.NewPostModel(a.DB)
-	pinnedPosts, err := pm.GetPostsByTopicAndIsPinned(nil, topic, true)
-	if err != nil {
+	pinnedPosts, err := pm.Find(nil, whereEq)
+	switch {
+	case err == sql.ErrNoRows:
+		pinnedPosts = make([]*models.Post, 0)
+	case err != nil:
 		return err
 	}
 
-	unpinnedPosts, err := pm.GetPostsByTopicAndIsPinned(nil, topic, false)
-	if err != nil {
+	whereEq["posts.is_pinned"] = false
+	unpinnedPosts, err := pm.Find(nil, whereEq)
+	switch {
+	case err == sql.ErrNoRows:
+		unpinnedPosts = make([]*models.Post, 0)
+	case err != nil:
 		return err
 	}
+
 	tagModel := models.NewTagModel(a.DB)
 	tags, err := tagModel.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
@@ -179,7 +191,7 @@ func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) e
 	tag := context.Tag(r)
 
 	pm := models.NewPostModel(a.DB)
-	posts, err := pm.GetPostsByTag(nil, tag)
+	posts, err := pm.Find(nil, squirrel.Eq{"post_tags.tag_id": tag.ID})
 	if err != nil {
 		return err
 	}

@@ -92,7 +92,7 @@ func (m *Middleware) SetPost(next http.Handler) http.Handler {
 
 		pm := models.NewPostModel(m.App.DB)
 		topic := context.Topic(r)
-		post, err := pm.GetPostByIDAndTopic(nil, postID, topic)
+		post, err := pm.FindOne(nil, squirrel.Eq{"posts.id": postID, "posts.topic_id": topic.ID})
 		if err != nil {
 			httperror.HandleError(w, err)
 			return
