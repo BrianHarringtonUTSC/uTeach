@@ -3,10 +3,13 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 )
 
 // Post represents a post in the app.
@@ -116,8 +119,17 @@ func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[i
 	return postIDs, err
 }
 
+func (pm *PostModel) processPostContent(content string) string {
+	unsafe := blackfriday.MarkdownBasic([]byte(content))
+	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+	trimmed := strings.TrimSpace(string(safe))
+	return trimmed
+}
+
 // AddPost adds a new post.
 func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, creator *User) (*Post, error) {
+	content = pm.processPostContent(content)
+
 	if title == "" || content == "" {
 		return nil, InputError{"Empty title or body not allowed"}
 	}

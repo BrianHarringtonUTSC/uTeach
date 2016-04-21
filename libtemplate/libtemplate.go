@@ -9,17 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"time"
-
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
 )
-
-// MarkdownToHTML converts and sanitizes a markdown string into HTML.
-func MarkdownToHTML(markdown string) template.HTML {
-	unsafe := blackfriday.MarkdownBasic([]byte(markdown))
-	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
-	return template.HTML(safe)
-}
 
 // FormatAndLocalizeTime a time to remove excess information and make it local to the server.
 func FormatAndLocalizeTime(t time.Time) string {
@@ -45,6 +35,11 @@ func Dict(values ...interface{}) (map[string]interface{}, error) {
 	return dict, nil
 }
 
+// HTML unescapes HTML in the string. It should be sanitized prior to this function.
+func HTML(s string) template.HTML {
+	return template.HTML(s)
+}
+
 // Load gets all templates at path into a mapping of the template name to its template object.
 // The path should contain a layouts/ subdirectory with all the templates. The path should also contain a includes/
 // subdirectory which contains parent and reusable templates, they will be parsed with each template in the layouts/
@@ -56,7 +51,7 @@ func Load(path string) (map[string]*template.Template, error) {
 	funcMap := template.FuncMap{
 		"dict":                  Dict,
 		"formatAndLocalizeTime": FormatAndLocalizeTime,
-		"markdownToHTML":        MarkdownToHTML,
+		"html":                  HTML,
 	}
 
 	layouts, err := filepath.Glob(filepath.Join(path, "layouts/*.html"))
