@@ -1,15 +1,11 @@
 {
-	"address": "localhost",
-	"http_port": 8000,
-	"https_port": 8001,
-	"https_cert_path": "./cert.pem",
-	"https_key_path": "./key.pem",
+	"http_address": ":8000",
 	"db_path": "./sample.db",
 	"templates_path": "../templates/",
 	"static_files_path": "../static/",
 	"cookie_authentication_key_base64": "lOk0VBzXGTDyVcYSArJfZT9wMPKgbmnSKzBdmCKkFYVY4H7mcsEgbzxu1udTj1KdSq6PqJrvsp9oZ1X1J/3aEg==",
 	"cookie_encryption_key_base64": "kB0nmnKxdOK12ulr2KxGSjCh7IuHKIcuEB6TpdxsjWw=",
-	"google_redirect_url": "https://localhost:8001/oauth2callback",
+	"google_redirect_url": "http://localhost:8000/oauth2callback",
 	"google_client_id": "",
 	"google_client_secret": ""
 }

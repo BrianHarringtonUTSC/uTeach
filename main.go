@@ -3,7 +3,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -31,19 +30,6 @@ func main() {
 	router := handlers.Router(app)
 	http.Handle("/", router)
 
-	httpAddress := fmt.Sprintf("%s:%d", app.Config.Address, app.Config.HttpPort)
-	httpsAddress := fmt.Sprintf("%s:%d", app.Config.Address, app.Config.HttpsPort)
-
-	log.Println("Serving http at", httpAddress, "https at", httpsAddress)
-
-	redirectToHttps := func(w http.ResponseWriter, r *http.Request) {
-		url := fmt.Sprintf("https://%s%s", httpsAddress, r.RequestURI)
-		http.Redirect(w, r, url, http.StatusFound)
-	}
-
-	go func() {
-		log.Fatal(http.ListenAndServe(httpAddress, http.HandlerFunc(redirectToHttps)))
-	}()
-
-	log.Fatal(http.ListenAndServeTLS(httpsAddress, app.Config.HttpsCertPath, app.Config.HttpsKeyPath, nil))
+	log.Println("Serving at", app.Config.HttpAddress)
+	log.Fatal(http.ListenAndServe(app.Config.HttpAddress, nil))
 }
