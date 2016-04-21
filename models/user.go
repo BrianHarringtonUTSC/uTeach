@@ -57,7 +57,7 @@ func (um *UserModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*User, er
 	case 1:
 		return users[0], err
 	default:
-		return nil, fmt.Errorf("Expected: 1, got: %d.", len(users))
+		return nil, fmt.Errorf("user: Expected: 1, got: %d.", len(users))
 	}
 }
 

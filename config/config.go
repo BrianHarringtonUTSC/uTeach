@@ -14,7 +14,11 @@ const (
 // Config stores user specific information required to run the app.
 // Google credentials should be obtained from the Google Developer Console (https://console.developers.google.com).
 type Config struct {
-	HTTPAddress                   string `mapstructure:"http_address"`
+	Address                       string `mapstructure:"address"`
+	HttpPort                      int    `mapstructure:"http_port"`
+	HttpsPort                     int    `mapstructure:"https_port"`
+	HttpsCertPath                 string `mapstructure:"https_cert_path"`
+	HttpsKeyPath                  string `mapstructure:"https_key_path"`
 	DBPath                        string `mapstructure:"db_path"`
 	TemplatesPath                 string `mapstructure:"templates_path"`
 	StaticFilesPath               string `mapstructure:"static_files_path"`
@@ -45,6 +49,8 @@ func Load(path string) (*Config, error) {
 	c.DBPath = joinIfNotAbs(dir, c.DBPath)
 	c.TemplatesPath = joinIfNotAbs(dir, c.TemplatesPath)
 	c.StaticFilesPath = joinIfNotAbs(dir, c.StaticFilesPath)
+	c.HttpsCertPath = joinIfNotAbs(dir, c.HttpsCertPath)
+	c.HttpsKeyPath = joinIfNotAbs(dir, c.HttpsKeyPath)
 
 	return c, nil
 }

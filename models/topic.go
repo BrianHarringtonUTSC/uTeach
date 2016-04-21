@@ -72,7 +72,7 @@ func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, 
 	case 1:
 		return topics[0], err
 	default:
-		return nil, fmt.Errorf("Expected: 1, got: %d.", len(topics))
+		return nil, fmt.Errorf("topic: Expected: 1, got: %d.", len(topics))
 	}
 }
 
