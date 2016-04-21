@@ -54,7 +54,7 @@ func (tm *TopicModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Topic, e
 	selectBuilder := tm.addWheresToBuilder(topicsBuilder, wheres...)
 	query, args, err := selectBuilder.ToSql()
 
-	topics := make([]*Topic, 0)
+	var topics []*Topic
 	err = tm.sel(tx, &topics, query, args...)
 	return topics, err
 }
@@ -72,7 +72,7 @@ func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, 
 	case 1:
 		return topics[0], err
 	default:
-		return nil, fmt.Errorf("topic: Expected: 1, got: %d.", len(topics))
+		return nil, fmt.Errorf("topic: Expected: 1, got: %d", len(topics))
 	}
 }
 

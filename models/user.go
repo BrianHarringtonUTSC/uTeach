@@ -39,7 +39,7 @@ func (um *UserModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*User, err
 	selectBuilder := um.addWheresToBuilder(usersBuilder, wheres...)
 	query, args, err := selectBuilder.ToSql()
 
-	users := make([]*User, 0)
+	var users []*User
 	err = um.sel(tx, &users, query, args...)
 	return users, err
 }
@@ -57,7 +57,7 @@ func (um *UserModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*User, er
 	case 1:
 		return users[0], err
 	default:
-		return nil, fmt.Errorf("user: Expected: 1, got: %d.", len(users))
+		return nil, fmt.Errorf("user: Expected: 1, got: %d", len(users))
 	}
 }
 

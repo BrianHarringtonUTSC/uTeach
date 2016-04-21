@@ -96,12 +96,12 @@ func (pm *PostModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Post, er
 	case 1:
 		return posts[0], err
 	default:
-		return nil, fmt.Errorf("post: Expected: 1, got: %d.", len(posts))
+		return nil, fmt.Errorf("post: Expected: 1, got: %d", len(posts))
 	}
 }
 
-// GetPostIdsUpvotedByUser gets the ids of all posts upvoted by the user. It returns a map which can be used to
-// check if a post was upvoted by a user in constant time.
+// GetVotedPostIds gets the ids of upvoted posts filtered by wheres. It returns a map that acts as a set (all values
+// are true) which can be used for quick lookup.
 func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[int64]bool, error) {
 
 	rows, err := pm.queryWhere(tx, squirrel.Select("post_id FROM post_votes"), where)

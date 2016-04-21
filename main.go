@@ -30,6 +30,6 @@ func main() {
 	router := handlers.Router(app)
 	http.Handle("/", router)
 
-	log.Println("Serving at", app.Config.HttpAddress)
-	log.Fatal(http.ListenAndServe(app.Config.HttpAddress, nil))
+	log.Println("Serving at", app.Config.HTTPAddress)
+	log.Fatal(http.ListenAndServe(app.Config.HTTPAddress, nil))
 }

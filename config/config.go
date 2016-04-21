@@ -14,7 +14,7 @@ const (
 // Config stores user specific information required to run the app.
 // Google credentials should be obtained from the Google Developer Console (https://console.developers.google.com).
 type Config struct {
-	HttpAddress                   string `mapstructure:"http_address"`
+	HTTPAddress                   string `mapstructure:"http_address"`
 	DBPath                        string `mapstructure:"db_path"`
 	TemplatesPath                 string `mapstructure:"templates_path"`
 	StaticFilesPath               string `mapstructure:"static_files_path"`
