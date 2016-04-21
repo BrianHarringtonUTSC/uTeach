@@ -31,14 +31,15 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 	return &TagModel{Base{db}}
 }
 
-var tagsSqlizer = squirrel.
+var tagsBuilder = squirrel.
 	Select("tags.id, tags.name, topics.id AS topic_id, topics.name AS topic_name, topics.title").
 	From("tags").
 	Join("topics ON topics.id=tags.topic_id").
 	OrderBy("tags.name")
 
+// Find gets all tags filtered by wheres.
 func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error) {
-	rows, err := tm.queryWhere(tx, tagsSqlizer, wheres...)
+	rows, err := tm.queryWhere(tx, tagsBuilder, wheres...)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +59,7 @@ func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error
 	return tags, err
 }
 
+// FindOne gets the user filtered by wheres.
 func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, error) {
 	tags, err := tm.Find(tx, wheres...)
 	if err != nil {
@@ -81,7 +83,7 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error)
 	}
 
 	name = strings.ToLower(name)
-	result, err := tm.Exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", name, topic.ID)
+	result, err := tm.exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", name, topic.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error)
 
 // AddPostTag adds a tag for the post.
 func (tm *TagModel) AddPostTag(tx *sqlx.Tx, post *Post, tag *Tag) error {
-	_, err := tm.Exec(tx, "INSERT INTO post_tags(post_id, tag_id, topic_id) VALUES(?, ?, ?)",
+	_, err := tm.exec(tx, "INSERT INTO post_tags(post_id, tag_id, topic_id) VALUES(?, ?, ?)",
 		post.ID, tag.ID, post.Topic.ID)
 	return err
 }

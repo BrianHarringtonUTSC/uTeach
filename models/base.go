@@ -30,8 +30,7 @@ func (ie InputError) Error() string {
 	return ie.Message
 }
 
-// Exec execs with the tx if not null else with the db.
-func (b *Base) Exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {
+func (b *Base) exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {
 
 	if tx != nil {
 		return tx.Exec(query, args...)
@@ -40,8 +39,7 @@ func (b *Base) Exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Resu
 	return b.db.Exec(query, args...)
 }
 
-// Get execs with the tx if not null else with the db.
-func (b *Base) Get(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
+func (b *Base) get(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
 	if tx != nil {
 		return tx.Get(dest, query, args...)
 	}
@@ -49,8 +47,7 @@ func (b *Base) Get(tx *sqlx.Tx, dest interface{}, query string, args ...interfac
 	return b.db.Get(dest, query, args...)
 }
 
-// Select execs with the tx if not null else with the db.
-func (b *Base) Select(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
+func (b *Base) sel(tx *sqlx.Tx, dest interface{}, query string, args ...interface{}) error {
 	if tx != nil {
 		return tx.Select(dest, query, args...)
 	}
@@ -58,8 +55,7 @@ func (b *Base) Select(tx *sqlx.Tx, dest interface{}, query string, args ...inter
 	return b.db.Select(dest, query, args...)
 }
 
-// Query execs with the tx if not null else with the db.
-func (b *Base) Query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (b *Base) query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows, error) {
 	if tx != nil {
 		return tx.Queryx(query, args...)
 	}
@@ -67,15 +63,21 @@ func (b *Base) Query(tx *sqlx.Tx, query string, args ...interface{}) (*sqlx.Rows
 	return b.db.Queryx(query, args...)
 }
 
-func (b *Base) queryWhere(tx *sqlx.Tx, selectBuilder squirrel.SelectBuilder, wheres ...squirrel.Sqlizer) (*sqlx.Rows, error) {
+func (b *Base) addWheresToBuilder(selectBuilder squirrel.SelectBuilder, wheres ...squirrel.Sqlizer) squirrel.SelectBuilder {
 	for _, where := range wheres {
 		selectBuilder = selectBuilder.Where(where)
 	}
+
+	return selectBuilder
+}
+
+func (b *Base) queryWhere(tx *sqlx.Tx, selectBuilder squirrel.SelectBuilder, wheres ...squirrel.Sqlizer) (*sqlx.Rows, error) {
+	selectBuilder = b.addWheresToBuilder(selectBuilder, wheres...)
 
 	query, args, err := selectBuilder.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	return b.Query(tx, query, args...)
+	return b.query(tx, query, args...)
 }

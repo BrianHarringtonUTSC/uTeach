@@ -44,7 +44,7 @@ func (m *Middleware) SetSessionUser(next http.Handler) http.Handler {
 		}
 
 		um := models.NewUserModel(m.App.DB)
-		user, err := um.GetUserByID(nil, userID)
+		user, err := um.FindOne(nil, squirrel.Eq{"users.id": userID})
 		if err != nil {
 			us.Delete(w, r)
 			http.Redirect(w, r, "/", http.StatusFound)
@@ -64,7 +64,7 @@ func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 		vars := mux.Vars(r)
 		topicName := strings.ToLower(vars["topicName"])
 		tm := models.NewTopicModel(m.App.DB)
-		topic, err := tm.GetTopicByName(nil, topicName)
+		topic, err := tm.FindOne(nil, squirrel.Eq{"topics.name": topicName})
 		if err != nil {
 			httperror.HandleError(w, err)
 			return

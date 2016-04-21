@@ -1,8 +1,11 @@
 package models
 
 import (
+	"database/sql"
+	"fmt"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -44,27 +47,33 @@ func NewTopicModel(db *sqlx.DB) *TopicModel {
 	return &TopicModel{Base{db}}
 }
 
-// GetAllTopics gets all topics.
-func (tm *TopicModel) GetAllTopics(tx *sqlx.Tx) ([]*Topic, error) {
-	topics := []*Topic{}
-	err := tm.Select(tx, &topics, "SELECT * FROM topics")
+var topicsBuilder = squirrel.Select("* FROM topics")
+
+// Find gets all topics filtered by wheres.
+func (tm *TopicModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Topic, error) {
+	selectBuilder := tm.addWheresToBuilder(topicsBuilder, wheres...)
+	query, args, err := selectBuilder.ToSql()
+
+	topics := make([]*Topic, 0)
+	err = tm.sel(tx, &topics, query, args...)
 	return topics, err
 }
 
-// GetTopicByID gets a topic by id.
-func (tm *TopicModel) GetTopicByID(tx *sqlx.Tx, id int64) (*Topic, error) {
-	topic := new(Topic)
-	err := tm.Get(tx, topic, "SELECT * FROM topics WHERE id=?", id)
-	return topic, err
-}
+// FindOne gets the topic filtered by wheres.
+func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, error) {
+	topics, err := tm.Find(tx, wheres...)
+	if err != nil {
+		return nil, err
+	}
 
-// GetTopicByName gets a topic by name.
-func (tm *TopicModel) GetTopicByName(tx *sqlx.Tx, name string) (*Topic, error) {
-	name = strings.ToLower(name)
-
-	topic := new(Topic)
-	err := tm.Get(tx, topic, "SELECT * FROM topics WHERE name=?", name)
-	return topic, err
+	switch len(topics) {
+	case 0:
+		return nil, sql.ErrNoRows
+	case 1:
+		return topics[0], err
+	default:
+		return nil, fmt.Errorf("Expected: 1, got: %d.", len(topics))
+	}
 }
 
 // AddTopic adds a new topic.
@@ -76,7 +85,7 @@ func (tm *TopicModel) AddTopic(tx *sqlx.Tx, name, title, description string) (*T
 	name = strings.ToLower(name)
 
 	query := "INSERT INTO topics(name, title, description) VALUES(?, ?, ?)"
-	result, err := tm.Exec(tx, query, name, title, description)
+	result, err := tm.exec(tx, query, name, title, description)
 	if err != nil {
 		return nil, err
 	}
@@ -86,5 +95,5 @@ func (tm *TopicModel) AddTopic(tx *sqlx.Tx, name, title, description string) (*T
 		return nil, err
 	}
 
-	return tm.GetTopicByID(tx, id)
+	return tm.FindOne(tx, squirrel.Eq{"topics.id": id})
 }

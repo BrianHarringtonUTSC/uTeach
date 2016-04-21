@@ -1,8 +1,11 @@
 package models
 
 import (
+	"database/sql"
+	"fmt"
 	"strings"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -29,20 +32,33 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 	return &UserModel{Base{db}}
 }
 
-// GetUserByID gets a user by the id.
-func (um *UserModel) GetUserByID(tx *sqlx.Tx, id int64) (*User, error) {
-	user := new(User)
-	err := um.Get(tx, user, "SELECT * FROM users WHERE id=?", id)
-	return user, err
+var usersBuilder = squirrel.Select("* FROM users")
+
+// Find gets all users filtered by wheres.
+func (um *UserModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*User, error) {
+	selectBuilder := um.addWheresToBuilder(usersBuilder, wheres...)
+	query, args, err := selectBuilder.ToSql()
+
+	users := make([]*User, 0)
+	err = um.sel(tx, &users, query, args...)
+	return users, err
 }
 
-// GetUserByEmail gets a user by email.
-func (um *UserModel) GetUserByEmail(tx *sqlx.Tx, email string) (*User, error) {
-	email = strings.ToLower(email)
+// FindOne gets the user filtered by wheres.
+func (um *UserModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*User, error) {
+	users, err := um.Find(tx, wheres...)
+	if err != nil {
+		return nil, err
+	}
 
-	user := new(User)
-	err := um.Get(tx, user, "SELECT * FROM users WHERE email=?", email)
-	return user, err
+	switch len(users) {
+	case 0:
+		return nil, sql.ErrNoRows
+	case 1:
+		return users[0], err
+	default:
+		return nil, fmt.Errorf("Expected: 1, got: %d.", len(users))
+	}
 }
 
 // AddUser adds a new user.
@@ -53,10 +69,15 @@ func (um *UserModel) AddUser(tx *sqlx.Tx, email, name string) (*User, error) {
 
 	email = strings.ToLower(email)
 	name = strings.Title(name)
-	_, err := um.Exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", email, name)
+	result, err := um.exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", email, name)
 	if err != nil {
 		return nil, err
 	}
 
-	return um.GetUserByEmail(tx, email)
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+	return um.FindOne(tx, squirrel.Eq{"users.id": id})
 }

@@ -37,7 +37,7 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 	return &PostModel{Base{db}}
 }
 
-var postsSqlizer = squirrel.
+var postsBuilder = squirrel.
 	Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
 			count(post_votes.post_id),
 			topics.id, topics.name, topics.title, topics.description,
@@ -51,8 +51,9 @@ var postsSqlizer = squirrel.
 	OrderBy("count(post_votes.post_id) DESC, posts.created_at DESC").
 	Distinct()
 
+// Find gets all posts filtered by wheres.
 func (pm *PostModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Post, error) {
-	rows, err := pm.queryWhere(tx, postsSqlizer, wheres...)
+	rows, err := pm.queryWhere(tx, postsBuilder, wheres...)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +80,7 @@ func (pm *PostModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Post, err
 	return posts, err
 }
 
+// FindOne gets the post filtered by wheres.
 func (pm *PostModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Post, error) {
 	posts, err := pm.Find(tx, wheres...)
 	if err != nil {
@@ -121,7 +123,7 @@ func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, c
 	}
 
 	query := "INSERT INTO posts(title, content, topic_id, creator_user_id) VALUES(?, ?, ?, ?)"
-	result, err := pm.Exec(tx, query, title, content, topic.ID, creator.ID)
+	result, err := pm.exec(tx, query, title, content, topic.ID, creator.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,36 +138,36 @@ func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, c
 
 // AddPostVoteForUser adds a vote for the post for the user.
 func (pm *PostModel) AddPostVoteForUser(tx *sqlx.Tx, post *Post, user *User) error {
-	_, err := pm.Exec(tx, "INSERT INTO post_votes(user_id, post_id) VALUES(?, ?)", user.ID, post.ID)
+	_, err := pm.exec(tx, "INSERT INTO post_votes(user_id, post_id) VALUES(?, ?)", user.ID, post.ID)
 	return err
 }
 
 // RemoveTheadVoteForUser removes a vote for the post for the user.
 func (pm *PostModel) RemoveTheadVoteForUser(tx *sqlx.Tx, post *Post, user *User) error {
-	_, err := pm.Exec(tx, "DELETE FROM post_votes where user_id=? AND post_id=?", user.ID, post.ID)
+	_, err := pm.exec(tx, "DELETE FROM post_votes where user_id=? AND post_id=?", user.ID, post.ID)
 	return err
 }
 
 // HidePost hides the post.
 func (pm *PostModel) HidePost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.Exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", false, post.ID)
+	_, err := pm.exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", false, post.ID)
 	return err
 }
 
 // UnhidePost unhides the post.
 func (pm *PostModel) UnhidePost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.Exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", true, post.ID)
+	_, err := pm.exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", true, post.ID)
 	return err
 }
 
 // PinPost pins a post.
 func (pm *PostModel) PinPost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.Exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", true, post.ID)
+	_, err := pm.exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", true, post.ID)
 	return err
 }
 
 // UnpinPost unpins a post.
 func (pm *PostModel) UnpinPost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.Exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", false, post.ID)
+	_, err := pm.exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", false, post.ID)
 	return err
 }

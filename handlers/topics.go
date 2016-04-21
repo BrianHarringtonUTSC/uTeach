@@ -11,7 +11,7 @@ import (
 
 func getTopics(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewTopicModel(a.DB)
-	topics, err := tm.GetAllTopics(nil)
+	topics, err := tm.Find(nil)
 	if err != nil {
 		return err
 	}
