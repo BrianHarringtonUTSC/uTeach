@@ -7,17 +7,21 @@ package models
 import (
 	"database/sql/driver"
 	"regexp"
+	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 )
 
 var singleWordAlphaNumRegex = regexp.MustCompile(`^[[:alnum:]]+(_[[:alnum:]]+)*$`)
 
-// Base is the base model for all other models to embed.
-// It has common helpers and functionality that all models can use.
-type Base struct {
-	db *sqlx.DB
+func sanitizeString(s string) string {
+	unsafe := blackfriday.MarkdownBasic([]byte(s))
+	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+	trimmed := strings.TrimSpace(string(safe))
+	return trimmed
 }
 
 // InputError is an error returned when the user supplied input was not valid.
@@ -28,6 +32,12 @@ type InputError struct {
 // Error returns the input error's message.
 func (ie InputError) Error() string {
 	return ie.Message
+}
+
+// Base is the base model for all other models to embed.
+// It has common helpers and functionality that all models can use.
+type Base struct {
+	db *sqlx.DB
 }
 
 func (b *Base) exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {

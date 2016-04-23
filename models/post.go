@@ -3,13 +3,10 @@ package models
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
 )
 
 // Post represents a post in the app.
@@ -28,6 +25,10 @@ type Post struct {
 // URL returns the unique URL for a post.
 func (p *Post) URL() string {
 	return p.Topic.URL() + fmt.Sprintf("/posts/%d", p.ID)
+}
+
+func (p *Post) SanitizedContent() string {
+	return sanitizeString(p.Content)
 }
 
 // PostModel handles getting and creating posts.
@@ -119,18 +120,10 @@ func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[i
 	return postIDs, err
 }
 
-func (pm *PostModel) processPostContent(content string) string {
-	unsafe := blackfriday.MarkdownBasic([]byte(content))
-	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
-	trimmed := strings.TrimSpace(string(safe))
-	return trimmed
-}
-
 // AddPost adds a new post.
 func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, creator *User) (*Post, error) {
-	content = pm.processPostContent(content)
 
-	if title == "" || content == "" {
+	if title == "" || sanitizeString(content) == "" {
 		return nil, InputError{"Empty title or body not allowed"}
 	}
 

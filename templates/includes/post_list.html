@@ -19,32 +19,32 @@
 							{{end}}
 						{{else}}
 							<span>{{$post.Score}}</span>
-						{{end}}
-						|
+						{{end -}}
+						<span>|</span>
 						<span><a class="no-decoration" href="{{$post.URL}}">{{$post.Title}}</a></span>
 						<span class="mdl-list__item-sub-title">
-							by <a href="{{$post.Creator.URL}}" class="no-decoration">{{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
-							in <a href="{{$post.Topic.URL}}" class="no-decoration">{{$post.Topic.Name}}</a>
+							<span>by</span> <a href="{{$post.Creator.URL}}" class="no-decoration">{{$post.Creator.Name}} ({{$post.Creator.Email}})</a>
+							<span>in</span> <a href="{{$post.Topic.URL}}" class="no-decoration">{{$post.Topic.Name}}</a>
 
 
-							{{if or $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $post.Creator.Email) }}
-								|
-								{{if $post.IsVisible}}
-									<span class="post-action clickable" url="{{$post.URL}}/hide" method="POST">hide</span>
-								{{else}}
-									<span class="post-action clickable" url="{{$post.URL}}/hide" method="DELETE">unhide</span>
-								{{end}}
+						{{if or $base.SessionUser.IsAdmin (eq $base.SessionUser.Email $post.Creator.Email) }}
+							<span>|</span>
+							{{if $post.IsVisible}}
+								<span class="post-action clickable" url="{{$post.URL}}/hide" method="POST">hide</span>
+							{{else}}
+								<span class="post-action clickable" url="{{$post.URL}}/hide" method="DELETE">unhide</span>
 							{{end}}
+						{{end}}
 
 
-							{{if $base.SessionUser.IsAdmin}}
-								|
-								{{if $post.IsPinned}}
-									<span class="post-action clickable" url="{{$post.URL}}/pin" method="DELETE">unpin</span>
-								{{else}}
-									<span class="post-action clickable" url="{{$post.URL}}/pin" method="POST">pin</span>
-								{{end}}
+						{{if $base.SessionUser.IsAdmin}}
+							<span>|</span>
+							{{if $post.IsPinned}}
+								<span class="post-action clickable" url="{{$post.URL}}/pin" method="DELETE">unpin</span>
+							{{else}}
+								<span class="post-action clickable" url="{{$post.URL}}/pin" method="POST">pin</span>
 							{{end}}
+						{{end}}
 						</span>
 					</span>
 				</li>
