@@ -30,6 +30,7 @@ func Router(a *application.App) http.Handler {
 	m := middleware.Middleware{a}
 
 	router := mux.NewRouter()
+	router.StrictSlash(true)
 
 	// topic routes
 	router.Handle("/", h(getTopics))

@@ -27,6 +27,7 @@ func (p *Post) URL() string {
 	return p.Topic.URL() + fmt.Sprintf("/posts/%d", p.ID)
 }
 
+// SanitizedContent returns the post's content with markdown converted to HTML and sanitized.
 func (p *Post) SanitizedContent() string {
 	return sanitizeString(p.Content)
 }
@@ -104,7 +105,6 @@ func (pm *PostModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Post, er
 // GetVotedPostIds gets the ids of upvoted posts filtered by wheres. It returns a map that acts as a set (all values
 // are true) which can be used for quick lookup.
 func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[int64]bool, error) {
-
 	rows, err := pm.queryWhere(tx, squirrel.Select("post_id FROM post_votes"), where)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,6 @@ func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[i
 
 // AddPost adds a new post.
 func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, creator *User) (*Post, error) {
-
 	if title == "" || sanitizeString(content) == "" {
 		return nil, InputError{"Empty title or body not allowed"}
 	}
