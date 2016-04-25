@@ -3,12 +3,12 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
@@ -42,7 +42,7 @@ func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
 
 func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	if _, ok := context.SessionUser(r); ok {
-		return errors.New("Already logged in")
+		return httperror.StatusError{http.StatusOK, errors.New("Already logged in")}
 	}
 
 	googleConfig := getGoogleConfig(a, r)
@@ -55,20 +55,18 @@ func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error 
 func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email, name string) error {
 	um := models.NewUserModel(a.DB)
 	user, err := um.FindOne(nil, squirrel.Eq{"users.email": email})
-
 	if err == sql.ErrNoRows {
 		// user not found so must be logging in for first time, add the user
 		user, err = um.AddUser(nil, email, name)
 	}
-
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		return errors.Wrap(err, "login error")
 	}
 
 	us := session.NewUserSession(a.Store)
 	err = us.SaveSessionUserID(w, r, user.ID)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "save session user error")
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -89,7 +87,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	client := googleConfig.Client(oauth2.NoContext, tok)
 	response, err := client.Get(googleUserInfoURL)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "get response error")
 	}
 	defer response.Body.Close()
 
@@ -97,7 +95,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	m := map[string]interface{}{}
 	err = json.NewDecoder(response.Body).Decode(&m)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "json decode error")
 	}
 
 	email := m["email"].(string)
@@ -108,7 +106,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 func getLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	us := session.NewUserSession(a.Store)
 	if err := us.Delete(w, r); err != nil {
-		return err
+		return errors.Wrap(err, "user session delete error")
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -122,7 +120,7 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	um := models.NewUserModel(a.DB)
 	user, err := um.FindOne(nil, squirrel.Eq{"users.email": email})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find one error")
 	}
 
 	pm := models.NewPostModel(a.DB)
@@ -135,7 +133,8 @@ func getUser(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	data["User"] = user
 	data["CreatedPosts"] = createdPosts
 	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
-		return err
+		return errors.Wrap(err, "add upvoted post ids to data error")
 	}
-	return libtemplate.Render(w, a.Templates, "user.html", data)
+	err = libtemplate.Render(w, a.Templates, "user.html", data)
+	return errors.Wrap(err, "render template error")
 }

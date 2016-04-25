@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // Tag represents a tag in the app.
@@ -41,7 +42,7 @@ var tagsBuilder = squirrel.
 func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error) {
 	rows, err := tm.queryWhere(tx, tagsBuilder, wheres...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "query error")
 	}
 	defer rows.Close()
 
@@ -49,30 +50,30 @@ func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error
 	for rows.Next() {
 		tag := new(Tag)
 		topic := new(Topic)
-		err := rows.Scan(&tag.ID, &tag.Name, &topic.ID, &topic.Name, &topic.Title)
+		err = rows.Scan(&tag.ID, &tag.Name, &topic.ID, &topic.Name, &topic.Title)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "scan error")
 		}
 		tag.Topic = topic
 		tags = append(tags, tag)
 	}
-	return tags, err
+	return tags, nil
 }
 
 // FindOne gets the user filtered by wheres.
 func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, error) {
 	tags, err := tm.Find(tx, wheres...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "find error")
 	}
 
 	switch len(tags) {
 	case 0:
 		return nil, sql.ErrNoRows
 	case 1:
-		return tags[0], err
+		return tags[0], nil
 	default:
-		return nil, fmt.Errorf("tag: Expected: 1, got: %d", len(tags))
+		return nil, errors.New(fmt.Sprintf("expected 1, got %d", len(tags)))
 	}
 }
 
@@ -85,20 +86,21 @@ func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error)
 	name = strings.ToLower(name)
 	result, err := tm.exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", name, topic.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "exec error")
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "last inserted id error")
 	}
 
-	return tm.FindOne(tx, squirrel.Eq{"tags.id": id})
+	tag, err := tm.FindOne(tx, squirrel.Eq{"tags.id": id})
+	return tag, errors.Wrap(err, "find one error")
 }
 
 // AddPostTag adds a tag for the post.
 func (tm *TagModel) AddPostTag(tx *sqlx.Tx, post *Post, tag *Tag) error {
 	_, err := tm.exec(tx, "INSERT INTO post_tags(post_id, tag_id, topic_id) VALUES(?, ?, ?)",
 		post.ID, tag.ID, post.Topic.ID)
-	return err
+	return errors.Wrap(err, "exec error")
 }

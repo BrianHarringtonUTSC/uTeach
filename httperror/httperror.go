@@ -4,9 +4,9 @@ package httperror
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/models"
 )
 
@@ -32,14 +32,14 @@ func HandleError(w http.ResponseWriter, err error) {
 	}
 
 	if err != nil {
-		switch e := err.(type) {
+		switch e := errors.Cause(err).(type) {
 		case StatusError:
 			http.Error(w, e.Error(), e.Code)
 		case models.InputError:
 			http.Error(w, e.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			log.Println(err)
+			errors.Print(err)
 		}
 	}
 }

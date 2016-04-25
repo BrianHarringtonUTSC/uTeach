@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/libtemplate"
@@ -13,16 +14,18 @@ func getTopics(a *application.App, w http.ResponseWriter, r *http.Request) error
 	tm := models.NewTopicModel(a.DB)
 	topics, err := tm.Find(nil)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	data := context.TemplateData(r)
 	data["Topics"] = topics
-	return libtemplate.Render(w, a.Templates, "topics.html", data)
+	err = libtemplate.Render(w, a.Templates, "topics.html", data)
+	return errors.Wrap(err, "render template error")
 }
 
 func getNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return libtemplate.Render(w, a.Templates, "new_topic.html", context.TemplateData(r))
+	err := libtemplate.Render(w, a.Templates, "new_topic.html", context.TemplateData(r))
+	return errors.Wrap(err, "render template error")
 }
 
 func postNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) error {

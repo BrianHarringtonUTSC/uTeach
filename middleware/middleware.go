@@ -8,6 +8,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
@@ -66,7 +67,7 @@ func (m *Middleware) SetTopic(next http.Handler) http.Handler {
 		tm := models.NewTopicModel(m.App.DB)
 		topic, err := tm.FindOne(nil, squirrel.Eq{"topics.name": topicName})
 		if err != nil {
-			httperror.HandleError(w, err)
+			httperror.HandleError(w, errors.Wrap(err, "find one error"))
 			return
 		}
 
@@ -94,7 +95,7 @@ func (m *Middleware) SetPost(next http.Handler) http.Handler {
 		topic := context.Topic(r)
 		post, err := pm.FindOne(nil, squirrel.Eq{"posts.id": postID, "posts.topic_id": topic.ID})
 		if err != nil {
-			httperror.HandleError(w, err)
+			httperror.HandleError(w, errors.Wrap(err, "find one error"))
 			return
 		}
 		context.SetPost(r, post)
@@ -118,7 +119,7 @@ func (m *Middleware) SetTag(next http.Handler) http.Handler {
 		tm := models.NewTagModel(m.App.DB)
 		tag, err := tm.FindOne(nil, squirrel.Eq{"tags.name": tagName, "tags.topic_id": topic.ID})
 		if err != nil {
-			httperror.HandleError(w, err)
+			httperror.HandleError(w, errors.Wrap(err, "find one error"))
 			return
 		}
 

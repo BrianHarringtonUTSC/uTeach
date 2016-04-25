@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/libtemplate"
@@ -16,18 +17,20 @@ func getTags(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	tm := models.NewTagModel(a.DB)
 	tags, err := tm.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	data := context.TemplateData(r)
 	data["Tags"] = tags
 	data["Topic"] = topic
 
-	return libtemplate.Render(w, a.Templates, "tags.html", data)
+	err = libtemplate.Render(w, a.Templates, "tags.html", data)
+	return errors.Wrap(err, "render template error")
 }
 
 func getNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	return libtemplate.Render(w, a.Templates, "new_tag.html", context.TemplateData(r))
+	err := libtemplate.Render(w, a.Templates, "new_tag.html", context.TemplateData(r))
+	return errors.Wrap(err, "render template error")
 }
 
 func postNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {

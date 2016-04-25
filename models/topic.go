@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // Topic represents a topic in the app.
@@ -53,26 +54,29 @@ var topicsBuilder = squirrel.Select("* FROM topics")
 func (tm *TopicModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Topic, error) {
 	selectBuilder := tm.addWheresToBuilder(topicsBuilder, wheres...)
 	query, args, err := selectBuilder.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "query error")
+	}
 
 	var topics []*Topic
 	err = tm.sel(tx, &topics, query, args...)
-	return topics, err
+	return topics, errors.Wrap(err, "select error")
 }
 
 // FindOne gets the topic filtered by wheres.
 func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, error) {
 	topics, err := tm.Find(tx, wheres...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "find error")
 	}
 
 	switch len(topics) {
 	case 0:
 		return nil, sql.ErrNoRows
 	case 1:
-		return topics[0], err
+		return topics[0], nil
 	default:
-		return nil, fmt.Errorf("topic: Expected: 1, got: %d", len(topics))
+		return nil, errors.New(fmt.Sprintf("expected 1, got %d", len(topics)))
 	}
 }
 
@@ -87,13 +91,14 @@ func (tm *TopicModel) AddTopic(tx *sqlx.Tx, name, title, description string) (*T
 	query := "INSERT INTO topics(name, title, description) VALUES(?, ?, ?)"
 	result, err := tm.exec(tx, query, name, title, description)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "exec error")
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "last inserted id error")
 	}
 
-	return tm.FindOne(tx, squirrel.Eq{"topics.id": id})
+	topic, err := tm.FindOne(tx, squirrel.Eq{"topics.id": id})
+	return topic, errors.Wrap(err, "topic error")
 }

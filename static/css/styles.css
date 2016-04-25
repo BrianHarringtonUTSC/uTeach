@@ -68,6 +68,7 @@
 
 li.mdl-list__item {
   padding-left: 0px;
+  overflow: auto;
 }
 
 #main-title {

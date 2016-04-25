@@ -7,6 +7,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/application"
 	"github.com/umairidris/uTeach/context"
 	"github.com/umairidris/uTeach/httperror"
@@ -18,7 +19,7 @@ func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, d
 	if user, ok := context.SessionUser(r); ok {
 		userUpvotedPostIDs, err := postModel.GetVotedPostIds(nil, squirrel.Eq{"post_votes.user_id": user.ID})
 		if err != nil {
-			return err
+			return errors.Wrap(err, "get upvoted post ids error")
 		}
 		data["UserUpvotedPostIDs"] = userUpvotedPostIDs
 	}
@@ -36,7 +37,7 @@ func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error 
 	case err == sql.ErrNoRows:
 		pinnedPosts = make([]*models.Post, 0)
 	case err != nil:
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	whereEq["posts.is_pinned"] = false
@@ -45,13 +46,13 @@ func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error 
 	case err == sql.ErrNoRows:
 		unpinnedPosts = make([]*models.Post, 0)
 	case err != nil:
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	tagModel := models.NewTagModel(a.DB)
 	tags, err := tagModel.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	data := context.TemplateData(r)
@@ -60,7 +61,7 @@ func getPosts(a *application.App, w http.ResponseWriter, r *http.Request) error 
 	data["Tags"] = tags
 
 	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
-		return err
+		return errors.Wrap(err, "add upvoted post ids to data error")
 	}
 
 	return libtemplate.Render(w, a.Templates, "posts.html", data)
@@ -76,7 +77,7 @@ func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	tm := models.NewTagModel(a.DB)
 	tags, err := tm.Find(nil, squirrel.Eq{"tags.topic_id": topic.ID})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	data := context.TemplateData(r)
@@ -93,14 +94,14 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 	// we want the post and tags to be created together so use one tx. If one part fails the rest won't be committed.
 	tx, err := a.DB.Beginx()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "begin transacion error")
 	}
 
 	postModel := models.NewPostModel(a.DB)
 	post, err := postModel.AddPost(tx, title, text, topic, user)
 	if err != nil {
 		tx.Rollback()
-		return err
+		return errors.Wrap(err, "add post error")
 	}
 
 	tagIDStr := r.FormValue("tag")
@@ -115,18 +116,18 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 		tag, err := tagModel.FindOne(nil, squirrel.Eq{"tags.id": tagID})
 		if err != nil {
 			tx.Rollback()
-			return err
+			return errors.Wrap(err, "find one error")
 		}
 
 		if err = tagModel.AddPostTag(tx, post, tag); err != nil {
 			tx.Rollback()
-			return err
+			return errors.Wrap(err, "add post tag error")
 		}
 	}
 
 	if err = tx.Commit(); err != nil {
 		tx.Rollback()
-		return err
+		return errors.Wrap(err, "commit error")
 	}
 
 	http.Redirect(w, r, post.URL(), http.StatusFound)
@@ -137,7 +138,7 @@ func handlePostAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, *
 	post := context.Post(r)
 
 	if err := f(nil, post); err != nil {
-		return err
+		return errors.Wrap(err, "post error")
 	}
 	w.WriteHeader(http.StatusOK)
 	return nil
@@ -149,10 +150,12 @@ func postPostVote(a *application.App, w http.ResponseWriter, r *http.Request) er
 	pm := models.NewPostModel(a.DB)
 
 	f := func(tx *sqlx.Tx, post *models.Post) error {
-		return pm.AddPostVoteForUser(tx, post, user)
+		err := pm.AddPostVoteForUser(tx, post, user)
+		return errors.Wrap(err, "add post vote error")
 	}
 
-	return handlePostAction(w, r, f)
+	err := handlePostAction(w, r, f)
+	return errors.Wrap(err, "handle post action error")
 }
 
 func deletePostVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -161,30 +164,36 @@ func deletePostVote(a *application.App, w http.ResponseWriter, r *http.Request) 
 	pm := models.NewPostModel(a.DB)
 
 	f := func(tx *sqlx.Tx, post *models.Post) error {
-		return pm.RemoveTheadVoteForUser(tx, post, user)
+		err := pm.RemovePostVoteForUser(tx, post, user)
+		return errors.Wrap(err, "remove post vote error")
 	}
 
-	return handlePostAction(w, r, f)
+	err := handlePostAction(w, r, f)
+	return errors.Wrap(err, "handle post action error")
 }
 
 func postHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	pm := models.NewPostModel(a.DB)
-	return handlePostAction(w, r, pm.HidePost)
+	err := handlePostAction(w, r, pm.HidePost)
+	return errors.Wrap(err, "hide post error")
 }
 
 func deleteHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	pm := models.NewPostModel(a.DB)
-	return handlePostAction(w, r, pm.UnhidePost)
+	err := handlePostAction(w, r, pm.UnhidePost)
+	return errors.Wrap(err, "unhide post error")
 }
 
 func postPinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	pm := models.NewPostModel(a.DB)
-	return handlePostAction(w, r, pm.PinPost)
+	err := handlePostAction(w, r, pm.PinPost)
+	return errors.Wrap(err, "pin post error")
 }
 
 func deletePinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	pm := models.NewPostModel(a.DB)
-	return handlePostAction(w, r, pm.UnpinPost)
+	err := handlePostAction(w, r, pm.UnpinPost)
+	return errors.Wrap(err, "unpin post error")
 }
 
 func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
@@ -193,13 +202,15 @@ func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) e
 	pm := models.NewPostModel(a.DB)
 	posts, err := pm.Find(nil, squirrel.Eq{"post_tags.tag_id": tag.ID})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "find error")
 	}
 
 	data := context.TemplateData(r)
 	data["Posts"] = posts
 	if err = addUserUpvotedPostIDsToData(r, pm, data); err != nil {
-		return err
+		return errors.Wrap(err, "add upvoted post ids to data error")
 	}
-	return libtemplate.Render(w, a.Templates, "posts_by_tag.html", data)
+
+	err = libtemplate.Render(w, a.Templates, "posts_by_tag.html", data)
+	return errors.Wrap(err, "render template error")
 }
