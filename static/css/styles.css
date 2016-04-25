@@ -71,6 +71,11 @@ li.mdl-list__item {
   overflow: auto;
 }
 
+.wrap {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 #main-title {
   display: inline-block;
 }
@@ -82,8 +87,4 @@ li.mdl-list__item {
 #signin-status {
   display: inline-block;
   float: right;
-}
-
-#post-content {
-  white-space: pre-wrap;
 }

@@ -1,12 +1,12 @@
 {{define "content"}}
-	<h3 id="pinned-posts-title" class="mdl-color-text--grey-800">
+	<h3 class="mdl-color-text--grey-800">
 		<a href="{{.Topic.URL}}" class="no-decoration">{{.Post.Topic.Title}}</a>
 	</h3>
 	<hr/>
 
-	<h4 id="pinned-posts-title" class="mdl-color-text--grey-800"><a href="{{.Post.URL}}" class="no-decoration">{{.Post.Title}}</a></h4>
+	<h4 class="mdl-color-text--grey-800"><a href="{{.Post.URL}}" class="no-decoration wrap">{{.Post.Title}}</a></h4>
 	<div class="mdl-color-text--grey-600">by <a href="{{.Post.Creator.URL}}" class="no-decoration">{{.Post.Creator.Name}} ({{.Post.Creator.Email}})</a> on {{formatAndLocalizeTime .Post.CreatedAt}}</div>
 	<br/>
 	<br/>
-	<div id="post-content">{{html .Post.SanitizedContent}}</div>
+	<div id="post-content wrap">{{html .Post.SanitizedContent}}</div>
 {{end}}
