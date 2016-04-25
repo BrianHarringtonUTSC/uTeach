@@ -99,7 +99,8 @@ func (pm *PostModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Post, er
 	case 1:
 		return posts[0], nil
 	default:
-		return nil, errors.New(fmt.Sprintf("expected 1, got %d", len(posts)))
+		msg := fmt.Sprintf("expected 1, got %d", len(posts))
+		return nil, errors.New(msg)
 	}
 }
 

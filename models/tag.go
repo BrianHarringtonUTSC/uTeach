@@ -73,7 +73,8 @@ func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, erro
 	case 1:
 		return tags[0], nil
 	default:
-		return nil, errors.New(fmt.Sprintf("expected 1, got %d", len(tags)))
+		msg := fmt.Sprintf("expected 1, got %d", len(tags))
+		return nil, errors.New(msg)
 	}
 }
 
