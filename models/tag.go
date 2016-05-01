@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -73,8 +72,7 @@ func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, erro
 	case 1:
 		return tags[0], nil
 	default:
-		msg := fmt.Sprintf("expected 1, got %d", len(tags))
-		return nil, errors.New(msg)
+		return nil, errors.Errorf("expected 1, got %d", len(tags))
 	}
 }
 

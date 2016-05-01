@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -61,8 +60,7 @@ func (um *UserModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*User, er
 	case 1:
 		return users[0], nil
 	default:
-		msg := fmt.Sprintf("expected 1, got %d", len(users))
-		return nil, errors.New(msg)
+		return nil, errors.Errorf("expected 1, got %d", len(users))
 	}
 }
 

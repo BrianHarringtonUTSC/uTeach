@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -76,8 +75,7 @@ func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, 
 	case 1:
 		return topics[0], nil
 	default:
-		msg := fmt.Sprintf("expected 1, got %d", len(topics))
-		return nil, errors.New(msg)
+		return nil, errors.Errorf("expected 1, got %d", len(topics))
 	}
 }
 
