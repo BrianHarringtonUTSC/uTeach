@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/pkg/errors"
 	"github.com/umairidris/uTeach/models"
@@ -27,19 +28,21 @@ func (se StatusError) Error() string {
 // HandleError handles error messaging for the client and server. Internal server errors are logged and not written to
 // client to not expose sensitive information.
 func HandleError(w http.ResponseWriter, err error) {
-	if err == sql.ErrNoRows {
-		err = StatusError{http.StatusNotFound, nil}
+	cause := errors.Cause(err)
+
+	if cause == sql.ErrNoRows {
+		cause = StatusError{http.StatusNotFound, nil}
 	}
 
 	if err != nil {
-		switch e := errors.Cause(err).(type) {
+		switch e := cause.(type) {
 		case StatusError:
 			http.Error(w, e.Error(), e.Code)
 		case models.InputError:
 			http.Error(w, e.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			errors.Print(err)
+			errors.Fprint(os.Stderr, err)
 		}
 	}
 }

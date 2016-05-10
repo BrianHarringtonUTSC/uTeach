@@ -32,7 +32,7 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 }
 
 var tagsBuilder = squirrel.
-	Select("tags.id, tags.name, topics.id AS topic_id, topics.name AS topic_name, topics.title").
+	Select("tags.id, tags.name, topics.id, topics.name, topics.title").
 	From("tags").
 	Join("topics ON topics.id=tags.topic_id").
 	OrderBy("tags.name")
