@@ -24,7 +24,6 @@ const (
 )
 
 func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
-
 	googleConfig := &oauth2.Config{
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
@@ -91,16 +90,16 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	}
 	defer response.Body.Close()
 
-	// parse response into generic map
-	m := map[string]interface{}{}
-	err = json.NewDecoder(response.Body).Decode(&m)
+	u := struct {
+		Email string
+		Name  string
+	}{}
+
+	err = json.NewDecoder(response.Body).Decode(&u)
 	if err != nil {
 		return errors.Wrap(err, "json decode error")
 	}
-
-	email := m["email"].(string)
-	name := m["name"].(string)
-	return loginUser(a, w, r, email, name)
+	return loginUser(a, w, r, u.Email, u.Name)
 }
 
 func getLogout(a *application.App, w http.ResponseWriter, r *http.Request) error {
