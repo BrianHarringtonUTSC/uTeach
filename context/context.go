@@ -49,8 +49,8 @@ func Post(r *http.Request) *models.Post {
 }
 
 // SetTag sets the tag in the context.
-func SetTag(r *http.Request, post *models.Tag) {
-	context.Set(r, tagKey, post)
+func SetTag(r *http.Request, tag *models.Tag) {
+	context.Set(r, tagKey, tag)
 }
 
 // Tag sets the tag in the context.
@@ -59,8 +59,8 @@ func Tag(r *http.Request) *models.Tag {
 }
 
 // SetSessionUser sets the session user in the context.
-func SetSessionUser(r *http.Request, post *models.User) {
-	context.Set(r, sessionUserKey, post)
+func SetSessionUser(r *http.Request, user *models.User) {
+	context.Set(r, sessionUserKey, user)
 }
 
 // SessionUser gets the session user from the context.
