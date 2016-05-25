@@ -4,8 +4,8 @@ package context
 import (
 	"net/http"
 
+	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/gorilla/context"
-	"github.com/umairidris/uTeach/models"
 )
 
 // TODO: Use context in standard lib which will be added in go 1.7

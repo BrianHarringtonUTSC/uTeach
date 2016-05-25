@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/BrianHarringtonUTSC/uTeach/application"
+	"github.com/BrianHarringtonUTSC/uTeach/context"
+	"github.com/BrianHarringtonUTSC/uTeach/libtemplate"
+	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/pkg/errors"
-	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/context"
-	"github.com/umairidris/uTeach/libtemplate"
-	"github.com/umairidris/uTeach/models"
 )
 
 func getTopics(a *application.App, w http.ResponseWriter, r *http.Request) error {

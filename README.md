@@ -1,7 +1,7 @@
 # uTeach
 
-[![GoDoc](https://godoc.org/github.com/umairidris/uTeach?status.svg)](https://godoc.org/github.com/umairidris/uTeach)
-[![Go Report Card](https://goreportcard.com/badge/github.com/UmairIdris/uTeach)](https://goreportcard.com/report/github.com/umairidris/uTeach)
+[![GoDoc](https://godoc.org/github.com/BrianHarringtonUTSC/uTeach?status.svg)](https://godoc.org/github.com/BrianHarringtonUTSC/uTeach)
+[![Go Report Card](https://goreportcard.com/badge/github.com/BrianHarringtonUTSC/uTeach)](https://goreportcard.com/report/github.com/BrianHarringtonUTSC/uTeach)
 
 uTeach is a community oriented platform for sharing educational material and resources. uTeach is sort of a hybrid between reddit and piazza in functionality.
 
@@ -32,8 +32,8 @@ Notes:
 
 #### As a User
 ```
-go get github.com/umairidris/uTeach
-cd $GOPATH/src/github.com/umairidris
+go get github.com/BrianHarringtonUTSC/uTeach
+cd $GOPATH/src/github.com/BrianHarringtonUTSC
 
 # Setup config...
 
@@ -44,11 +44,11 @@ $GOPATH/bin/uTeach --config=sample/config.json  # Or replace with your own confi
 #### As a Developer
 ```
 # Make the required directories
-mkdir -p $GOPATH/src/github.com/umairidris
-cd $GOPATH/src/github.com/umairidris
+mkdir -p $GOPATH/src/github.com/BrianHarringtonUTSC
+cd $GOPATH/src/github.com/BrianHarringtonUTSC
 
 # Checkout repo from git
-git init && git checkout github.com/umairidris/uTeach
+git init && git clone https://github.com/BrianHarringtonUTSC/uTeach
 cd uTeach
 
 # Get dependencies
@@ -119,4 +119,4 @@ I am no database expert and there are some promising ORMs ([go-pg - postgres spe
 ### Contributing Code
 
 - Make sure you run [gofmt](https://golang.org/cmd/gofmt/). Most IDEs/plugins will automatically run it for you as you code.
-- Refresh [Go Report Card](https://goreportcard.com/report/github.com/umairidris/uTeach). Try to keep it at 100%.
+- Refresh [Go Report Card](https://goreportcard.com/report/github.com/BrianHarringtonUTSC/uTeach). Try to keep it at 100%.

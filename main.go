@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/config"
-	"github.com/umairidris/uTeach/handlers"
+	"github.com/BrianHarringtonUTSC/uTeach/application"
+	"github.com/BrianHarringtonUTSC/uTeach/config"
+	"github.com/BrianHarringtonUTSC/uTeach/handlers"
 )
 
 func main() {

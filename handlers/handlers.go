@@ -4,11 +4,11 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/BrianHarringtonUTSC/uTeach/application"
+	"github.com/BrianHarringtonUTSC/uTeach/httperror"
+	"github.com/BrianHarringtonUTSC/uTeach/middleware"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
-	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/httperror"
-	"github.com/umairidris/uTeach/middleware"
 )
 
 // Handler allows passing an application context to a handler and handling errors.

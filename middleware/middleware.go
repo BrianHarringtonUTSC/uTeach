@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BrianHarringtonUTSC/uTeach/application"
+	"github.com/BrianHarringtonUTSC/uTeach/context"
+	"github.com/BrianHarringtonUTSC/uTeach/httperror"
+	"github.com/BrianHarringtonUTSC/uTeach/models"
+	"github.com/BrianHarringtonUTSC/uTeach/session"
 	"github.com/Masterminds/squirrel"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/context"
-	"github.com/umairidris/uTeach/httperror"
-	"github.com/umairidris/uTeach/models"
-	"github.com/umairidris/uTeach/session"
 )
 
 // Middleware has app specific middleware.

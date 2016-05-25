@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/BrianHarringtonUTSC/uTeach/application"
+	"github.com/BrianHarringtonUTSC/uTeach/context"
+	"github.com/BrianHarringtonUTSC/uTeach/httperror"
+	"github.com/BrianHarringtonUTSC/uTeach/libtemplate"
+	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"github.com/umairidris/uTeach/application"
-	"github.com/umairidris/uTeach/context"
-	"github.com/umairidris/uTeach/httperror"
-	"github.com/umairidris/uTeach/libtemplate"
-	"github.com/umairidris/uTeach/models"
 )
 
 func addUserUpvotedPostIDsToData(r *http.Request, postModel *models.PostModel, data map[string]interface{}) error {

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/pkg/errors"
-	"github.com/umairidris/uTeach/models"
 )
 
 // StatusError represents an error with an associated HTTP status code.

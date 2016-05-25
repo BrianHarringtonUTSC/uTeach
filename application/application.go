@@ -6,11 +6,11 @@ import (
 	"html/template"
 	"log"
 
+	"github.com/BrianHarringtonUTSC/uTeach/config"
+	"github.com/BrianHarringtonUTSC/uTeach/libtemplate"
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3" // blank identifier import registers the sqlite driver
-	"github.com/umairidris/uTeach/config"
-	"github.com/umairidris/uTeach/libtemplate"
 )
 
 // App is the context which contains application-wide configuration and components.
