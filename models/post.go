@@ -55,8 +55,10 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 }
 
 var (
-	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"} // error for invalid post
-	postsBuilder   = squirrel.
+	// error for invalid post
+	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"}
+
+	postsBuilder = squirrel.
 			Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
 			count(post_votes.post_id),
 			topics.id, topics.name, topics.title, topics.description,

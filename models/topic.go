@@ -53,8 +53,10 @@ func NewTopicModel(db *sqlx.DB) *TopicModel {
 }
 
 var (
-	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"} // error for invalid topic
-	topicsBuilder   = squirrel.Select("* FROM topics")
+	// error for invalid topic
+	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"}
+
+	topicsBuilder = squirrel.Select("* FROM topics")
 )
 
 // Find gets all topics filtered by wheres.

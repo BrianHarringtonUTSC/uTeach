@@ -38,8 +38,10 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 }
 
 var (
-	ErrInvalidUser = InputError{"empty email and/or name"} // error for invalid user
-	usersBuilder   = squirrel.Select("* FROM users")
+	// error for invalid user
+	ErrInvalidUser = InputError{"empty email and/or name"}
+
+	usersBuilder = squirrel.Select("* FROM users")
 )
 
 // Find gets all users filtered by wheres.

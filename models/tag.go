@@ -37,8 +37,10 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 }
 
 var (
-	ErrInvalidTag = InputError{"Invalid name"} // error for invalid tag
-	tagsBuilder   = squirrel.
+	// error for invalid tag
+	ErrInvalidTag = InputError{"Invalid name"}
+
+	tagsBuilder = squirrel.
 			Select("tags.id, tags.name, topics.id, topics.name, topics.title").
 			From("tags").
 			Join("topics ON topics.id=tags.topic_id").
