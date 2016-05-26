@@ -53,7 +53,7 @@ func NewTopicModel(db *sqlx.DB) *TopicModel {
 }
 
 var (
-	// error for invalid topic
+	// ErrInvalidTopic is returned when adding or updating an invalid topic
 	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"}
 
 	topicsBuilder = squirrel.Select("* FROM topics")

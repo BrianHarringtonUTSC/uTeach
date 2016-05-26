@@ -37,7 +37,7 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 }
 
 var (
-	// error for invalid tag
+	// ErrInvalidTag is returned when adding or updating an invalid tag
 	ErrInvalidTag = InputError{"Invalid name"}
 
 	tagsBuilder = squirrel.

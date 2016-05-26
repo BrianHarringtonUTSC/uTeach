@@ -38,7 +38,7 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 }
 
 var (
-	// error for invalid user
+	// ErrInvalidUser is returned when adding or updating an invalid user
 	ErrInvalidUser = InputError{"empty email and/or name"}
 
 	usersBuilder = squirrel.Select("* FROM users")

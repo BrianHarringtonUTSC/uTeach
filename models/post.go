@@ -55,7 +55,7 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 }
 
 var (
-	// error for invalid post
+	// ErrInvalidPost is returned when adding or updating an invalid post
 	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"}
 
 	postsBuilder = squirrel.
