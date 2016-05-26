@@ -39,6 +39,7 @@ func (p *Post) SanitizedContent() string {
 	return trimmed
 }
 
+// IsValid returns true if the post is valid else false.
 func (p *Post) IsValid() bool {
 	return p.Title != "" && p.SanitizedContent() != ""
 }
@@ -54,7 +55,7 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 }
 
 var (
-	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"}
+	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"} // error for invalid post
 	postsBuilder   = squirrel.
 			Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
 			count(post_votes.post_id),

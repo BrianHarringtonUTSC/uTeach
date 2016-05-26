@@ -27,6 +27,7 @@ func (t *Topic) NewPostURL() string {
 	return t.URL() + "/new"
 }
 
+// IsValid returns true if the topic is valid else false.
 func (t *Topic) IsValid() bool {
 	return t.Title != "" && t.Description != "" && singleWordAlphaNumRegex.MatchString(t.Name)
 }
@@ -52,7 +53,7 @@ func NewTopicModel(db *sqlx.DB) *TopicModel {
 }
 
 var (
-	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"}
+	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"} // error for invalid topic
 	topicsBuilder   = squirrel.Select("* FROM topics")
 )
 

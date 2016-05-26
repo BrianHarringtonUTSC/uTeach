@@ -22,6 +22,7 @@ func (u *User) URL() string {
 	return "/users/" + u.Email
 }
 
+// IsValid returns true if the user is valid else false.
 func (u *User) IsValid() bool {
 	return u.Email != "" && u.Name != ""
 }
@@ -37,7 +38,7 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 }
 
 var (
-	ErrInvalidUser = InputError{"empty email and/or name"}
+	ErrInvalidUser = InputError{"empty email and/or name"} // error for invalid user
 	usersBuilder   = squirrel.Select("* FROM users")
 )
 

@@ -21,6 +21,7 @@ func (t *Tag) URL() string {
 	return t.Topic.TagsURL() + "/" + t.Name
 }
 
+// IsValid returns true if the tag is valid else false.
 func (t *Tag) IsValid() bool {
 	return singleWordAlphaNumRegex.MatchString(t.Name)
 }
@@ -36,7 +37,7 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 }
 
 var (
-	ErrInvalidTag = InputError{"Invalid name"}
+	ErrInvalidTag = InputError{"Invalid name"} // error for invalid tag
 	tagsBuilder   = squirrel.
 			Select("tags.id, tags.name, topics.id, topics.name, topics.title").
 			From("tags").
