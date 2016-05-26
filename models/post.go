@@ -3,11 +3,14 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/pkg/errors"
+	"github.com/russross/blackfriday"
 )
 
 // Post represents a post in the app.
@@ -30,7 +33,14 @@ func (p *Post) URL() string {
 
 // SanitizedContent returns the post's content with markdown converted to HTML and sanitized.
 func (p *Post) SanitizedContent() string {
-	return sanitizeString(p.Content)
+	unsafe := blackfriday.MarkdownBasic([]byte(p.Content))
+	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
+	trimmed := strings.TrimSpace(string(safe))
+	return trimmed
+}
+
+func (p *Post) IsValid() bool {
+	return p.Title != "" && p.SanitizedContent() != ""
 }
 
 // PostModel handles getting and creating posts.
@@ -43,19 +53,22 @@ func NewPostModel(db *sqlx.DB) *PostModel {
 	return &PostModel{Base{db}}
 }
 
-var postsBuilder = squirrel.
-	Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
+var (
+	ErrInvalidPost = InputError{"Invalid post id or empty title or empty body"}
+	postsBuilder   = squirrel.
+			Select(`posts.id, posts.title, posts.content, posts.created_at, posts.is_pinned, posts.is_visible,
 			count(post_votes.post_id),
 			topics.id, topics.name, topics.title, topics.description,
 			users.id, users.email, users.name, users.is_admin`).
-	From("posts").
-	Join("topics ON topics.id=posts.topic_id").
-	Join("users ON users.id=posts.creator_user_id").
-	LeftJoin("post_votes ON post_votes.post_id=posts.id").
-	LeftJoin("post_tags ON post_tags.post_id=posts.id").
-	GroupBy("posts.id, post_tags.tag_id").
-	OrderBy("count(post_votes.post_id) DESC, posts.created_at DESC").
-	Distinct()
+			From("posts").
+			Join("topics ON topics.id=posts.topic_id").
+			Join("users ON users.id=posts.creator_user_id").
+			LeftJoin("post_votes ON post_votes.post_id=posts.id").
+			LeftJoin("post_tags ON post_tags.post_id=posts.id").
+			GroupBy("posts.id, post_tags.tag_id").
+			OrderBy("count(post_votes.post_id) DESC, posts.created_at DESC").
+			Distinct()
+)
 
 // Find gets all posts filtered by wheres.
 func (pm *PostModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Post, error) {
@@ -103,6 +116,54 @@ func (pm *PostModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Post, er
 	}
 }
 
+// Add adds a new post.
+func (pm *PostModel) Add(tx *sqlx.Tx, post *Post) error {
+	if !post.IsValid() || post.ID > 0 {
+		return ErrInvalidPost
+	}
+
+	result, err := pm.exec(tx, "INSERT INTO posts(title, content, topic_id, creator_user_id) VALUES(?, ?, ?, ?)",
+		post.Title, post.Content, post.Topic.ID, post.Creator.ID)
+	if err != nil {
+		return errors.Wrap(err, "exec error")
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return errors.Wrap(err, "last inserted id error")
+	}
+
+	p, err := pm.FindOne(tx, squirrel.Eq{"posts.id": id})
+	if err != nil {
+		return errors.Wrap(err, "find one error")
+	}
+
+	*post = *p
+	return nil
+}
+
+// Update updates a post.
+func (pm *PostModel) Update(tx *sqlx.Tx, post *Post) error {
+	if post.ID < 1 || !post.IsValid() {
+		return ErrInvalidPost
+	}
+
+	_, err := pm.exec(tx, "UPDATE posts SET title=?, content=?, is_pinned=?, is_visible=? WHERE id=?",
+		post.Title, post.Content, post.IsPinned, post.IsVisible, post.ID)
+
+	if err != nil {
+		return errors.Wrap(err, "exec error")
+	}
+
+	p, err := pm.FindOne(tx, squirrel.Eq{"posts.id": post.ID})
+	if err != nil {
+		return errors.Wrap(err, "find one error")
+	}
+
+	*post = *p
+	return nil
+}
+
 // GetVotedPostIds gets the ids of upvoted posts filtered by wheres. It returns a map that acts as a set (all values
 // are true) which can be used for quick lookup.
 func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[int64]bool, error) {
@@ -112,7 +173,7 @@ func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[i
 	}
 	defer rows.Close()
 
-	postIDs := map[int64]bool{}
+	postIDs := make(map[int64]bool)
 	var postID int64
 	for rows.Next() {
 		err = rows.Scan(&postID)
@@ -124,58 +185,13 @@ func (pm *PostModel) GetVotedPostIds(tx *sqlx.Tx, where squirrel.Sqlizer) (map[i
 	return postIDs, nil
 }
 
-// AddPost adds a new post.
-func (pm *PostModel) AddPost(tx *sqlx.Tx, title, content string, topic *Topic, creator *User) (*Post, error) {
-	if title == "" || sanitizeString(content) == "" {
-		return nil, InputError{"Empty title or body not allowed"}
+// UpdatePostVoteForUser addsa vote for the user for the post if voted is true else it removes the vote.
+func (pm *PostModel) UpdatePostVoteForUser(tx *sqlx.Tx, post *Post, user *User, voted bool) error {
+	var err error
+	if voted {
+		_, err = pm.exec(tx, "INSERT INTO post_votes(user_id, post_id) VALUES(?, ?)", user.ID, post.ID)
+	} else {
+		_, err = pm.exec(tx, "DELETE FROM post_votes where user_id=? AND post_id=?", user.ID, post.ID)
 	}
-
-	query := "INSERT INTO posts(title, content, topic_id, creator_user_id) VALUES(?, ?, ?, ?)"
-	result, err := pm.exec(tx, query, title, content, topic.ID, creator.ID)
-	if err != nil {
-		return nil, errors.Wrap(err, "exec error")
-	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return nil, errors.Wrap(err, "last inserted id error")
-	}
-	post, err := pm.FindOne(tx, squirrel.Eq{"posts.id": id})
-	return post, errors.Wrap(err, "find one error")
-}
-
-// AddPostVoteForUser adds a vote for the post for the user.
-func (pm *PostModel) AddPostVoteForUser(tx *sqlx.Tx, post *Post, user *User) error {
-	_, err := pm.exec(tx, "INSERT INTO post_votes(user_id, post_id) VALUES(?, ?)", user.ID, post.ID)
-	return errors.Wrap(err, "exec error")
-}
-
-// RemovePostVoteForUser removes a vote for the post for the user.
-func (pm *PostModel) RemovePostVoteForUser(tx *sqlx.Tx, post *Post, user *User) error {
-	_, err := pm.exec(tx, "DELETE FROM post_votes where user_id=? AND post_id=?", user.ID, post.ID)
-	return errors.Wrap(err, "exec error")
-}
-
-// HidePost hides the post.
-func (pm *PostModel) HidePost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", false, post.ID)
-	return errors.Wrap(err, "exec error")
-}
-
-// UnhidePost unhides the post.
-func (pm *PostModel) UnhidePost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.exec(tx, "UPDATE posts SET is_visible=? WHERE id=?", true, post.ID)
-	return errors.Wrap(err, "exec error")
-}
-
-// PinPost pins a post.
-func (pm *PostModel) PinPost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", true, post.ID)
-	return errors.Wrap(err, "exec error")
-}
-
-// UnpinPost unpins a post.
-func (pm *PostModel) UnpinPost(tx *sqlx.Tx, post *Post) error {
-	_, err := pm.exec(tx, "UPDATE posts SET is_pinned=? WHERE id=?", false, post.ID)
 	return errors.Wrap(err, "exec error")
 }

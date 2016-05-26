@@ -18,23 +18,27 @@ type Topic struct {
 }
 
 // URL returns the unique URL for a topic.
-func (s *Topic) URL() string {
-	return "/topics/" + s.Name
+func (t *Topic) URL() string {
+	return "/topics/" + t.Name
 }
 
 // NewPostURL returns the URL of the page to create a new post under the topic.
-func (s *Topic) NewPostURL() string {
-	return s.URL() + "/new"
+func (t *Topic) NewPostURL() string {
+	return t.URL() + "/new"
+}
+
+func (t *Topic) IsValid() bool {
+	return t.Title != "" && t.Description != "" && singleWordAlphaNumRegex.MatchString(t.Name)
 }
 
 // TagsURL returns the URL of the page listing the tags under the topic.
-func (s *Topic) TagsURL() string {
-	return s.URL() + "/tags"
+func (t *Topic) TagsURL() string {
+	return t.URL() + "/tags"
 }
 
 // NewTagURL returns the URL of the page to create a new tag under the topic.
-func (s *Topic) NewTagURL() string {
-	return s.TagsURL() + "/new"
+func (t *Topic) NewTagURL() string {
+	return t.TagsURL() + "/new"
 }
 
 // TopicModel handles getting and creating topics.
@@ -47,7 +51,10 @@ func NewTopicModel(db *sqlx.DB) *TopicModel {
 	return &TopicModel{Base{db}}
 }
 
-var topicsBuilder = squirrel.Select("* FROM topics")
+var (
+	ErrInvalidTopic = InputError{"Cannot have empty name and/or title"}
+	topicsBuilder   = squirrel.Select("* FROM topics")
+)
 
 // Find gets all topics filtered by wheres.
 func (tm *TopicModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Topic, error) {
@@ -79,25 +86,30 @@ func (tm *TopicModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Topic, 
 	}
 }
 
-// AddTopic adds a new topic.
-func (tm *TopicModel) AddTopic(tx *sqlx.Tx, name, title, description string) (*Topic, error) {
-	if title == "" || description == "" || !singleWordAlphaNumRegex.MatchString(name) {
-		return nil, InputError{"Invalid name and/or title."}
+// Add adds a new topic.
+func (tm *TopicModel) Add(tx *sqlx.Tx, topic *Topic) error {
+	if !topic.IsValid() {
+		return ErrInvalidTopic
 	}
 
-	name = strings.ToLower(name)
+	topic.Name = strings.ToLower(topic.Name)
 
 	query := "INSERT INTO topics(name, title, description) VALUES(?, ?, ?)"
-	result, err := tm.exec(tx, query, name, title, description)
+	result, err := tm.exec(tx, query, topic.Name, topic.Title, topic.Description)
 	if err != nil {
-		return nil, errors.Wrap(err, "exec error")
+		return errors.Wrap(err, "exec error")
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, errors.Wrap(err, "last inserted id error")
+		return errors.Wrap(err, "last inserted id error")
 	}
 
-	topic, err := tm.FindOne(tx, squirrel.Eq{"topics.id": id})
-	return topic, errors.Wrap(err, "topic error")
+	t, err := tm.FindOne(tx, squirrel.Eq{"topics.id": id})
+	if err != nil {
+		return errors.Wrap(err, "find one error")
+	}
+
+	*topic = *t
+	return nil
 }

@@ -21,6 +21,10 @@ func (t *Tag) URL() string {
 	return t.Topic.TagsURL() + "/" + t.Name
 }
 
+func (t *Tag) IsValid() bool {
+	return singleWordAlphaNumRegex.MatchString(t.Name)
+}
+
 // TagModel handles getting and creating tags.
 type TagModel struct {
 	Base
@@ -31,11 +35,14 @@ func NewTagModel(db *sqlx.DB) *TagModel {
 	return &TagModel{Base{db}}
 }
 
-var tagsBuilder = squirrel.
-	Select("tags.id, tags.name, topics.id, topics.name, topics.title").
-	From("tags").
-	Join("topics ON topics.id=tags.topic_id").
-	OrderBy("tags.name")
+var (
+	ErrInvalidTag = InputError{"Invalid name"}
+	tagsBuilder   = squirrel.
+			Select("tags.id, tags.name, topics.id, topics.name, topics.title").
+			From("tags").
+			Join("topics ON topics.id=tags.topic_id").
+			OrderBy("tags.name")
+)
 
 // Find gets all tags filtered by wheres.
 func (tm *TagModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*Tag, error) {
@@ -76,25 +83,30 @@ func (tm *TagModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*Tag, erro
 	}
 }
 
-// AddTag adds a new tag for the topic.
-func (tm *TagModel) AddTag(tx *sqlx.Tx, name string, topic *Topic) (*Tag, error) {
-	if !singleWordAlphaNumRegex.MatchString(name) {
-		return nil, InputError{"Invalid name."}
+// Add adds a new tag.
+func (tm *TagModel) Add(tx *sqlx.Tx, tag *Tag) error {
+	if !tag.IsValid() {
+		return ErrInvalidTag
 	}
 
-	name = strings.ToLower(name)
-	result, err := tm.exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", name, topic.ID)
+	tag.Name = strings.ToLower(tag.Name)
+	result, err := tm.exec(tx, "INSERT INTO tags(name, topic_id) VALUES(?, ?)", tag.Name, tag.Topic.ID)
 	if err != nil {
-		return nil, errors.Wrap(err, "exec error")
+		return errors.Wrap(err, "exec error")
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, errors.Wrap(err, "last inserted id error")
+		return errors.Wrap(err, "last inserted id error")
 	}
 
-	tag, err := tm.FindOne(tx, squirrel.Eq{"tags.id": id})
-	return tag, errors.Wrap(err, "find one error")
+	t, err := tm.FindOne(tx, squirrel.Eq{"tags.id": id})
+	if err != nil {
+		return errors.Wrap(err, "find one error")
+	}
+
+	*tag = *t
+	return nil
 }
 
 // AddPostTag adds a tag for the post.

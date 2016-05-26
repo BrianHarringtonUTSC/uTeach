@@ -35,12 +35,11 @@ func getNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error
 
 func postNewTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	topic := context.Topic(r)
-
 	name := r.FormValue("name")
 
 	tm := models.NewTagModel(a.DB)
-	tag, err := tm.AddTag(nil, name, topic)
-	if err != nil {
+	tag := &models.Tag{Name: name, Topic: topic}
+	if err := tm.Add(nil, tag); err != nil {
 		return err
 	}
 

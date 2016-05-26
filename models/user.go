@@ -22,6 +22,10 @@ func (u *User) URL() string {
 	return "/users/" + u.Email
 }
 
+func (u *User) IsValid() bool {
+	return u.Email != "" && u.Name != ""
+}
+
 // UserModel handles getting and creating users.
 type UserModel struct {
 	Base
@@ -32,7 +36,10 @@ func NewUserModel(db *sqlx.DB) *UserModel {
 	return &UserModel{Base{db}}
 }
 
-var usersBuilder = squirrel.Select("* FROM users")
+var (
+	ErrInvalidUser = InputError{"empty email and/or name"}
+	usersBuilder   = squirrel.Select("* FROM users")
+)
 
 // Find gets all users filtered by wheres.
 func (um *UserModel) Find(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) ([]*User, error) {
@@ -64,24 +71,29 @@ func (um *UserModel) FindOne(tx *sqlx.Tx, wheres ...squirrel.Sqlizer) (*User, er
 	}
 }
 
-// AddUser adds a new user.
-func (um *UserModel) AddUser(tx *sqlx.Tx, email, name string) (*User, error) {
-	if email == "" || name == "" {
-		return nil, InputError{"email and/or name cannot be empty"}
+// Add adds a new user.
+func (um *UserModel) Add(tx *sqlx.Tx, user *User) error {
+	if !user.IsValid() {
+		return ErrInvalidUser
 	}
 
-	email = strings.ToLower(email)
-	name = strings.Title(name)
-	result, err := um.exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", email, name)
+	user.Email = strings.ToLower(user.Email)
+	user.Name = strings.Title(user.Name)
+	result, err := um.exec(tx, "INSERT INTO users(email, name) VALUES(?, ?)", user.Email, user.Name)
 	if err != nil {
-		return nil, errors.Wrap(err, "exec error")
+		return errors.Wrap(err, "exec error")
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return nil, errors.Wrap(err, "last inserted id error")
+		return errors.Wrap(err, "last inserted id error")
 	}
 
-	user, err := um.FindOne(tx, squirrel.Eq{"users.id": id})
-	return user, errors.Wrap(err, "find one error")
+	u, err := um.FindOne(tx, squirrel.Eq{"users.id": id})
+	if err != nil {
+		return errors.Wrap(err, "find one error")
+	}
+
+	*user = *u
+	return nil
 }

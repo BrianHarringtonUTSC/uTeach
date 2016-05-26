@@ -34,8 +34,9 @@ func postNewTopic(a *application.App, w http.ResponseWriter, r *http.Request) er
 	description := r.FormValue("description")
 
 	tm := models.NewTopicModel(a.DB)
-	topic, err := tm.AddTopic(nil, name, title, description)
-	if err != nil {
+
+	topic := &models.Topic{Name: name, Title: title, Description: description}
+	if err := tm.Add(nil, topic); err != nil {
 		return err
 	}
 

@@ -56,7 +56,8 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 	user, err := um.FindOne(nil, squirrel.Eq{"users.email": email})
 	if err == sql.ErrNoRows {
 		// user not found so must be logging in for first time, add the user
-		user, err = um.AddUser(nil, email, name)
+		user = &models.User{Email: email, Name: name}
+		err = um.Add(nil, user)
 	}
 	if err != nil && err != sql.ErrNoRows {
 		return errors.Wrap(err, "login error")

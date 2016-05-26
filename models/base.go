@@ -7,22 +7,12 @@ package models
 import (
 	"database/sql/driver"
 	"regexp"
-	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
 )
 
 var singleWordAlphaNumRegex = regexp.MustCompile(`^[[:alnum:]]+(_[[:alnum:]]+)*$`)
-
-func sanitizeString(s string) string {
-	unsafe := blackfriday.MarkdownBasic([]byte(s))
-	safe := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
-	trimmed := strings.TrimSpace(string(safe))
-	return trimmed
-}
 
 // InputError is an error returned when the user supplied input was not valid.
 type InputError struct {

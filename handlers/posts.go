@@ -11,7 +11,6 @@ import (
 	"github.com/BrianHarringtonUTSC/uTeach/libtemplate"
 	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/Masterminds/squirrel"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
 
@@ -98,8 +97,8 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 	}
 
 	postModel := models.NewPostModel(a.DB)
-	post, err := postModel.AddPost(tx, title, text, topic, user)
-	if err != nil {
+	post := &models.Post{Title: title, Content: text, Topic: topic, Creator: user}
+	if err = postModel.Add(tx, post); err != nil {
 		tx.Rollback()
 		return errors.Wrap(err, "add post error")
 	}
@@ -134,66 +133,56 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 	return nil
 }
 
-func handlePostAction(w http.ResponseWriter, r *http.Request, f func(*sqlx.Tx, *models.Post) error) error {
+func postHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	pm := models.NewPostModel(a.DB)
 	post := context.Post(r)
+	post.IsVisible = false
+	err := pm.Update(nil, post)
+	return errors.Wrap(err, "update error")
+}
 
-	if err := f(nil, post); err != nil {
-		return errors.Wrap(err, "post error")
+func deleteHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	pm := models.NewPostModel(a.DB)
+	post := context.Post(r)
+	post.IsVisible = true
+	err := pm.Update(nil, post)
+	return errors.Wrap(err, "update error")
+}
+
+func postPinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	pm := models.NewPostModel(a.DB)
+	post := context.Post(r)
+	post.IsPinned = true
+	err := pm.Update(nil, post)
+	return errors.Wrap(err, "update error")
+}
+
+func deletePinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	pm := models.NewPostModel(a.DB)
+	post := context.Post(r)
+	post.IsPinned = false
+	err := pm.Update(nil, post)
+	return errors.Wrap(err, "update error")
+}
+
+func updatePostVote(a *application.App, w http.ResponseWriter, r *http.Request, voted bool) error {
+	post := context.Post(r)
+	user, _ := context.SessionUser(r)
+	pm := models.NewPostModel(a.DB)
+
+	if err := pm.UpdatePostVoteForUser(nil, post, user, voted); err != nil {
+		return errors.Wrap(err, "update post vote error")
 	}
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func postPostVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	user, _ := context.SessionUser(r)
-
-	pm := models.NewPostModel(a.DB)
-
-	f := func(tx *sqlx.Tx, post *models.Post) error {
-		err := pm.AddPostVoteForUser(tx, post, user)
-		return errors.Wrap(err, "add post vote error")
-	}
-
-	err := handlePostAction(w, r, f)
-	return errors.Wrap(err, "handle post action error")
+	return updatePostVote(a, w, r, true)
 }
 
 func deletePostVote(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	user, _ := context.SessionUser(r)
-
-	pm := models.NewPostModel(a.DB)
-
-	f := func(tx *sqlx.Tx, post *models.Post) error {
-		err := pm.RemovePostVoteForUser(tx, post, user)
-		return errors.Wrap(err, "remove post vote error")
-	}
-
-	err := handlePostAction(w, r, f)
-	return errors.Wrap(err, "handle post action error")
-}
-
-func postHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	pm := models.NewPostModel(a.DB)
-	err := handlePostAction(w, r, pm.HidePost)
-	return errors.Wrap(err, "hide post error")
-}
-
-func deleteHidePost(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	pm := models.NewPostModel(a.DB)
-	err := handlePostAction(w, r, pm.UnhidePost)
-	return errors.Wrap(err, "unhide post error")
-}
-
-func postPinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	pm := models.NewPostModel(a.DB)
-	err := handlePostAction(w, r, pm.PinPost)
-	return errors.Wrap(err, "pin post error")
-}
-
-func deletePinPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	pm := models.NewPostModel(a.DB)
-	err := handlePostAction(w, r, pm.UnpinPost)
-	return errors.Wrap(err, "unpin post error")
+	return updatePostVote(a, w, r, false)
 }
 
 func getPostsByTag(a *application.App, w http.ResponseWriter, r *http.Request) error {
