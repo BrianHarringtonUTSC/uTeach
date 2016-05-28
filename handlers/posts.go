@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -84,7 +85,7 @@ func getNewPost(a *application.App, w http.ResponseWriter, r *http.Request) erro
 	return libtemplate.Render(w, a.Templates, "new_post.html", data)
 }
 
-func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) error {
+func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) (err error) {
 	title := r.FormValue("title")
 	text := r.FormValue("text")
 	topic := context.Topic(r)
@@ -96,10 +97,18 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 		return errors.Wrap(err, "begin transacion error")
 	}
 
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+		err = errors.Wrap(err, "commit error")
+	}()
+
 	postModel := models.NewPostModel(a.DB)
 	post := &models.Post{Title: title, Content: text, Topic: topic, Creator: user}
 	if err = postModel.Add(tx, post); err != nil {
-		tx.Rollback()
 		return errors.Wrap(err, "add post error")
 	}
 
@@ -107,26 +116,18 @@ func postNewPost(a *application.App, w http.ResponseWriter, r *http.Request) err
 	if tagIDStr != "" {
 		tagID, err := strconv.ParseInt(tagIDStr, 10, 64)
 		if err != nil {
-			tx.Rollback()
 			return httperror.StatusError{http.StatusBadRequest, err}
 		}
 
 		tagModel := models.NewTagModel(a.DB)
 		tag, err := tagModel.FindOne(nil, squirrel.Eq{"tags.id": tagID})
 		if err != nil {
-			tx.Rollback()
 			return errors.Wrap(err, "find one error")
 		}
 
 		if err = tagModel.AddPostTag(tx, post, tag); err != nil {
-			tx.Rollback()
 			return errors.Wrap(err, "add post tag error")
 		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		tx.Rollback()
-		return errors.Wrap(err, "commit error")
 	}
 
 	http.Redirect(w, r, post.URL(), http.StatusFound)
