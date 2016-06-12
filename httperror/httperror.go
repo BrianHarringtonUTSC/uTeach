@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/BrianHarringtonUTSC/uTeach/models"
 	"github.com/pkg/errors"
@@ -15,6 +14,11 @@ import (
 type StatusError struct {
 	Code int
 	Err  error
+}
+
+// Stacktrace interface to get err stack info
+type Stacktrace interface {
+	Stacktrace() []errors.Frame
 }
 
 // Error allows StatusError to satisfy the error interface.
@@ -42,7 +46,8 @@ func HandleError(w http.ResponseWriter, err error) {
 			http.Error(w, e.Error(), http.StatusBadRequest)
 		default:
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			errors.Fprint(os.Stderr, err)
+			fmt.Printf("%+v\n", err)
+
 		}
 	}
 }
