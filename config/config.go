@@ -19,7 +19,7 @@ const (
 	userInfoURL = base + "/userinfo"
 )
 
-// Config stores user specific information required to run the app.
+// Config stores context information required to run the app.
 type Config struct {
 	HTTPAddress             string
 	DBPath                  string
