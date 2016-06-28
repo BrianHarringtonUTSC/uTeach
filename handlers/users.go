@@ -16,37 +16,15 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
-
-const (
-	googleUserInfoURL = "https://www.googleapis.com/oauth2/v2/userinfo"
-)
-
-func getGoogleConfig(a *application.App, r *http.Request) *oauth2.Config {
-	googleConfig := &oauth2.Config{
-		Scopes: []string{
-			"https://www.googleapis.com/auth/userinfo.profile",
-			"https://www.googleapis.com/auth/userinfo.email",
-		},
-		Endpoint: google.Endpoint,
-	}
-
-	googleConfig.RedirectURL = a.Config.GoogleRedirectURL
-	googleConfig.ClientID = a.Config.GoogleClientID
-	googleConfig.ClientSecret = a.Config.GoogleClientSecret
-
-	return googleConfig
-}
 
 func getLogin(a *application.App, w http.ResponseWriter, r *http.Request) error {
 	if _, ok := context.SessionUser(r); ok {
 		return httperror.StatusError{http.StatusOK, errors.New("Already logged in")}
 	}
 
-	googleConfig := getGoogleConfig(a, r)
-	// redirect user to Google's consent page to ask for permission for the scopes specified above.
-	url := googleConfig.AuthCodeURL("uteach-login") // TODO: replace with CSRF token
+	// TODO: replace code with CSRF token
+	url := a.Config.OAuth2.AuthCodeURL("uteach-login") + "&connection=Username-Password-Authentication" // connection required by Auth0
 	http.Redirect(w, r, url, http.StatusFound)
 	return nil
 }
@@ -74,18 +52,16 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 }
 
 func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Request) error {
-	googleConfig := getGoogleConfig(a, r)
-
 	// handle the exchange code to initiate a transport
-	authcode := r.FormValue("code")
-	tok, err := googleConfig.Exchange(oauth2.NoContext, authcode)
+	code := r.FormValue("code")
+	tok, err := a.Config.OAuth2.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		return httperror.StatusError{http.StatusUnauthorized, errors.New("Permission not given by user.")}
+		return httperror.StatusError{http.StatusUnauthorized, errors.New("Permission not given by user")}
 	}
 
 	// make get request to get user info using token
-	client := googleConfig.Client(oauth2.NoContext, tok)
-	response, err := client.Get(googleUserInfoURL)
+	client := a.Config.OAuth2.Client(oauth2.NoContext, tok)
+	response, err := client.Get(a.Config.OAuth2UserInfoURL)
 	if err != nil {
 		return errors.Wrap(err, "get response error")
 	}
@@ -93,7 +69,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 
 	u := struct {
 		Email string
-		Name  string
+		Name  string `json:"nickname"`
 	}{}
 
 	err = json.NewDecoder(response.Body).Decode(&u)
