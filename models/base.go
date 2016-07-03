@@ -31,7 +31,6 @@ type Base struct {
 }
 
 func (b *Base) exec(tx *sqlx.Tx, query string, args ...interface{}) (driver.Result, error) {
-
 	if tx != nil {
 		return tx.Exec(query, args...)
 	}
