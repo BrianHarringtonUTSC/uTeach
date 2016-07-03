@@ -52,8 +52,17 @@ func loginUser(a *application.App, w http.ResponseWriter, r *http.Request, email
 }
 
 func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Request) error {
+	errorParam := r.FormValue("error")
+	if errorParam != "" {
+		return httperror.StatusError{http.StatusUnauthorized,
+			errors.Errorf("%s: %s", errorParam, r.FormValue("error_description"))}
+	}
+
 	// handle the exchange code to initiate a transport
 	code := r.FormValue("code")
+	if code == "" {
+		return httperror.StatusError{http.StatusBadRequest, errors.New("Missing code.")}
+	}
 	tok, err := a.Config.OAuth2.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		return httperror.StatusError{http.StatusUnauthorized, errors.New("Permission not given by user")}

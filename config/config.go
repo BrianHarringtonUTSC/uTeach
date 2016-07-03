@@ -13,7 +13,7 @@ const (
 	envPrefix = "uteach"
 
 	// Auth0 URLs for OAuth2
-	base        = "https://umairidris.auth0.com"
+	base        = "https://uteach.auth0.com"
 	authURL     = base + "/authorize"
 	tokenURL    = base + "/oauth/token"
 	userInfoURL = base + "/userinfo"
