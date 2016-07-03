@@ -63,6 +63,7 @@ func getOauth2Callback(a *application.App, w http.ResponseWriter, r *http.Reques
 	if code == "" {
 		return httperror.StatusError{http.StatusBadRequest, errors.New("Missing code.")}
 	}
+
 	tok, err := a.Config.OAuth2.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		return httperror.StatusError{http.StatusUnauthorized, errors.New("Permission not given by user")}
